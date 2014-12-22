@@ -1,5 +1,6 @@
 $LOAD_PATH.unshift File.dirname($0)
 
+require 'clipboard'
 require_relative 'processor'
 require_relative 'ansi_colors'
 
@@ -17,10 +18,17 @@ while input > ''
   end
   print "#{GRAY_TEXT} "
   processor.stack.each{|val|
-    print "#{val.round} " if val.integer?
-    print "#{val} " unless val.integer?
+    print "#{val.round} " if val % 1 == 0
+    print "#{val} " unless val % 1 == 0
   }
 
   print "#{GREEN_TEXT}> #{RESET_COLORS}"
   input = gets.chomp
 end
+
+Clipboard.copy processor.stack.last.to_s
+if !processor.stack.last.nil?
+  puts "#{CYAN_TEXT}===============================================================================#{RESET_COLORS}"
+  puts " #{GRAY_TEXT}#{processor.stack.last} #{RESET_COLORS}was copied to the clipboard."
+end
+puts " "
