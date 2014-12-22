@@ -6,8 +6,8 @@ require_relative 'ansi_colors'
 
 processor = Processor.new
 
-puts "#{GREEN_TEXT}RPN Calculator, ©2014, Phil Runninger #{CYAN_TEXT}._.-._.-._.-._.-._.-._. Enter ? for help."
-print "#{GREEN_TEXT} > #{RESET_COLORS}"
+puts "#{GREEN_TEXT}RPN Calculator, ©2014, Phil Runninger #{CYAN_TEXT}======================= Enter ? for help."
+print "#{GREEN_TEXT} » #{RESET_COLORS}"
 input = gets.chomp
 while input > ''
 
@@ -16,19 +16,19 @@ while input > ''
   rescue Exception => msg
     puts "#{RED_TEXT}#{msg}"
   end
-  print "#{GRAY_TEXT} "
   processor.stack.each{|val|
-    print "#{val.round} " if val % 1 == 0
-    print "#{val} " unless val % 1 == 0
+    print "#{GRAY_TEXT} #{val % 1 == 0 ? val.round : val} "
   }
 
-  print "#{GREEN_TEXT}> #{RESET_COLORS}"
+  print "#{GREEN_TEXT}» #{RESET_COLORS}"
   input = gets.chomp
 end
 
-Clipboard.copy processor.stack.last.to_s
-if !processor.stack.last.nil?
-  puts "#{CYAN_TEXT}===============================================================================#{RESET_COLORS}"
-  puts " #{GRAY_TEXT}#{processor.stack.last} #{RESET_COLORS}was copied to the clipboard."
+puts "#{CYAN_TEXT}========================================================= Thanks for using rpn.#{RESET_COLORS}"
+answer = processor.stack.last
+if !answer.nil?
+  answer = (answer % 1 == 0 ? answer.round : answer)
+  Clipboard.copy answer.to_s
+  puts " #{GRAY_TEXT}#{answer} #{RESET_COLORS}was copied to the clipboard."
 end
 puts " "

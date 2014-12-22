@@ -130,13 +130,13 @@ class Processor
   def help value
     if value == '?'
       types = OPERATORS.each_with_index.map{|value,i| [value['type'],i]}.uniq{|s| s.first}.map{|item| item[0]}.each{|group| group}
-      puts "#{CYAN_TEXT}.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-."
+      puts "#{CYAN_TEXT}-------------------------------------------------------------------------------"
       types.each{ |type|
         puts "#{BLUE_TEXT}#{type}#{GRAY_TEXT}"
         operators = OPERATORS.select{|item| item['type'] == type}.map{|item| item['operators']}
         operators.each{|list| list.each{|operator,value| puts " #{'%8s' % operator}  #{value}"}}
       }
-      puts "#{CYAN_TEXT}.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-.#{RESET_COLORS}"
+      puts "#{CYAN_TEXT}-------------------------------------------------------------------------------#{RESET_COLORS}"
     else
       puts "#{RED_TEXT}Detailed Help is not written yet.#{RESET_COLORS}"
     end
