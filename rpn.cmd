@@ -1,1 +1,1 @@
-ruby rpn.rb
+@ruby rpn.rb
