@@ -95,9 +95,6 @@ describe Processor do
   it 'should display a list of all functions' do
     expect{subject.execute('?')}.to_not raise_error
   end
-  it 'should display more detailed help' do
-    expect{subject.execute('help')}.to_not raise_error
-  end
 
   # Trigonometric
   it 'should convert degrees to radians' do
@@ -157,7 +154,7 @@ describe Processor do
   it 'should clear the stack completely' do
     subject.execute('1 2 3 4')
     expect(subject.stack).to eq([1,2,3,4])
-    subject.execute('clear')
+    subject.execute('cs')
     expect(subject.stack).to eq([])
   end
   it 'should exchange the values in X and Y' do
@@ -197,5 +194,27 @@ describe Processor do
     expect(subject.execute('-4.2 truncate')).to eq(-4)
     expect(subject.execute('-4.5 truncate')).to eq(-4)
     expect(subject.execute('-5.6 truncate')).to eq(-5)
+  end
+
+  # Memories
+  it 'should copy x to a named memory location' do
+      subject.execute('12 @a')
+      expect(subject.stack).to eq([12])
+      expect(subject.memories['a']).to eq(12)
+  end
+  it 'should put the named memory location\'s value on the stack' do
+    subject.execute('13 @a')
+    subject.execute('a')
+    expect(subject.stack).to eq([13, 13])
+    expect(subject.memories['a']).to eq(13)
+  end
+  it 'should return the value of x as an answer' do
+    expect(subject.execute('14 @a')).to eq(14)
+  end
+  it 'should clear all memories' do
+    subject.execute('13 @a')
+    expect(subject.memories['a']).to eq(13)
+    subject.execute('cm')
+    expect(subject.memories['a']).to be_nil
   end
 end
