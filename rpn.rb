@@ -10,15 +10,14 @@ puts "#{TITLE_COLOR}RPN Calculator, ©2014, Phil Runninger #{HIGHLIGHT_COLOR}===
 print "#{TITLE_COLOR} » #{RESET_COLORS}"
 input = gets.chomp
 while input > ''
-
   begin
     answer = processor.execute(input)
   rescue Exception => msg
     answer = nil
     puts "#{ERROR_COLOR}#{msg}"
   end
-  processor.memories.each{|name, value| print "#{RESET_COLORS} #{name}=#{value % 1 == 0 ? value.round : value} " }
-  print "#{TITLE_COLOR}|" if processor.memories != {}
+  processor.registers.each{|name, value| print "#{RESET_COLORS} #{name}=#{value % 1 == 0 ? value.round : value} " }
+  print "#{TITLE_COLOR}|" if processor.registers != {}
   processor.stack.each{|value| print "#{HELP_TEXT} #{value % 1 == 0 ? value.round : value} " }
   print "#{TITLE_COLOR}» #{RESET_COLORS}"
   input = gets.chomp

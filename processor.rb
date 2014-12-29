@@ -46,8 +46,8 @@ OPERATORS = [{'type'=>'Basic Arithmetic',
               'operators'=>{'copy'=>'Copy top value on stack', 'del'=>'Delete top value from stack', 'cs'=>'Clear the stack', 'xy'=>'Swap x and y'},
               'function'=>'custom_operator'},
 
-             {'type'=>'Memory',
-              'operators'=>{'cm'=>'Clear memory values'},
+             {'type'=>'Registers',
+              'operators'=>{'cm'=>'Clear register values'},
               'function'=>'custom_operator'},
 
              {'type'=>'Help',
@@ -56,11 +56,11 @@ OPERATORS = [{'type'=>'Basic Arithmetic',
             ]
 
 class Processor
-  attr_reader :stack, :memories
+  attr_reader :stack, :registers
 
   def initialize
     @stack = []
-    @memories = {}
+    @registers = {}
   end
 
   def execute(text)
@@ -76,9 +76,9 @@ class Processor
         elsif !operator.nil?
           send(operator['function'], value)
         elsif !register.nil?
-          memory_operator value.start_with?('@'), register
+          register_operator value.start_with?('@'), register
         else
-          raise NotImplementedError, "#{value} is not a valid number, operator, or memory"
+          raise NotImplementedError, "#{value} is not a valid number, operator, or register."
         end
       end
     rescue Exception => exception
@@ -101,7 +101,7 @@ class Processor
     name = value.match(/^@?([a-z]+\d*)$/i)
     return name if name.nil?
     name = name.captures[0]
-    return name if value.start_with?('@') or !@memories[name].nil?
+    return name if value.start_with?('@') or !@registers[name].nil?
   end
 
   def float_1_operator operator
@@ -150,7 +150,7 @@ class Processor
       when 'cs'
         @stack = []
       when 'cm'
-        @memories = {}
+        @registers = {}
       when 'xy'
         x = @stack.pop
         y = @stack.pop
@@ -190,8 +190,8 @@ class Processor
       console_columns / 2 - OPERATOR_WIDTH - 4
   end
 
-  def memory_operator do_write, name
-    @memories[name] = @stack.last if do_write
-    @stack.push @memories[name] if !do_write
+  def register_operator do_write, name
+    @registers[name] = @stack.last if do_write
+    @stack.push @registers[name] if !do_write
   end
 end

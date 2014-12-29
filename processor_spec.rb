@@ -196,25 +196,25 @@ describe Processor do
     expect(subject.execute('-5.6 truncate')).to eq(-5)
   end
 
-  # Memories
-  it 'should copy x to a named memory location' do
+  # Registers
+  it 'should copy x to a named register location' do
       subject.execute('12 @a')
       expect(subject.stack).to eq([12])
-      expect(subject.memories['a']).to eq(12)
+      expect(subject.registers['a']).to eq(12)
   end
-  it 'should put the named memory location\'s value on the stack' do
+  it 'should put the named register location\'s value on the stack' do
     subject.execute('13 @a')
     subject.execute('a')
     expect(subject.stack).to eq([13, 13])
-    expect(subject.memories['a']).to eq(13)
+    expect(subject.registers['a']).to eq(13)
   end
   it 'should return the value of x as an answer' do
     expect(subject.execute('14 @a')).to eq(14)
   end
-  it 'should clear all memories' do
+  it 'should clear all registers' do
     subject.execute('13 @a')
-    expect(subject.memories['a']).to eq(13)
+    expect(subject.registers['a']).to eq(13)
     subject.execute('cm')
-    expect(subject.memories['a']).to be_nil
+    expect(subject.registers['a']).to be_nil
   end
 end
