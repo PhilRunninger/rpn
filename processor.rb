@@ -33,7 +33,8 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'copy'  => 'Copy top value on stack',       'del'      => 'Delete top value from stack',
                                                                                     'cs'    => 'Clear the stack',               'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'cm'    => 'Clear register values'}}]},
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'cm'    => 'Clear register values'}}],
+                    'suffix' => {'@<name>' => 'Copies x into the named register', '<name>' => 'Pushes named register onto the stack'}},
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?'     => 'Display this list'}}]}
             ]
@@ -143,6 +144,10 @@ class Processor
             puts "#{HIGHLIGHT_COLOR}-------------------------------------------------------------------------------"
             VALID_OPERATORS.each{ |category|
                 puts "#{HELP_CATEGORY}#{category['category']}"
+
+                category['prefix'].each{|part1, part2|
+                    printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
+
                 right_column = false
                 category['groups'].each {|group|
                     group['operators'].each{|operator,description| 
@@ -159,6 +164,9 @@ class Processor
                     }
                 }
                 puts "" if right_column
+
+                category['suffix'].each{|part1, part2|
+                    printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
             }
             puts "#{HIGHLIGHT_COLOR}-------------------------------------------------------------------------------#{RESET_COLORS}"
         end
