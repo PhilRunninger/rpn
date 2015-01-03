@@ -29,14 +29,6 @@ BOLD_OFF = "\033[22m"
 BLINK_OFF = "\033[25m"
 REVERSE_OFF = "\033[27m"
 
-# RPN color constants
-TITLE_COLOR = "#{GREEN_TEXT}"
-HIGHLIGHT_COLOR = "#{CYAN_TEXT}"
-NORMAL_COLOR = "#{BROWN_TEXT}"
-ERROR_COLOR = "#{RED_TEXT}"
-HELP_CATEGORY = "#{BLUE_TEXT}"
-HELP_TEXT = "#{GRAY_TEXT}"
-
 def console_columns
     rows, columns = IO.console.winsize
     columns

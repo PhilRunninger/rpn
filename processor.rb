@@ -1,4 +1,4 @@
-require_relative 'ansi_colors'
+require_relative 'common'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
@@ -145,18 +145,18 @@ class Processor
             @stack.push x
             @stack.push y
         when '?'
-            puts "#{HIGHLIGHT_COLOR}#{'─' * (console_columns - 1)}#{NORMAL_COLOR}"
+            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}#{BROWN_TEXT}"
             VALID_OPERATORS.each{ |category|
-                puts "#{HELP_CATEGORY}#{category['category']}"
+                puts "#{BLUE_TEXT}#{category['category']}"
 
-                category['prefix'].each{|part1, part2| printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
+                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
 
                 operators = category['groups'].inject({}) {|acc, x| acc.merge(x['operators'])}
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
                 total_width = 0
                 operators.each{|operator,description| 
-                    text = sprintf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s", operator, description
+                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s", operator, description
                     if total_width + text.length - 10 < console_columns
                         print "#{text}"
                         total_width = total_width + text.length - 10
@@ -171,9 +171,9 @@ class Processor
                 }
                 puts "" if total_width > 0
 
-                category['suffix'].each{|part1, part2| printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
+                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
             }
-            puts "#{HIGHLIGHT_COLOR}#{'─' * (console_columns - 1)}#{NORMAL_COLOR}"
+            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}#{BROWN_TEXT}"
         end
     end
 end
