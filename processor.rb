@@ -32,7 +32,7 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'copy'  => 'Copy top value on stack',       'del'      => 'Delete top value from stack',
                                                                                     'cs'    => 'Clear the stack',               'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'cm'    => 'Clear register values'}}],
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'cr'    => 'Clear register values'}}],
                     'suffix' => {'@<name>' => 'Copies x into the named register', '<name>' => 'Pushes named register onto the stack'}},
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?'     => 'Display this list'}}]}
@@ -137,7 +137,7 @@ class Processor
             @stack.pop
         when 'cs'
             @stack = []
-        when 'cm'
+        when 'cr'
             @registers = {}
         when 'xy'
             x = @stack.pop

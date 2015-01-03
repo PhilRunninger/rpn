@@ -214,7 +214,7 @@ describe Processor do
   it 'should clear all registers' do
     subject.execute('13 @a')
     expect(subject.registers['a']).to eq(13)
-    subject.execute('cm')
+    subject.execute('cr')
     expect(subject.registers['a']).to be_nil
   end
 end
