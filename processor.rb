@@ -1,4 +1,3 @@
-require 'io/console'
 require_relative 'ansi_colors'
 
 OPERATOR_WIDTH = 8
@@ -117,6 +116,11 @@ class Processor
         @stack.push eval("Math.#{operator}(#{x})")
     end
 
+    def register_operator do_write, name
+        @registers[name] = @stack.last if do_write
+        @stack.push @registers[name] if !do_write
+    end
+
     def custom_operator operator
         case operator
         when 'rad'
@@ -141,47 +145,35 @@ class Processor
             @stack.push x
             @stack.push y
         when '?'
-            puts "#{HIGHLIGHT_COLOR}-------------------------------------------------------------------------------"
+            puts "#{HIGHLIGHT_COLOR}#{'─' * (console_columns - 1)}#{NORMAL_COLOR}"
             VALID_OPERATORS.each{ |category|
                 puts "#{HELP_CATEGORY}#{category['category']}"
 
-                category['prefix'].each{|part1, part2|
-                    printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
+                category['prefix'].each{|part1, part2| printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
 
-                right_column = false
-                category['groups'].each {|group|
-                    group['operators'].each{|operator,description| 
-                        text = sprintf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s", operator, description
-                            if text.length - 10 >= console_columns / 2
-                                puts "" if right_column
-                                puts "#{text}"
-                                right_column = false
-                        else
-                            print "#{text}"
-                            puts "" if right_column
-                            right_column = !right_column
-                        end
-                    }
+                operators = category['groups'].inject({}) {|acc, x| acc.merge(x['operators'])}
+                description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
+
+                total_width = 0
+                operators.each{|operator,description| 
+                    text = sprintf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s", operator, description
+                    if total_width + text.length - 10 < console_columns
+                        print "#{text}"
+                        total_width = total_width + text.length - 10
+                    elsif total_width + text.rstrip.length - 10 < console_columns
+                        puts "#{text.rstrip}"
+                        total_width = 0
+                    else
+                        puts ""
+                        print "#{text}"
+                        total_width = text.length - 10
+                    end
                 }
-                puts "" if right_column
+                puts "" if total_width > 0
 
-                category['suffix'].each{|part1, part2|
-                    printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
+                category['suffix'].each{|part1, part2| printf " #{HIGHLIGHT_COLOR}%#{OPERATOR_WIDTH}s  #{HELP_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
             }
-            puts "#{HIGHLIGHT_COLOR}-------------------------------------------------------------------------------#{RESET_COLORS}"
+            puts "#{HIGHLIGHT_COLOR}#{'─' * (console_columns - 1)}#{NORMAL_COLOR}"
         end
-    end
-
-    def console_columns
-        rows, columns = IO.console.winsize
-        columns
-    end
-    def description_width
-        console_columns / 2 - OPERATOR_WIDTH - 4
-    end
-
-    def register_operator do_write, name
-        @registers[name] = @stack.last if do_write
-        @stack.push @registers[name] if !do_write
     end
 end
