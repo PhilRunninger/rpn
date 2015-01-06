@@ -2,38 +2,64 @@ require_relative 'common'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
-                    'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'     => 'Addition',                      '*'        => 'Multiplication',
-                                                                                    '-'     => 'Subtraction',                   '/'        => 'Division',
-                                                                                    'div'   => 'Integer portion of division',   '%'        => 'Modulus',
-                                                                                    '**'    => 'Exponentiation'}},
-                                 {'function' => 'float_1_operator', 'operators' => {'abs'   => 'Absolute value of x'}},
-                                 {'function' => 'custom_operator',  'operators' => {'chs'   => 'Change the sign of x'}}]},
+                    'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'   => 'Addition',
+                                                                                    '*'   => 'Multiplication',
+                                                                                    '-'   => 'Subtraction',
+                                                                                    '/'   => 'Division',
+                                                                                    'div' => 'Integer portion of division',
+                                                                                    '%'   => 'Modulus',
+                                                                                    '**'  => 'Exponentiation'}},
+                                 {'function' => 'float_1_operator', 'operators' => {'abs'  => 'Absolute value of x'}},
+                                 {'function' => 'custom_operator',  'operators' => {'chs'  => 'Change the sign of x'}}]},
                    {'category' => 'Rounding',
-                    'groups' => [{'function' => 'float_1_operator', 'operators' => {'round' => 'Round to nearest integer',      'truncate' => 'Truncate to integer',
-                                                                                    'floor' => 'Round down to nearest integer', 'ceil'     => 'Round up to nearest integer'}}]},
+                    'groups' => [{'function' => 'float_1_operator', 'operators' => {'round'    => 'Round to nearest integer',
+                                                                                    'truncate' => 'Truncate to integer',
+                                                                                    'floor'    => 'Round down to nearest integer',
+                                                                                    'ceil'     => 'Round up to nearest integer'}}]},
                    {'category' => 'Constants',
-                    'groups' => [{'function' => 'Math_constant',    'operators' => {'pi'    => '3.141592653....',               'e'        => '2.718281828...'}}]},
+                    'groups' => [{'function' => 'Math_constant',    'operators' => {'pi' => '3.141592653....',
+                                                                                    'e'  => '2.718281828...'}}]},
                    {'category' => 'Powers and Logarithms',
-                    'groups' => [{'function' => 'Math_1_operator',  'operators' => {'sqrt'  => 'Square Root',                   'exp'      => 'Raise e to the x power',
-                                                                                    'log'   => 'Natural Log of x',              'log10'    => 'Log (base 10) of x',
+                    'groups' => [{'function' => 'Math_1_operator',  'operators' => {'sqrt'  => 'Square Root',
+                                                                                    'exp'   => 'Raise e to the x power',
+                                                                                    'log'   => 'Natural Log of x',
+                                                                                    'log10' => 'Log (base 10) of x',
                                                                                     'log2'  => 'Log (base 2) of x'}},
                                  {'function' => 'custom_operator',  'operators' => {'\\'    => 'Reciprocal'}}]},
                    {'category' => 'Trigonometric',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'rad'   => 'Convert degrees to radians',    'deg'      => 'Convert radians to degrees'}},
-                                 {'function' => 'Math_1_operator',  'operators' => {'sin'   => 'Sine of x in radians',          'asin'     => 'Arcsine in radians of x',
-                                                                                    'cos'   => 'Cosine of x in radians',        'acos'     => 'Arccosine in radians of x',
-                                                                                    'tan'   => 'Tangent of x in radians',       'atan'     => 'Artangent in radians of x'}}]},
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'rad'   => 'Convert degrees to radians',
+                                                                                    'deg'   => 'Convert radians to degrees'}},
+                                 {'function' => 'Math_1_operator',  'operators' => {'sin'   => 'Sine of x in radians',
+                                                                                    'asin'  => 'Arcsine in radians of x',
+                                                                                    'cos'   => 'Cosine of x in radians',
+                                                                                    'acos'  => 'Arccosine in radians of x',
+                                                                                    'tan'   => 'Tangent of x in radians',
+                                                                                    'atan'  => 'Artangent in radians of x'}}]},
+
+                   {'category' => 'Statistics',
+                    'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'      => 'Factorial',
+                                                                                       'perm'   => 'Permutation(Y, X)',
+                                                                                       'comb'   => 'Combination(Y, X)',
+                                                                                       'mean'   => 'Mean average',
+                                                                                       'median' => 'Median average',
+                                                                                       'std'    => 'Standard Deviation',
+                                                                                       'count'  => 'Size of the stack'}}]},
                    {'category' => 'Bitwise',
-                    'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'     => 'AND',                           '|'        => 'OR',
-                                                                                    '^'     => 'XOR',                           '<<'       => 'Left Shift',
+                    'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'     => 'AND',
+                                                                                    '|'        => 'OR',
+                                                                                    '^'     => 'XOR',
+                                                                                    '<<'       => 'Left Shift',
                                                                                     '>>'    => 'Right Shift'}},
                                  {'function' => 'int_1_operator',   'operators' => {'~'     => "1's complement"}}]},
                    {'category' => 'Stack Manipulation',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'copy'  => 'Copy top value on stack',       'del'      => 'Delete top value from stack',
-                                                                                    'cs'    => 'Clear the stack',               'xy'       => 'Swap x and y'}}]},
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'copy'  => 'Copy top value on stack',
+                                                                                    'del'      => 'Delete top value from stack',
+                                                                                    'cs'    => 'Clear the stack',
+                                                                                    'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'cr'    => 'Clear register values'}}],
                     'suffix' => {'@<name>' => 'Copies x into the named register', '<name>' => 'Pushes named register onto the stack'}},
+
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?'     => 'Display this list'}}]}
             ]
@@ -116,9 +142,61 @@ class Processor
         @stack.push eval("Math.#{operator}(#{x})")
     end
 
-    def register_operator do_write, name
-        @registers[name] = @stack.last if do_write
-        @stack.push @registers[name] if !do_write
+    def register_operator save_in_register, name
+        @registers[name] = @stack.last if save_in_register
+        [@registers[name]].flatten.each{|value| @stack.push value} if !save_in_register
+    end
+
+    def statistics_operator operator
+        case operator
+        when '!'
+            x = @stack.pop
+            raise RangeError, "x must be non-negative." if x < 0
+            @stack.push factorial(x)
+        when 'perm'
+            x = @stack.pop
+            y = @stack.pop
+            @stack.push factorial(y) / factorial(y - x)
+        when 'comb'
+            x = @stack.pop
+            y = @stack.pop
+            @stack.push factorial(y) / (factorial(y - x) * factorial(x))
+        when 'count'
+            @registers['sample'] = @stack.dup
+            @stack = [@stack.size]
+        when 'mean'
+            @registers['sample'] = @stack.dup
+            @stack = [mean(@stack)]
+        when 'median'
+            @registers['sample'] = @stack.dup
+            @stack = [median(@stack)]
+        when 'std'
+            @registers['sample'] = @stack.dup
+            @stack = [standard_deviation(@stack)]
+        end
+    end
+
+    def factorial n
+        n == 0 ? 1 : (1..n).reduce(:*)
+    end
+    def sum(a)
+        a.inject(0){ |accum, i| accum + i }
+    end
+    def mean(a)
+        sum(a) / a.length.to_f
+    end
+    def median(a)
+        sorted = a.sort
+        len = sorted.length
+        (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
+    end
+    def sample_variance(a)
+        m = mean(a)
+        sum = a.inject(0){ |accum, i| accum + (i - m) ** 2 }
+        sum / (a.length - 1).to_f
+    end
+    def standard_deviation(a)
+        Math.sqrt(sample_variance(a))
     end
 
     def custom_operator operator
@@ -155,7 +233,7 @@ class Processor
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
                 total_width = 0
-                operators.each{|operator,description| 
+                operators.each{|operator,description|
                     text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s", operator, description
                     if total_width + text.length - 10 < console_columns
                         print "#{text}"

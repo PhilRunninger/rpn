@@ -208,6 +208,12 @@ describe Processor do
     expect(subject.stack).to eq([13, 13])
     expect(subject.registers['a']).to eq(13)
   end
+  it 'should put the values of an array stored in the register onto the stack' do
+      subject.registers['sample'] = [1,2,3]
+      subject.execute('sample')
+      expect(subject.stack).to eq([1,2,3])
+  end
+
   it 'should return the value of x as an answer' do
     expect(subject.execute('14 @a')).to eq(14)
   end
@@ -217,4 +223,35 @@ describe Processor do
     subject.execute('cr')
     expect(subject.registers['a']).to be_nil
   end
+
+  # Statistics
+  it 'should calculate the factorial of x' do
+    expect(subject.execute('0 !')).to eq(1)
+    expect(subject.execute('6 !')).to eq(720)
+    expect(subject.execute('3.14 !')).to eq(6)
+    expect {subject.execute('-5 !')}.to raise_error
+  end
+  it 'should calculate permutation' do
+      expect(subject.execute('5 3 perm')).to eq(60)
+  end
+  it 'should calculate combination' do
+      expect(subject.execute('5 3 comb')).to eq(10)
+  end
+  it 'should calculate the mean of the stack' do
+      expect(subject.execute('2 5 7 11 mean')).to eq(6.25)
+      expect(subject.registers['sample']).to eq([2, 5, 7, 11])
+  end
+  it 'should calculate the median of the stack' do
+      expect(subject.execute('2 5 7 11 median')).to eq(6)
+      expect(subject.registers['sample']).to eq([2, 5, 7, 11])
+  end
+  it 'should calculate the standard deviation of the stack' do
+      expect(subject.execute('2 5 7 11 std')).to be_within(0.000001).of(3.774917218)
+      expect(subject.registers['sample']).to eq([2, 5, 7, 11])
+  end
+  it 'should calculate the count of the stack' do
+      expect(subject.execute('2 5 7 11 count')).to eq(4)
+      expect(subject.registers['sample']).to eq([2, 5, 7, 11])
+  end
+
 end
