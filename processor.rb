@@ -40,6 +40,7 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                     'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'      => 'Factorial',
                                                                                        'perm'   => 'Permutation(Y, X)',
                                                                                        'comb'   => 'Combination(Y, X)',
+                                                                                       'sum'    => 'Sum of the stack',
                                                                                        'mean'   => 'Mean average',
                                                                                        'median' => 'Median average',
                                                                                        'std'    => 'Standard Deviation',
@@ -57,8 +58,12 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'cs'    => 'Clear the stack',
                                                                                     'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'cr'    => 'Clear register values'}}],
-                    'suffix' => {'@<name>' => 'Copies x into the named register', '<name>' => 'Pushes named register onto the stack'}},
+                    'groups' => [{'function' => 'register_function', 'operators' => {'cr'    => 'Clear register values'}}],
+                    'suffix' => {'@foo' => 'Copy x into the register named \'foo\'', 
+                                 '@@foo' => 'Copy the entire stack into the register named \'foo\'', 
+                                 '<foo' => 'Push register named \'foo\' onto the stack',
+                                 '<<foo' => 'Replace stack with contents of register named \'foo\'',
+                                 '' => 'Register names consist of letters, numbers and underscores.'}},
 
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?'     => 'Display this list'}}]}
@@ -85,7 +90,7 @@ class Processor
                 elsif !operator.nil?
                     send(operator['function'], value)
                 elsif !register.nil?
-                    register_operator value.start_with?('@'), register
+                    register_function register
                 else
                     raise NotImplementedError, "#{value} is not a valid number, operator, or register."
                 end
@@ -107,10 +112,9 @@ class Processor
     end
 
     def parse_register value
-        name = value.match(/^@?([a-z]+\d*)$/i)
-        return name if name.nil?
-        name = name.captures[0]
-        return name if value.start_with?('@') or !@registers[name].nil?
+        name = value.match(/^(<<?|@@?)(\w+)$/i)
+        return nil if name.nil? or !parse_operator(name.captures[1]).nil?
+        return name unless name.captures[0].start_with?('<') and @registers[name.captures[1]].nil?
     end
 
     def float_1_operator operator
@@ -142,11 +146,6 @@ class Processor
         @stack.push eval("Math.#{operator}(#{x})")
     end
 
-    def register_operator save_in_register, name
-        @registers[name] = @stack.last if save_in_register
-        [@registers[name]].flatten.each{|value| @stack.push value} if !save_in_register
-    end
-
     def statistics_operator operator
         case operator
         when '!'
@@ -161,6 +160,9 @@ class Processor
             x = @stack.pop
             y = @stack.pop
             @stack.push factorial(y) / (factorial(y - x) * factorial(x))
+        when 'sum'
+            @registers['sample'] = @stack.dup
+            @stack = [sum(@stack)]
         when 'count'
             @registers['sample'] = @stack.dup
             @stack = [@stack.size]
@@ -215,8 +217,6 @@ class Processor
             @stack.pop
         when 'cs'
             @stack = []
-        when 'cr'
-            @registers = {}
         when 'xy'
             x = @stack.pop
             y = @stack.pop
@@ -252,6 +252,22 @@ class Processor
                 category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
             }
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}#{BROWN_TEXT}"
+        end
+    end
+
+    def register_function operator
+        if operator.kind_of?(MatchData)
+            prefix = operator.captures[0]
+            name = operator.captures[1]
+            @registers[name] = @stack.last if prefix == '@'
+            @registers[name] = @stack.dup if prefix == '@@'
+            [@registers[name]].flatten.each{|value| @stack.push value} if prefix == '<'
+            @stack = [@registers[name]].flatten.dup if prefix == '<<'
+        else
+            case operator
+            when 'cr'
+                @registers = {}
+            end
         end
     end
 end
