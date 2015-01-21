@@ -282,6 +282,10 @@ describe Processor do
     it 'should calculate combination' do
         expect(subject.execute('5 3 comb')).to eq(10)
     end
+    it 'should calculate the product of all numbers on the stack' do
+        expect(subject.execute('5 4 2 product')).to eq(40)
+        expect(subject.registers['sample']).to eq([5,4,2])
+    end
     it 'should calculate the sum of the stack' do
         expect(subject.execute('1 2 5 sum')).to eq(8)
         expect(subject.registers['sample']).to eq([1,2,5])

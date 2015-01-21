@@ -37,14 +37,15 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'atan'  => 'Artangent in radians of x'}}]},
 
                    {'category' => 'Statistics',
-                    'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'      => 'Factorial',
-                                                                                       'perm'   => 'Permutation(Y, X)',
-                                                                                       'comb'   => 'Combination(Y, X)',
-                                                                                       'sum'    => 'Sum of the stack',
-                                                                                       'mean'   => 'Mean average',
-                                                                                       'median' => 'Median average',
-                                                                                       'std'    => 'Standard Deviation',
-                                                                                       'count'  => 'Size of the stack'}}]},
+                    'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'       => 'Factorial',
+                                                                                       'perm'    => 'Permutation(Y, X)',
+                                                                                       'comb'    => 'Combination(Y, X)',
+                                                                                       'sum'     => 'Sum of the stack',
+                                                                                       'product' => 'Product of the stack',
+                                                                                       'mean'    => 'Mean average',
+                                                                                       'median'  => 'Median average',
+                                                                                       'std'     => 'Standard Deviation',
+                                                                                       'count'   => 'Size of the stack'}}]},
                    {'category' => 'Bitwise',
                     'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'     => 'AND',
                                                                                     '|'        => 'OR',
@@ -163,6 +164,9 @@ class Processor
         when 'sum'
             @registers['sample'] = @stack.dup
             @stack = [sum(@stack)]
+        when 'product'
+            @registers['sample'] = @stack.dup
+            @stack = [product(@stack)]
         when 'count'
             @registers['sample'] = @stack.dup
             @stack = [@stack.size]
@@ -183,6 +187,9 @@ class Processor
     end
     def sum(a)
         a.inject(0){ |accum, i| accum + i }
+    end
+    def product(a)
+        a.inject(1){ |accum, i| accum * i }
     end
     def mean(a)
         sum(a) / a.length.to_f
