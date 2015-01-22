@@ -16,8 +16,12 @@ while input > ''
         answer = nil
         puts "#{RED_TEXT}#{msg}"
     end
-    processor.registers.each{|name, value| print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{value.kind_of?(Array) ? value : (value % 1 == 0 ? value.round : value)} " }
-    print "#{GREEN_TEXT}∫ " if processor.registers != {}
+    processor.registers.each{|name, value| 
+        value = value.round if !value.kind_of?(Array) and value % 1 == 0
+        value = value.map{|i| i % 1 == 0 ? i.round : i} if value.kind_of?(Array)
+        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{value} " 
+    }
+    print "#{BLUE_TEXT}• " if processor.registers != {}
     processor.stack.each{|value| print "#{GRAY_TEXT}#{value % 1 == 0 ? value.round : value} " }
     print "#{GREEN_TEXT}► #{BROWN_TEXT}"
     input = gets.chomp

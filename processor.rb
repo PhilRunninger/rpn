@@ -60,10 +60,10 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
                     'groups' => [{'function' => 'register_function', 'operators' => {'cr'    => 'Clear register values'}}],
-                    'suffix' => {'@foo' => 'Copy x into the register named \'foo\'', 
-                                 '@@foo' => 'Copy the entire stack into the register named \'foo\'', 
-                                 '<foo' => 'Push register named \'foo\' onto the stack',
-                                 '<<foo' => 'Replace stack with contents of register named \'foo\'',
+                    'suffix' => {'<foo' => 'Copy x into the register named \'foo\'', 
+                                 '<<foo' => 'Copy the entire stack into the register named \'foo\'', 
+                                 '>foo' => 'Push register named \'foo\' onto the stack',
+                                 '>>foo' => 'Replace stack with contents of register named \'foo\'',
                                  '' => 'Register names consist of letters, numbers and underscores.'}},
 
                    {'category' => 'Help',
@@ -113,9 +113,9 @@ class Processor
     end
 
     def parse_register value
-        name = value.match(/^(<<?|@@?)(\w+)$/i)
+        name = value.match(/^(>>?|<<?)(\w+)$/i)
         return nil if name.nil? or !parse_operator(name.captures[1]).nil?
-        return name unless name.captures[0].start_with?('<') and @registers[name.captures[1]].nil?
+        return name unless name.captures[0].start_with?('>') and @registers[name.captures[1]].nil?
     end
 
     def float_1_operator operator
@@ -266,10 +266,18 @@ class Processor
         if operator.kind_of?(MatchData)
             prefix = operator.captures[0]
             name = operator.captures[1]
-            @registers[name] = @stack.last if prefix == '@'
-            @registers[name] = @stack.dup if prefix == '@@'
-            [@registers[name]].flatten.each{|value| @stack.push value} if prefix == '<'
-            @stack = [@registers[name]].flatten.dup if prefix == '<<'
+            case prefix
+            when '<'
+                raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
+                @registers[name] = @stack.last
+            when '<<'
+                raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
+                @registers[name] = @stack.dup 
+            when '>'
+                [@registers[name]].flatten.each{|value| @stack.push value}
+            when '>>'
+                @stack = [@registers[name]].flatten.dup
+            end
         else
             case operator
             when 'cr'

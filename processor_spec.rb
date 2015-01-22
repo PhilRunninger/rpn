@@ -31,26 +31,26 @@ describe Processor do
         expect(subject.parse_number('5e-3')).to eq(0.005)
         expect(subject.parse_number('4.2.3')).to be_nil
         expect(subject.parse_number('-')).to be_nil
-        expect(subject.parse_number('@@foobar')).to be_nil
+        expect(subject.parse_number('<<foobar')).to be_nil
     end
     it 'should parse operators' do
         expect(subject.parse_operator('+')).to be_kind_of(Hash)
         expect(subject.parse_operator('123')).to be_nil
-        expect(subject.parse_operator('@fubar')).to be_nil
         expect(subject.parse_operator('<fubar')).to be_nil
+        expect(subject.parse_operator('>fubar')).to be_nil
     end
     it 'should parse registers' do
         expect(subject.parse_register('123')).to be_nil
         expect(subject.parse_register('**')).to be_nil
         expect(subject.parse_register('sin')).to be_nil
-        expect(subject.parse_register('@hot!')).to be_nil
-        expect(subject.parse_register('@a1a')).to be_kind_of(MatchData)
-        expect(subject.parse_register('@@abc')).to be_kind_of(MatchData)
+        expect(subject.parse_register('<hot!')).to be_nil
+        expect(subject.parse_register('<a1a')).to be_kind_of(MatchData)
+        expect(subject.parse_register('<<abc')).to be_kind_of(MatchData)
     end
     it 'should not allow pushing a nonexistent register' do
-        expect(subject.parse_register('<widgets')).to be_nil
-        subject.execute('12 @widgets')
-        expect(subject.parse_register('<widgets')).to be_kind_of(MatchData)
+        expect(subject.parse_register('>widgets')).to be_nil
+        subject.execute('12 <widgets')
+        expect(subject.parse_register('>widgets')).to be_kind_of(MatchData)
     end
 
     # Basic Arithmetic {{{1
@@ -231,42 +231,45 @@ describe Processor do
 
     # Registers {{{1
     it 'should copy x to a named register location' do
-        subject.execute('12 @a')
+        subject.execute('12 <a')
         expect(subject.stack).to eq([12])
         expect(subject.registers['a']).to eq(12)
     end
     it 'should copy the entire stack to an array value in the named register' do
-        subject.execute('4 3 2 1 @@a')
+        subject.execute('4 3 2 1 <<a')
         expect(subject.stack).to eq([4,3,2,1])
         expect(subject.registers['a']).to eq([4,3,2,1])
     end
     it 'should put the named register location\'s value on the stack' do
-        subject.execute('13 @a')
-        subject.execute('<a')
+        subject.execute('13 <a')
+        subject.execute('>a')
         expect(subject.stack).to eq([13, 13])
         expect(subject.registers['a']).to eq(13)
     end
     it 'should replace the stack with the named register location\'s value' do
-        subject.execute('12 11 13 @a')
-        subject.execute('<<a')
+        subject.execute('12 11 13 <a')
+        subject.execute('>>a')
         expect(subject.stack).to eq([13])
     end
     it 'should put the values of an array stored in the register onto the stack' do
         subject.registers['sample'] = [1,2,3]
-        subject.execute('<sample')
+        subject.execute('>sample')
         expect(subject.stack).to eq([1,2,3])
     end
     it 'should return the value of x as an answer' do
-        expect(subject.execute('14 @a')).to eq(14)
+        expect(subject.execute('14 <a')).to eq(14)
     end
     it 'should clear all registers' do
-        subject.execute('13 @a')
+        subject.execute('13 <a')
         expect(subject.registers['a']).to eq(13)
         subject.execute('cr')
         expect(subject.registers['a']).to be_nil
     end
     it 'should not allow the use of an operator for a register name' do
-        expect {subject.execute('pi @pi')}.to raise_error
+        expect {subject.execute('pi <pi')}.to raise_error
+    end
+    it 'should throw an exception when nothing to put into register' do
+        expect {subject.execute('<foo')}.to raise_error
     end
 
     # Statistics {{{1
