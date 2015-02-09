@@ -1,4 +1,4 @@
 rpn_ruby
 ========
 
-A Ruby implementation of an Reverse Polish Notation calculator
+A Ruby implementation of a Reverse Polish Notation calculator
