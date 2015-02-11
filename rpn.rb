@@ -4,6 +4,17 @@ require 'clipboard'
 require_relative 'processor'
 require_relative 'common'
 
+def format(value)
+    if value.kind_of?(Array)
+        return "[#{value.map{|v| format(v)}.join(' ')}]"
+    elsif value % 1 == 0
+        value.round.to_s.reverse.gsub( /\d{3}(?=\d)/, '\&,' ).reverse
+    else
+        pre, post = value.to_s.split '.'
+        "#{pre.reverse.gsub( /\d{3}(?=\d)/, '\&,' ).reverse}.#{post}"
+    end
+end
+
 processor = Processor.new
 
 puts "#{GREEN_TEXT}RPN Calculator, ©2014, Phil Runninger #{CYAN_TEXT}#{'═' * (console_columns - 57)} Enter ? for help."
@@ -16,22 +27,19 @@ while input > ''
         answer = nil
         puts "#{RED_TEXT}#{msg}"
     end
-    processor.registers.each{|name, value| 
-        value = value.round if !value.kind_of?(Array) and value % 1 == 0
-        value = value.map{|i| i % 1 == 0 ? i.round : i} if value.kind_of?(Array)
-        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{value} " 
+    processor.registers.each{|name, value|
+        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{format(value)} " 
     }
     print "#{BLUE_TEXT}• " if processor.registers != {}
-    processor.stack.each{|value| print "#{GRAY_TEXT}#{value % 1 == 0 ? value.round : value} " }
+    processor.stack.each{|value| print "#{GRAY_TEXT}#{format(value)} " }
     print "#{GREEN_TEXT}► #{BROWN_TEXT}"
     input = gets.chomp
 end
 
 puts "#{CYAN_TEXT}#{'═' * (console_columns - 23)} Thanks for using rpn."
 if !answer.nil?
-    answer = (answer % 1 == 0 ? answer.round : answer)
-    Clipboard.copy answer.to_s
-    puts "#{GRAY_TEXT}#{answer} #{BROWN_TEXT}was copied to the clipboard."
+    Clipboard.copy format(answer).to_s
+    puts "#{GRAY_TEXT}#{format(answer)} #{BROWN_TEXT}was copied to the clipboard."
 end
 puts "#{RESET_COLORS} "
 sleep 1
