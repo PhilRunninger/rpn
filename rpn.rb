@@ -8,10 +8,9 @@ def format(value)
     if value.kind_of?(Array)
         return "[#{value.map{|v| format(v)}.join(' ')}]"
     elsif value % 1 == 0
-        value.round.to_s.reverse.gsub( /\d{3}(?=\d)/, '\&,' ).reverse
+        value.round.to_s
     else
-        pre, post = value.to_s.split '.'
-        "#{pre.reverse.gsub( /\d{3}(?=\d)/, '\&,' ).reverse}.#{post}"
+        value.to_s
     end
 end
 

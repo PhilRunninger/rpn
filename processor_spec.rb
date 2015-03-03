@@ -175,7 +175,7 @@ describe Processor do
         expect(subject.execute('99 log2')).to be_within(0.000001).of(6.62935662008)
     end
 
-    #Stack Manipulation {{{1
+    # Stack Manipulation {{{1
     it 'should copy the top value on the stack' do
         subject.execute('5 copy')
         expect(subject.stack).to eq([5,5])
