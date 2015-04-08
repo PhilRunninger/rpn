@@ -31,26 +31,27 @@ describe Processor do
         expect(subject.parse_number('5e-3')).to eq(0.005)
         expect(subject.parse_number('4.2.3')).to be_nil
         expect(subject.parse_number('-')).to be_nil
-        expect(subject.parse_number('<<foobar')).to be_nil
+        expect(subject.parse_number('foobar==')).to be_nil
     end
     it 'parses operators' do
         expect(subject.parse_operator('+')).to be_kind_of(Hash)
         expect(subject.parse_operator('123')).to be_nil
-        expect(subject.parse_operator('<fubar')).to be_nil
-        expect(subject.parse_operator('>fubar')).to be_nil
+        expect(subject.parse_operator('fubar=')).to be_nil
+        expect(subject.parse_operator('=fubar')).to be_nil
     end
     it 'parses registers' do
         expect(subject.parse_register('123')).to be_nil
         expect(subject.parse_register('**')).to be_nil
-        expect(subject.parse_register('sin')).to be_nil
-        expect(subject.parse_register('<hot!')).to be_nil
-        expect(subject.parse_register('<a1a')).to be_kind_of(MatchData)
-        expect(subject.parse_register('<<abc')).to be_kind_of(MatchData)
+        expect(subject.parse_register('hot!=')).to be_nil
+        expect(subject.parse_register('a1a=')).to be_kind_of(MatchData)
+        expect(subject.parse_register('abc==')).to be_kind_of(MatchData)
+        expect(subject.parse_register('==def')).to be_kind_of(MatchData)
+        expect(subject.parse_register('=ghi')).to be_kind_of(MatchData)
+        expect(subject.parse_register('j_k')).to be_kind_of(MatchData)
     end
     it 'will not allow pushing a nonexistent register' do
-        expect(subject.parse_register('>widgets')).to be_nil
-        subject.execute('12 <widgets')
-        expect(subject.parse_register('>widgets')).to be_kind_of(MatchData)
+        subject.execute('12 widgets=')
+        expect(subject.parse_register('=widgets')).to be_kind_of(MatchData)
     end
 
     # Basic Arithmetic {{{1
@@ -87,8 +88,9 @@ describe Processor do
     it 'raises an error if not enough operands' do
         expect {subject.execute ('2 +')}.to raise_error
     end
-    it 'raises an error if given a bad operator' do
+    it 'raises an error if given an unknown operator/register' do
         expect {subject.execute('1 2 snafu')}.to raise_error
+        expect {subject.execute('1 2 =foobar')}.to raise_error
     end
     it 'restores the stack to what it was before an exception was raised' do
         subject.execute('42')
@@ -231,45 +233,54 @@ describe Processor do
 
     # Registers {{{1
     it 'copies x to a named register location' do
-        subject.execute('12 <a')
+        subject.execute('12 a=')
         expect(subject.stack).to eq([12])
         expect(subject.registers['a']).to eq(12)
     end
     it 'copies the entire stack to an array value in the named register' do
-        subject.execute('4 3 2 1 <<a')
+        subject.execute('4 3 2 1 a==')
         expect(subject.stack).to eq([4,3,2,1])
         expect(subject.registers['a']).to eq([4,3,2,1])
     end
     it 'puts the named register location\'s value on the stack' do
-        subject.execute('13 <a')
-        subject.execute('>a')
+        subject.execute('13 a=')
+        subject.execute('=a')
+        expect(subject.stack).to eq([13, 13])
+        expect(subject.registers['a']).to eq(13)
+    end
+    it 'puts the named register location\'s value on the stack without equal sign' do
+        subject.execute('13 a=')
+        subject.execute('a')
         expect(subject.stack).to eq([13, 13])
         expect(subject.registers['a']).to eq(13)
     end
     it 'replaces the stack with the named register location\'s value' do
-        subject.execute('12 11 13 <a')
-        subject.execute('>>a')
+        subject.execute('12 11 13 a=')
+        subject.execute('==a')
         expect(subject.stack).to eq([13])
     end
     it 'puts the values of an array stored in the register onto the stack' do
         subject.registers['sample'] = [1,2,3]
-        subject.execute('>sample')
+        subject.execute('=sample')
         expect(subject.stack).to eq([1,2,3])
     end
     it 'returns the value of x as an answer' do
-        expect(subject.execute('14 <a')).to eq(14)
+        expect(subject.execute('14 a=')).to eq(14)
     end
     it 'clears all registers' do
-        subject.execute('13 <a')
+        subject.execute('13 a=')
         expect(subject.registers['a']).to eq(13)
         subject.execute('cr')
         expect(subject.registers['a']).to be_nil
     end
     it 'will not allow the use of an operator for a register name' do
-        expect {subject.execute('pi <pi')}.to raise_error
+        expect {subject.execute('5 pi=')}.to raise_error
     end
     it 'throws an exception when nothing to put into register' do
-        expect {subject.execute('<foo')}.to raise_error
+        expect {subject.execute('foo=')}.to raise_error
+    end
+    it 'throws an exception when register is not defined' do
+        expect {subject.execute('foo')}.to raise_error
     end
 
     # Statistics {{{1

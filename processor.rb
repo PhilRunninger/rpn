@@ -60,10 +60,11 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'xy'       => 'Swap x and y'}}]},
                    {'category' => 'Registers',
                     'groups' => [{'function' => 'register_function', 'operators' => {'cr'    => 'Clear register values'}}],
-                    'suffix' => {'<foo' => 'Copy x into the register named \'foo\'', 
-                                 '<<foo' => 'Copy the entire stack into the register named \'foo\'', 
-                                 '>foo' => 'Push register named \'foo\' onto the stack',
-                                 '>>foo' => 'Replace stack with contents of register named \'foo\'',
+                    'suffix' => {'foo=' => 'Copy x into the register named \'foo\'', 
+                                 'foo==' => 'Copy the entire stack into the register named \'foo\'', 
+                                 'foo' => 'Push register named \'foo\' onto the stack',
+                                 '=foo' => 'Push register named \'foo\' onto the stack',
+                                 '==foo' => 'Replace stack with contents of register named \'foo\'',
                                  '' => 'Register names consist of letters, numbers and underscores.'}},
 
                    {'category' => 'Help',
@@ -86,11 +87,11 @@ class Processor
                 operator = parse_operator(value)
                 register = parse_register(value)
 
-                if !number.nil?
+                if number
                     @stack.push number
-                elsif !operator.nil?
+                elsif operator
                     send(operator['function'], value)
-                elsif !register.nil?
+                elsif register
                     register_function register
                 else
                     raise NotImplementedError, "#{value} is not a valid number, operator, or register."
@@ -98,7 +99,7 @@ class Processor
             end
         rescue Exception => exception
             @stack = save_stack.dup
-            raise
+            raise exception
         end
         @stack.delete(nil)
         @stack.last
@@ -113,9 +114,7 @@ class Processor
     end
 
     def parse_register value
-        name = value.match(/^(>>?|<<?)(\w+)$/i)
-        return nil if name.nil? or !parse_operator(name.captures[1]).nil?
-        return name unless name.captures[0].start_with?('>') and @registers[name.captures[1]].nil?
+        value.match(/^((=?=?)(\w*[a-z]+\w*)|(\w*[a-z]+\w*)(==?))$/)
     end
 
     def float_1_operator operator
@@ -215,7 +214,7 @@ class Processor
         when 'deg'
             @stack.push @stack.pop * 180.0 / Math::PI
         when 'chs'
-            @stack.push -@stack.pop
+            @stack.push (-@stack.pop)
         when '\\'
             @stack.push 1/@stack.pop
         when 'copy'
@@ -236,12 +235,12 @@ class Processor
 
                 category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
 
-                operators = category['groups'].inject({}) {|acc, x| acc.merge(x['operators'])}
+                operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
                 total_width = 0
-                operators.each{|operator,description|
-                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s", operator, description
+                operators.each{|op,description|
+                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s", op, description
                     if total_width + text.length - 10 < console_columns
                         print "#{text}"
                         total_width = total_width + text.length - 10
@@ -262,24 +261,30 @@ class Processor
         end
     end
 
-    def register_function operator
-        if operator.kind_of?(MatchData)
-            prefix = operator.captures[0]
-            name = operator.captures[1]
-            case prefix
-            when '<'
+    def register_function parts
+        if parts.kind_of?(MatchData)
+            operator = "#{parts.captures[1]}[name]#{parts.captures[4]}"
+            name =  parts.captures[2] || parts.captures[3]
+            raise ArgumentError, "The operator #{name} cannot be used as a register name." if parse_operator(name)
+            case operator
+            when '[name]='
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
                 @registers[name] = @stack.last
-            when '<<'
+            when '[name]=='
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
                 @registers[name] = @stack.dup 
-            when '>'
+            when '[name]'
+                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 [@registers[name]].flatten.each{|value| @stack.push value}
-            when '>>'
+            when '=[name]'
+                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+                [@registers[name]].flatten.each{|value| @stack.push value}
+            when '==[name]'
+                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 @stack = [@registers[name]].flatten.dup
             end
         else
-            case operator
+            case parts
             when 'cr'
                 @registers = {}
             end
