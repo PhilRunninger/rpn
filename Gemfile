@@ -1,5 +1,4 @@
-source :rubygems
-source 'http://10.10.1.108:9292'
+source 'http://rubygems.org'
 
 gem 'rspec'
 gem 'clipboard'

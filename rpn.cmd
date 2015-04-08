@@ -1,1 +1,1 @@
-@ruby rpn.rb
+@ruby "%~dp0\rpn.rb"
