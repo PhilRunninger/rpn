@@ -127,9 +127,9 @@ describe Processor do
     end
 
     ## Help {{{1
-    #it 'displays a list of all functions' do
-    #    expect{subject.execute('?')}.to_not raise_error
-    #end
+    it 'displays a list of all functions' do
+        expect{subject.execute('?')}.to_not raise_error
+    end
 
     # Trigonometric {{{1
     it 'converts degrees to radians' do
@@ -320,6 +320,28 @@ describe Processor do
         expect(subject.execute('2 5 7 11 count')).to eq(4)
         expect(subject.registers['sample']).to eq([2, 5, 7, 11])
     end
-# }}}
+
+    # Unit Conversion {{{1
+    it 'shows a list of convertible units' do
+        expect{subject.execute('units')}.to_not raise_error
+    end
+    it 'converts degrees to radians' do
+        expect(subject.execute('30 deg>rad')).to be_within(0.00000001).of(0.5235987755982988)
+    end
+    it 'converts radians to degrees' do
+        expect(subject.execute('0.5235987755982988 rad>deg')).to be_within(0.00000001).of(30.0)
+    end
+    it 'converts Fahrenheit to Celcius' do
+        expect(subject.execute('212 F>C')).to eq(100)
+    end
+    it 'throws an exception for invalid units' do
+        expect{subject.execute('1 foobar>snafu')}.to raise_error
+    end
+    it 'throws an exception for incompatible units' do
+        expect{subject.execute('1 in>kg')}.to raise_error
+    end
+
+    # }}}
+
 end
 # vim:ft=ruby foldmethod=marker sw=4

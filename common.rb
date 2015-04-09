@@ -30,6 +30,6 @@ BLINK_OFF = "\033[25m"
 REVERSE_OFF = "\033[27m"
 
 def console_columns
-    rows, columns = IO.console.winsize
-    columns
+    _, columns = IO.console.winsize
+    [columns, 80].max
 end

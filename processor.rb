@@ -2,13 +2,13 @@ require_relative 'common'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
-                    'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'   => 'Addition',
-                                                                                    '*'   => 'Multiplication',
-                                                                                    '-'   => 'Subtraction',
-                                                                                    '/'   => 'Division',
-                                                                                    'div' => 'Integer portion of division',
-                                                                                    '%'   => 'Modulus',
-                                                                                    '**'  => 'Exponentiation'}},
+                    'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'    => 'Addition',
+                                                                                    '*'    => 'Multiplication',
+                                                                                    '-'    => 'Subtraction',
+                                                                                    '/'    => 'Division',
+                                                                                    'div'  => 'Integer portion of division',
+                                                                                    '%'    => 'Modulus',
+                                                                                    '**'   => 'Exponentiation'}},
                                  {'function' => 'float_1_operator', 'operators' => {'abs'  => 'Absolute value of x'}},
                                  {'function' => 'custom_operator',  'operators' => {'chs'  => 'Change the sign of x'}}]},
                    {'category' => 'Rounding',
@@ -47,28 +47,31 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                        'std'     => 'Standard Deviation',
                                                                                        'count'   => 'Size of the stack'}}]},
                    {'category' => 'Bitwise',
-                    'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'     => 'AND',
-                                                                                    '|'        => 'OR',
-                                                                                    '^'     => 'XOR',
-                                                                                    '<<'       => 'Left Shift',
-                                                                                    '>>'    => 'Right Shift'}},
-                                 {'function' => 'int_1_operator',   'operators' => {'~'     => "1's complement"}}]},
+                    'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'  => 'AND',
+                                                                                    '|'  => 'OR',
+                                                                                    '^'  => 'XOR',
+                                                                                    '<<' => 'Left Shift',
+                                                                                    '>>' => 'Right Shift'}},
+                                 {'function' => 'int_1_operator',   'operators' => {'~'  => "1's complement"}}]},
+                   {'category' => 'Unit Conversion',
+                    'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit conversions.'}}],
+                    'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units.'}},
                    {'category' => 'Stack Manipulation',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'copy'  => 'Copy top value on stack',
-                                                                                    'del'      => 'Delete top value from stack',
-                                                                                    'cs'    => 'Clear the stack',
-                                                                                    'xy'       => 'Swap x and y'}}]},
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'copy' => 'Copy top value on stack',
+                                                                                    'del'  => 'Delete top value from stack',
+                                                                                    'cs'   => 'Clear the stack',
+                                                                                    'xy'   => 'Swap x and y'}}]},
                    {'category' => 'Registers',
-                    'groups' => [{'function' => 'register_function', 'operators' => {'cr'    => 'Clear register values'}}],
-                    'suffix' => {'foo=' => 'Copy x into the register named \'foo\'', 
+                    'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear register values'}}],
+                    'suffix' => {'foo='  => 'Copy x into the register named \'foo\'', 
                                  'foo==' => 'Copy the entire stack into the register named \'foo\'', 
-                                 'foo' => 'Push register named \'foo\' onto the stack',
-                                 '=foo' => 'Push register named \'foo\' onto the stack',
+                                 'foo'   => 'Push register named \'foo\' onto the stack',
+                                 '=foo'  => 'Push register named \'foo\' onto the stack',
                                  '==foo' => 'Replace stack with contents of register named \'foo\'',
-                                 '' => 'Register names consist of letters, numbers and underscores.'}},
+                                 ''      => 'Register names consist of letters, numbers and underscores.'}},
 
                    {'category' => 'Help',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'?'     => 'Display this list'}}]}
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list'}}]}
             ]
 
 class Processor
@@ -86,11 +89,14 @@ class Processor
                 number = parse_number(value)
                 operator = parse_operator(value)
                 register = parse_register(value)
+                unit_conversion = parse_unit_conversion(value)
 
                 if number
                     @stack.push number
                 elsif operator
                     send(operator['function'], value)
+                    elsif unit_conversion
+                      convert_unit unit_conversion
                 elsif register
                     register_function register
                 else
@@ -111,6 +117,10 @@ class Processor
 
     def parse_operator value
         VALID_OPERATORS.map{|category| category['groups']}.flatten.find{|group| group['operators'].keys.include?(value)}
+    end
+
+    def parse_unit_conversion value
+        value.match(/^(\w+)>(\w+)$/)
     end
 
     def parse_register value
@@ -290,4 +300,15 @@ class Processor
             end
         end
     end
+
+    def convert_unit parts
+      if parts.kind_of?(MatchData)
+      else
+        case parts
+        when 'units'
+          puts "Units..."
+        end
+      end
+    end
+
 end
