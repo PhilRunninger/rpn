@@ -41,4 +41,3 @@ if !answer.nil?
     puts "#{GRAY_TEXT}#{format(answer)} #{BROWN_TEXT}was copied to the clipboard."
 end
 puts "#{RESET_COLORS} "
-sleep 1

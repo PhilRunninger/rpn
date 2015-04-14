@@ -338,7 +338,10 @@ describe Processor do
         expect{subject.execute('1 foobar>snafu')}.to raise_error
     end
     it 'throws an exception for incompatible units' do
-        expect{subject.execute('1 in>kg')}.to raise_error
+        expect{subject.execute('1 in>rad')}.to raise_error
+    end
+    it 'throws an exception when nothing to convert' do
+        expect{subject.execute('mi>km')}.to raise_error
     end
 
     # }}}

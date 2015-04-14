@@ -35,7 +35,6 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'acos'  => 'Arccosine in radians of x',
                                                                                     'tan'   => 'Tangent of x in radians',
                                                                                     'atan'  => 'Artangent in radians of x'}}]},
-
                    {'category' => 'Statistics',
                     'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'       => 'Factorial',
                                                                                        'perm'    => 'Permutation(Y, X)',
@@ -69,10 +68,29 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                  '=foo'  => 'Push register named \'foo\' onto the stack',
                                  '==foo' => 'Replace stack with contents of register named \'foo\'',
                                  ''      => 'Register names consist of letters, numbers and underscores.'}},
-
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list'}}]}
             ]
+
+# The conversion expressions are as follows for each category:
+#   'from' converts 'unit' to 'standard'
+#   'to' converts 'standard' to 'unit'
+UNITS_CONVERSION = [{'category' => 'length', 'standard' => 'm',
+                     'conversions' => [{'unit' => 'mm', 'from' => '1000 /', 'to' => '1000 *'},
+                                       {'unit' => 'cm', 'from' => '100 /', 'to' => '100 *'},
+                                       {'unit' => 'm', 'from' => '', 'to' => ''},
+                                       {'unit' => 'km', 'from' => '1000 *', 'to' => '1000 /'},
+                                       {'unit' => 'in', 'from' => '25.4 * 1000 /', 'to' => '1000 * 25.4 /'},
+                                       {'unit' => 'ft', 'from' => '12 * 25.4 * 1000 /', 'to' => '1000 * 25.4 / 12 /'},
+                                       {'unit' => 'mi', 'from' => '5280 * 12 * 25.4 * 1000 /', 'to' => '1000 * 25.4 / 12 / 5280 /'}]},
+                    {'category' => 'temperature', 'standard' => 'C',
+                     'conversions' => [{'unit' => 'C', 'from' => '', 'to' => ''},
+                                       {'unit' => 'F', 'from' => '32 - 5 * 9 /', 'to' => '9 * 5 / 32 +'},
+                                       {'unit' => 'K', 'from' => '273.15 -', 'to' => '273.15 +'}]},
+                    {'category' => 'angle', 'standard' => 'rad',
+                     'conversions' => [{'unit' => 'rad', 'from' => '', 'to' => ''},
+                                       {'unit' => 'deg', 'from' => 'pi * 180 /', 'to' => '180 * pi /'}]}
+                   ]
 
 class Processor
     attr_reader :stack, :registers
@@ -239,7 +257,7 @@ class Processor
             @stack.push x
             @stack.push y
         when '?'
-            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}#{BROWN_TEXT}"
+            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
             VALID_OPERATORS.each{ |category|
                 puts "#{BLUE_TEXT}#{category['category']}"
 
@@ -267,7 +285,7 @@ class Processor
 
                 category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
             }
-            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}#{BROWN_TEXT}"
+            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         end
     end
 
@@ -303,10 +321,21 @@ class Processor
 
     def convert_unit parts
       if parts.kind_of?(MatchData)
+        from_units = UNITS_CONVERSION.find{|y| y['conversions'].index{|x| x['unit']==parts.captures[0]}}
+        to_units = UNITS_CONVERSION.find{|y| y['conversions'].index{|x| x['unit']==parts.captures[1]}}
+        raise ArgumentError, "Invalid unit conversion. Type 'units' to see valid units." if from_units.nil? or to_units.nil?
+        raise ArgumentError, "incompatible units, Type 'units' to see valid units." if from_units['category'] != to_units['category']
+        from_units = from_units['conversions'].find{|x| x['unit']==parts.captures[0]}['from']
+        to_units = to_units['conversions'].find{|x| x['unit']==parts.captures[1]}['to']
+        execute "#{from_units} #{to_units}"
       else
         case parts
         when 'units'
-          puts "Units..."
+          puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+          UNITS_CONVERSION.each{ |category|
+            puts "#{BLUE_TEXT}#{category['category']}:  #{GRAY_TEXT}#{category['conversions'].map{|u| u['unit']}.join(', ')}"
+          }
+          puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         end
       end
     end
