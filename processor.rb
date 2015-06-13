@@ -27,9 +27,7 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'log2'  => 'Log (base 2) of x'}},
                                  {'function' => 'custom_operator',  'operators' => {'\\'    => 'Reciprocal'}}]},
                    {'category' => 'Trigonometric',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'rad'   => 'Convert degrees to radians',
-                                                                                    'deg'   => 'Convert radians to degrees'}},
-                                 {'function' => 'Math_1_operator',  'operators' => {'sin'   => 'Sine of x in radians',
+                    'groups' => [{'function' => 'Math_1_operator',  'operators' => {'sin'   => 'Sine of x in radians',
                                                                                     'asin'  => 'Arcsine in radians of x',
                                                                                     'cos'   => 'Cosine of x in radians',
                                                                                     'acos'  => 'Arccosine in radians of x',
@@ -251,10 +249,6 @@ class Processor
 
     def custom_operator operator
         case operator
-        when 'rad'
-            @stack.push @stack.pop * Math::PI / 180.0
-        when 'deg'
-            @stack.push @stack.pop * 180.0 / Math::PI
         when 'chs'
             @stack.push (-@stack.pop)
         when '\\'

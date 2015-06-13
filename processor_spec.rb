@@ -132,29 +132,23 @@ describe Processor do
     end
 
     # Trigonometric {{{1
-    it 'converts degrees to radians' do
-        expect(subject.execute('30 rad')).to be_within(0.00000001).of(0.5235987755982988)
-    end
-    it 'converts radians to degrees' do
-        expect(subject.execute('0.5235987755982988 deg')).to be_within(0.00000001).of(30)
-    end
     it 'calculates sin of a number in radians' do
-        expect(subject.execute('30 rad sin')).to be_within(0.000001).of(0.5)
+        expect(subject.execute('0.5235987755982988 sin')).to be_within(0.000001).of(0.5)
     end
     it 'calculates cos of a number in radians' do
-        expect(subject.execute('60 rad cos')).to be_within(0.000001).of(0.5)
+        expect(subject.execute('1.0471975511965976 cos')).to be_within(0.000001).of(0.5)
     end
     it 'calculates tan of a number in radians' do
-        expect(subject.execute('45 rad tan')).to be_within(0.000001).of(1.0)
+        expect(subject.execute('0.7853981633974483 tan')).to be_within(0.000001).of(1.0)
     end
     it 'calculates asin of a number in radians' do
-        expect(subject.execute('0.5 asin deg')).to be_within(0.000001).of(30.0)
+        expect(subject.execute('0.5 asin')).to be_within(0.000001).of(0.5235987755982988)
     end
     it 'calculates acos of a number in radians' do
-        expect(subject.execute('0.5 acos deg')).to be_within(0.000001).of(60.0)
+        expect(subject.execute('0.5 acos')).to be_within(0.000001).of(1.0471975511965976)
     end
     it 'calculates atan of a number in radians' do
-        expect(subject.execute('1 atan deg')).to be_within(0.000001).of(45)
+        expect(subject.execute('1 atan')).to be_within(0.000001).of(0.7853981633974483)
     end
 
     # Powers and Logarithms {{{1
