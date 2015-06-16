@@ -319,15 +319,6 @@ describe Processor do
     it 'shows a list of convertible units' do
         expect{subject.execute('units')}.to_not raise_error
     end
-    it 'converts degrees to radians' do
-        expect(subject.execute('30 deg>rad')).to be_within(0.00000001).of(0.5235987755982988)
-    end
-    it 'converts radians to degrees' do
-        expect(subject.execute('0.5235987755982988 rad>deg')).to be_within(0.00000001).of(30.0)
-    end
-    it 'converts Fahrenheit to Celcius' do
-        expect(subject.execute('212 F>C')).to eq(100)
-    end
     it 'throws an exception for invalid units' do
         expect{subject.execute('1 foobar>snafu')}.to raise_error
     end
@@ -336,6 +327,58 @@ describe Processor do
     end
     it 'throws an exception when nothing to convert' do
         expect{subject.execute('mi>km')}.to raise_error
+    end
+
+    it 'converts lengths correctly' do
+        test_conversions([ [1, 'nm',     1e-9,             'm'],
+                           [1, 'micron', 1e-6,             'm'],
+                           [1, 'mm',     1e-3,             'm'],
+                           [1, 'cm',     0.01,             'm'],
+                           [1, 'in',     0.0254,           'm'],
+                           [1, 'ft',     0.3048,           'm',       1e-7],
+                           [1, 'yd',     0.9144,           'm'],
+                           [1, 'km',     1000,             'm'],
+                           [1, 'mi',     1609.344,         'm'],
+                           [1, 'ly',     9460730472580800, 'm'],
+                           [1, 'm',      1e9,              'nm'],
+                           [1, 'm',      1e6,              'micron'],
+                           [1, 'm',      1e3,              'mm'],
+                           [1, 'm',      100,              'cm'],
+                           [1, 'm',      39.37007874,      'in',      1e-7],
+                           [1, 'm',      3.280839895,      'ft',      1e-7],
+                           [1, 'm',      1.093613298,      'yd',      1e-7],
+                           [1, 'm',      0.001,            'km'],
+                           [1, 'm',      0.000621371,      'mi',      1e-7],
+                           [1, 'm',      1.057000834e-16,  'ly',      1e-22] ])
+    end
+    it 'converts weights correctly' do
+    end
+    it 'converts temperatures correctly' do
+        test_conversions([[  0, 'C',      32, 'F'],
+                          [  0, 'K', -459.67, 'F', 1e-7],
+                          [-40, 'C',     -40, 'F'],
+                          [212, 'F',     100, 'C']])
+    end
+    it 'converts angles correctly' do
+        test_conversions([[30, 'deg', 0.5235987755982988, 'rad', 1e-7],
+                          [ 1, 'rad',  57.29577951308232, 'deg', 1e-7]])
+    end
+
+    def test_conversions(conditions)
+        conditions.each{|condition|
+            from_value = condition[0]
+            from_units = condition[1]
+            to_value = condition[2]
+            to_units = condition[3]
+            tolerance = condition[4] || 0
+            begin
+                result = subject.execute("#{from_value} #{from_units}>#{to_units}")
+                fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got #{result}.]"
+            rescue Exception => e
+                fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got \"#{e.message}\".]"
+            end
+            expect(result).to be_within(tolerance).of(to_value), fail_message
+        }
     end
 
     # }}}

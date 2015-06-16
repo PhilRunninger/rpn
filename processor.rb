@@ -52,7 +52,7 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                  {'function' => 'int_1_operator',   'operators' => {'~'  => "1's complement"}}]},
                    {'category' => 'Unit Conversion',
                     'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit conversions.'}}],
-                    'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units.'}},
+                    'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units, eg. mi>km'}},
                    {'category' => 'Stack Manipulation',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'copy' => 'Copy top value on stack',
                                                                                     'del'  => 'Delete top value from stack',
@@ -60,8 +60,8 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'xy'   => 'Swap x and y'}}]},
                    {'category' => 'Registers',
                     'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear register values'}}],
-                    'suffix' => {'foo='  => 'Copy x into the register named \'foo\'', 
-                                 'foo==' => 'Copy the entire stack into the register named \'foo\'', 
+                    'suffix' => {'foo='  => 'Copy x into the register named \'foo\'',
+                                 'foo==' => 'Copy the entire stack into the register named \'foo\'',
                                  'foo'   => 'Push register named \'foo\' onto the stack',
                                  '=foo'  => 'Push register named \'foo\' onto the stack',
                                  '==foo' => 'Replace stack with contents of register named \'foo\'',
@@ -71,37 +71,45 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
             ]
 
 # The conversion expressions are as follows for each category:
-#   'from' converts 'unit' to 'standard'
-#   'to' converts 'standard' to 'unit'
+#   'to_std' converts 'unit' to 'standard'
+#   'from_std' converts 'standard' to 'unit'
 UNITS_CONVERSION = [{'category' => 'length', 'standard' => 'm',
-                     'conversions' => [{'unit' => 'mm', 'from' => '1000 /', 'to' => '1000 *'},
-                                       {'unit' => 'cm', 'from' => '100 /', 'to' => '100 *'},
-                                       {'unit' => 'm', 'from' => '', 'to' => ''},
-                                       {'unit' => 'km', 'from' => '1000 *', 'to' => '1000 /'},
-                                       {'unit' => 'in', 'from' => '25.4 * 1000 /', 'to' => '1000 * 25.4 /'},
-                                       {'unit' => 'ft', 'from' => '12 * 25.4 * 1000 /', 'to' => '1000 * 25.4 / 12 /'},
-                                       {'unit' => 'mi', 'from' => '5280 * 12 * 25.4 * 1000 /', 'to' => '1000 * 25.4 / 12 / 5280 /'}]},
-                    {'category' => 'weight', 'standard' => 'kg',
-                     'conversions' => [{'unit' => 'mg', 'from' => '1000000 /', 'to' => '1000000 *'},
-                                       {'unit' => 'g', 'from' => '1000 /', 'to' => '1000 *'},
-                                       {'unit' => 'kg', 'from' => '', 'to' => ''},
-                                       {'unit' => 'lb', 'from' => '0.45359 *', 'to' => '0.45359 /'},
-                                       {'unit' => 'ton', 'from' => '2000 0.45359 * *', 'to' => '0.45359 2000 * /'}]},
+                     'conversions' => [{'unit' => 'nm',     'to_std' => '1e9 /',                     'from_std' => '1e9 *'},
+                                       {'unit' => 'micron', 'to_std' => '1e6 /',                     'from_std' => '1e6 *'},
+                                       {'unit' => 'mm',     'to_std' => '1000 /',                    'from_std' => '1000 *'},
+                                       {'unit' => 'cm',     'to_std' => '100 /',                     'from_std' => '100 *'},
+                                       {'unit' => 'in',     'to_std' => '25.4 * 1000 /',             'from_std' => '1000 * 25.4 /'},
+                                       {'unit' => 'ft',     'to_std' => '12 * 25.4 * 1000 /',        'from_std' => '1000 * 25.4 / 12 /'},
+                                       {'unit' => 'yd',     'to_std' => '3 * 12 * 25.4 * 1000 /',    'from_std' => '1000 * 25.4 / 12 / 3 /'},
+                                       {'unit' => 'm',      'to_std' => '',                          'from_std' => ''},
+                                       {'unit' => 'km',     'to_std' => '1000 *',                    'from_std' => '1000 /'},
+                                       {'unit' => 'mi',     'to_std' => '5280 * 12 * 25.4 * 1000 /', 'from_std' => '1000 * 25.4 / 12 / 5280 /'},
+                                       {'unit' => 'ly',     'to_std' => '9.4607304725808e15 *',      'from_std' => '9.4607304725808e15 /'}]},
+                    {'category' => 'weight (force)', 'standard' => 'kg',
+                     'conversions' => [{'unit' => 'mg', 'to_std' => '1000000 /', 'from_std' => '1000000 *'},
+                                       {'unit' => 'g', 'to_std' => '1000 /', 'from_std' => '1000 *'},
+                                       {'unit' => 'kg', 'to_std' => '', 'from_std' => ''},
+                                       {'unit' => 'lb', 'to_std' => '0.45359 *', 'from_std' => '0.45359 /'},
+                                       {'unit' => 'ton', 'to_std' => '2000 0.45359 * *', 'from_std' => '0.45359 2000 * /'},
+                                       {'unit' => 'N', 'to_std' => '9.80665002864 /', 'from_std' => '9.80665002864 *'}]},
+                    {'category' => 'pressure', 'standard' => 'pa',
+                     'conversions' => [{'unit' => 'psi', 'to_std' => '6894.75728001037 *' , 'from_std' => '6894.75728001037 /'},
+                                       {'unit' => 'kg/cm2', 'to_std' => '0.000010197162129779282 /', 'from_std' => '0.000010197162129779282 *'}]},
                     {'category' => 'kitchen volumes', 'standard' => 'tsp',
-                     'conversions' => [{'unit' => 'tsp', 'from' => '', 'to' => ''},
-                                       {'unit' => 'tbsp', 'from' => '3 *', 'to' => '3 /'},
-                                       {'unit' => 'ounce', 'from' => '3 2 * *', 'to' => '3 2 * /'},
-                                       {'unit' => 'cup', 'from' => '16 * 3 *', 'to' => '3 / 16 /'},
-                                       {'unit' => 'pint', 'from' => '2 16 3 * * *', 'to' => '2 16 3 * * /'},
-                                       {'unit' => 'quart', 'from' => '2 2 16 3 * * * *', 'to' => '2 2 16 3 * * * /'},
-                                       {'unit' => 'gallon', 'from' => '4 2 2 16 3 * * * * *', 'to' => '4 2 2 16 3 * * * * /'}]},
+                     'conversions' => [{'unit' => 'tsp', 'to_std' => '', 'from_std' => ''},
+                                       {'unit' => 'tbsp', 'to_std' => '3 *', 'from_std' => '3 /'},
+                                       {'unit' => 'ounce', 'to_std' => '3 2 * *', 'from_std' => '3 2 * /'},
+                                       {'unit' => 'cup', 'to_std' => '16 * 3 *', 'from_std' => '3 / 16 /'},
+                                       {'unit' => 'pint', 'to_std' => '2 16 3 * * *', 'from_std' => '2 16 3 * * /'},
+                                       {'unit' => 'quart', 'to_std' => '2 2 16 3 * * * *', 'from_std' => '2 2 16 3 * * * /'},
+                                       {'unit' => 'gallon', 'to_std' => '4 2 2 16 3 * * * * *', 'from_std' => '4 2 2 16 3 * * * * /'}]},
                     {'category' => 'temperature', 'standard' => 'C',
-                     'conversions' => [{'unit' => 'C', 'from' => '', 'to' => ''},
-                                       {'unit' => 'F', 'from' => '32 - 5 * 9 /', 'to' => '9 * 5 / 32 +'},
-                                       {'unit' => 'K', 'from' => '273.15 -', 'to' => '273.15 +'}]},
+                     'conversions' => [{'unit' => 'C', 'to_std' => '', 'from_std' => ''},
+                                       {'unit' => 'F', 'to_std' => '32 - 5 * 9 /', 'from_std' => '9 * 5 / 32 +'},
+                                       {'unit' => 'K', 'to_std' => '273.15 -', 'from_std' => '273.15 +'}]},
                     {'category' => 'angle', 'standard' => 'rad',
-                     'conversions' => [{'unit' => 'rad', 'from' => '', 'to' => ''},
-                                       {'unit' => 'deg', 'from' => 'pi * 180 /', 'to' => '180 * pi /'}]}
+                     'conversions' => [{'unit' => 'rad', 'to_std' => '', 'from_std' => ''},
+                                       {'unit' => 'deg', 'to_std' => 'pi * 180 /', 'from_std' => '180 * pi /'}]}
                    ]
 
 class Processor
@@ -150,7 +158,7 @@ class Processor
     end
 
     def parse_unit_conversion value
-        value.match(/^(\w+)>(\w+)$/)
+        value.match(/^([\w\/]+)>([\w\/]+)$/)
     end
 
     def parse_register value
@@ -308,7 +316,7 @@ class Processor
                 @registers[name] = @stack.last
             when '[name]=='
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
-                @registers[name] = @stack.dup 
+                @registers[name] = @stack.dup
             when '[name]'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 [@registers[name]].flatten.each{|value| @stack.push value}
@@ -331,10 +339,11 @@ class Processor
       if parts.kind_of?(MatchData)
         from_units = UNITS_CONVERSION.find{|y| y['conversions'].index{|x| x['unit']==parts.captures[0]}}
         to_units = UNITS_CONVERSION.find{|y| y['conversions'].index{|x| x['unit']==parts.captures[1]}}
-        raise ArgumentError, "Invalid unit conversion. Type 'units' to see valid units." if from_units.nil? or to_units.nil?
-        raise ArgumentError, "incompatible units, Type 'units' to see valid units." if from_units['category'] != to_units['category']
-        from_units = from_units['conversions'].find{|x| x['unit']==parts.captures[0]}['from']
-        to_units = to_units['conversions'].find{|x| x['unit']==parts.captures[1]}['to']
+        raise ArgumentError, "Invalid units - #{parts.captures[0]}. Type 'units' to see valid units." if from_units.nil?
+        raise ArgumentError, "Invalid units - #{parts.captures[1]}. Type 'units' to see valid units." if to_units.nil?
+        raise ArgumentError, "Incompatible units, Type 'units' to see valid units." if from_units['category'] != to_units['category']
+        from_units = from_units['conversions'].find{|x| x['unit']==parts.captures[0]}['to_std']
+        to_units = to_units['conversions'].find{|x| x['unit']==parts.captures[1]}['from_std']
         execute "#{from_units} #{to_units}"
       else
         case parts
