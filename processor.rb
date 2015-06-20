@@ -73,6 +73,14 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
 # The conversion expressions are as follows for each category:
 #   'to_std' converts 'unit' to 'standard'
 #   'from_std' converts 'standard' to 'unit'
+#UNITS_CONVERSION = [{'category' => 'length',
+#                     'units' =>        ['nm',     'micron', 'mm',     'cm',    'in',               'ft',             'yd',            'm',      'km',               'mi',                             'ly'],
+#                     'conversions' => [['',       '1000 /', '1e6 /',  '1e8 /', 'nm>cm 2.54 /',     'nm>in 12 /',     'nm>ft 3 /',     '1e9 /',  'nm>m 1000 /',        'nm>ft 5280 /',     'nm>m 9.4607304725808e15 /'],
+#                                       ['1000 *', '',       '1000 /', '1e5 /', 'micron>cm 2.54 /', 'micron>in 12 /', 'micron>ft 3 /', '1e6 /',  'micron>m 1000 /',        'micron>ft 5280 /', 'micron>m 9.4607304725808e15 /'],
+#                                       ['1e6 *',  '1000 *', '',       '100 /', 'mm>cm 2.54 /',     'mm>in 12 /',     'mm>ft 3 /',     '1000 /', 'mm>m 1000 /',        'mm>ft 5280 /',     'mm>m 9.4607304725808e15 /'],
+#                                       ['1e8 *',  '1e6 *',  '1000 *', '',      '2.54 /',           'cm>in 12 /',     'cm>ft 3 /',     '100 /',  'cm>m 1000 /',        'cm>ft 5280 /',     'cm>m 9.4607304725808e15 /'],
+#                                       ['1e8 *',  '1e6 *',  '1000 *', '',      '2.54 /',           'cm>in 12 /',     'cm>ft 3 /',     '100 /',  'in>m 1000 /',        'in>ft 5280 /',     'in>m 9.4607304725808e15 /']]
+
 UNITS_CONVERSION = [{'category' => 'length', 'standard' => 'm',
                      'conversions' => [{'unit' => 'nm',     'to_std' => '1e9 /',                     'from_std' => '1e9 *'},
                                        {'unit' => 'micron', 'to_std' => '1e6 /',                     'from_std' => '1e6 *'},
