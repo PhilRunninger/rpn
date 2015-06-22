@@ -1,0 +1,2 @@
+#!/bin/bash
+ruby ~/projects/personal/rpn/rpn.rb
