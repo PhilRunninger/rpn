@@ -330,38 +330,56 @@ describe Processor do
     end
 
     it 'converts lengths correctly' do
-        test_conversions([ [1, 'nm',     1e-9,             'm'],
-                           [1, 'micron', 1e-6,             'm'],
-                           [1, 'mm',     1e-3,             'm'],
-                           [1, 'cm',     0.01,             'm'],
-                           [1, 'in',     0.0254,           'm'],
-                           [1, 'ft',     0.3048,           'm',       1e-7],
-                           [1, 'yd',     0.9144,           'm'],
-                           [1, 'km',     1000,             'm'],
-                           [1, 'mi',     1609.344,         'm'],
-                           [1, 'ly',     9460730472580800, 'm'],
-                           [1, 'm',      1e9,              'nm'],
-                           [1, 'm',      1e6,              'micron'],
-                           [1, 'm',      1e3,              'mm'],
-                           [1, 'm',      100,              'cm'],
-                           [1, 'm',      39.37007874,      'in',      1e-7],
-                           [1, 'm',      3.280839895,      'ft',      1e-7],
-                           [1, 'm',      1.093613298,      'yd',      1e-7],
-                           [1, 'm',      0.001,            'km'],
-                           [1, 'm',      0.000621371,      'mi',      1e-7],
-                           [1, 'm',      1.057000834e-16,  'ly',      1e-22] ])
+        test_conversions([ [1,       'nm',     1e-9,               'm'],
+                           [1,       'micron', 1e-6,               'm'],
+                           [1,       'mm',     1e-3,               'm'],
+                           [1,       'cm',     0.01,               'm'],
+                           [1,       'in',     0.0254,             'm'],
+                           [1,       'ft',     0.3048,             'm',       1e-7],
+                           [1,       'yd',     0.9144,             'm'],
+                           [1,       'km',     1000,               'm'],
+                           [1,       'mi',     1609.344,           'm'],
+                           [1,       'ly',     9460730472580800,   'm'],
+                           [1,       'm',      1e9,                'nm'],
+                           [1,       'm',      1e6,                'micron'],
+                           [1,       'm',      1e3,                'mm'],
+                           [1,       'm',      100,                'cm'],
+                           [1,       'm',      39.37007874,        'in',      1e-7],
+                           [1,       'm',      3.280839895,        'ft',      1e-7],
+                           [1,       'm',      1.093613298,        'yd',      1e-7],
+                           [1,       'm',      0.001,              'km'],
+                           [1,       'm',      0.000621371,        'mi',      1e-7],
+                           [1,       'm',      1.057000834e-16,    'ly',      1e-22],
+                           [1,       'ft',     12,                 'in'],
+                           [1,       'yd',     36,                 'in'],
+                           [1,       'mi',     5280,               'ft'] ])
     end
     it 'converts weights correctly' do
+        test_conversions([ [1000000, 'mg',     1,                  'kg'],
+                           [1000,    'g',      1,                  'kg'],
+                           [1,       'kg',     1000,               'g'],
+                           [1,       'kg',     9.80665002864,      'N'],
+                           [16,      'oz',     1,                  'lb'],
+                           [1,       'lb',     16,                 'oz'],
+                           [1,       'ton',    2000,               'lb'] ])
+    end
+    it 'converts kitchen measurements correctly' do
+        test_conversions([ [1,       'gallon', 4,                  'quart'],
+                           [1,       'quart',  2,                  'pint'],
+                           [1,       'pint',   2,                  'cup'],
+                           [1,       'cup',    16,                 'tbsp'],
+                           [1,       'tbsp',   3,                  'tsp'],
+                           [1,       'ounce',  6,                  'tsp'] ])
     end
     it 'converts temperatures correctly' do
-        test_conversions([[  0, 'C',      32, 'F'],
-                          [  0, 'K', -459.67, 'F', 1e-7],
-                          [-40, 'C',     -40, 'F'],
-                          [212, 'F',     100, 'C']])
+        test_conversions([ [  0,     'C',      32,                 'F'],
+                           [  0,     'K',      -459.67,            'F',       1e-7],
+                           [-40,     'C',      -40,                'F'],
+                           [212,     'F',      100,                'C'] ])
     end
     it 'converts angles correctly' do
-        test_conversions([[30, 'deg', 0.5235987755982988, 'rad', 1e-7],
-                          [ 1, 'rad',  57.29577951308232, 'deg', 1e-7]])
+        test_conversions([ [30,      'deg',    0.5235987755982988, 'rad',     1e-7],
+                           [ 1,      'rad',    57.29577951308232,  'deg',     1e-7] ])
     end
 
     def test_conversions(conditions)
