@@ -330,8 +330,7 @@ describe Processor do
     end
 
     it 'converts lengths correctly' do
-        test_conversions([{'ly'=>1, 'm'=>9460730472580800, 'mi'=>5878625373183.6083984375, 'tolerance'=>2},
-                          {'km'=>1, 'm'=>1e3, 'cm'=>1e5, 'mm'=>1e6, 'micron'=>1e9, 'nm'=>1e12, 'mi'=>0.62137119223733397666365, 'yd'=>1093.6132983377076, 'ft'=>3280.839895013123, 'in'=>39370.07874015748, 'tolerance'=>1e-7}])
+        test_conversions([{'km'=>1, 'm'=>1e3, 'cm'=>1e5, 'mm'=>1e6, 'micron'=>1e9, 'nm'=>1e12, 'mi'=>0.62137119223733397666365, 'yd'=>1093.6132983377076, 'ft'=>3280.839895013123, 'in'=>39370.07874015748, 'tolerance'=>1e-7}])
     end
     it 'converts speed correctly' do
         test_conversions([{'mi/hr'=>60, 'km/hr'=>96.56064, 'ft/sec'=>88, 'm/sec'=>26.8224, 'ft/hr'=>316800, 'tolerance'=>1e-7}])
