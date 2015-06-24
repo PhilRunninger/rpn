@@ -330,72 +330,47 @@ describe Processor do
     end
 
     it 'converts lengths correctly' do
-        test_conversions([ [1,       'nm',     1e-9,               'm'],
-                           [1,       'micron', 1e-6,               'm'],
-                           [1,       'mm',     1e-3,               'm'],
-                           [1,       'cm',     0.01,               'm'],
-                           [1,       'in',     0.0254,             'm'],
-                           [1,       'ft',     0.3048,             'm',       1e-7],
-                           [1,       'yd',     0.9144,             'm'],
-                           [1,       'km',     1000,               'm'],
-                           [1,       'mi',     1609.344,           'm'],
-                           [1,       'ly',     9460730472580800,   'm'],
-                           [1,       'm',      1e9,                'nm'],
-                           [1,       'm',      1e6,                'micron'],
-                           [1,       'm',      1e3,                'mm'],
-                           [1,       'm',      100,                'cm'],
-                           [1,       'm',      39.37007874,        'in',      1e-7],
-                           [1,       'm',      3.280839895,        'ft',      1e-7],
-                           [1,       'm',      1.093613298,        'yd',      1e-7],
-                           [1,       'm',      0.001,              'km'],
-                           [1,       'm',      0.000621371,        'mi',      1e-7],
-                           [1,       'm',      1.057000834e-16,    'ly',      1e-22],
-                           [1,       'ft',     12,                 'in'],
-                           [1,       'yd',     36,                 'in'],
-                           [1,       'mi',     5280,               'ft'] ])
+        test_conversions([{'ly'=>1, 'm'=>9460730472580800, 'mi'=>5878625373183.6083984375, 'tolerance'=>2},
+                          {'km'=>1, 'm'=>1e3, 'cm'=>1e5, 'mm'=>1e6, 'micron'=>1e9, 'nm'=>1e12, 'mi'=>0.62137119223733397666365, 'yd'=>1093.6132983377076, 'ft'=>3280.839895013123, 'in'=>39370.07874015748, 'tolerance'=>1e-7}])
+    end
+    it 'converts speed correctly' do
+        test_conversions([{'mi/hr'=>60, 'km/hr'=>96.56064, 'ft/sec'=>88, 'm/sec'=>26.8224, 'ft/hr'=>316800, 'tolerance'=>1e-7}])
+    end
+    it 'converts time correctly' do
+        test_conversions([{'hr' => 1, 'min' => 60, 'sec' => 3600} ])
     end
     it 'converts weights correctly' do
-        test_conversions([ [1000000, 'mg',     1,                  'kg'],
-                           [1000,    'g',      1,                  'kg'],
-                           [1,       'kg',     1000,               'g'],
-                           [1,       'kg',     9.80665002864,      'N'],
-                           [16,      'oz',     1,                  'lb'],
-                           [1,       'lb',     16,                 'oz'],
-                           [1,       'ton',    2000,               'lb'] ])
+        test_conversions([{'kg'=>1, 'g'=>1000, 'mg'=>1000000, 'N'=>9.80665002864, 'ton'=>0.00110231, 'lb'=>2.20462, 'oz'=>35.27392}])
     end
     it 'converts kitchen measurements correctly' do
-        test_conversions([ [1,       'gallon', 4,                  'quart'],
-                           [1,       'quart',  2,                  'pint'],
-                           [1,       'pint',   2,                  'cup'],
-                           [1,       'cup',    16,                 'tbsp'],
-                           [1,       'tbsp',   3,                  'tsp'],
-                           [1,       'ounce',  6,                  'tsp'] ])
+        test_conversions([{'gallon'=>1, 'quart'=>4 ,'pint' =>8 ,'cup'  =>16 ,'tbsp' => 256 ,'tsp'  => 768, 'ounce'=> 128} ])
     end
     it 'converts temperatures correctly' do
-        test_conversions([ [  0,     'C',      32,                 'F'],
-                           [  0,     'K',      -459.67,            'F',       1e-7],
-                           [-40,     'C',      -40,                'F'],
-                           [212,     'F',      100,                'C'] ])
+        test_conversions([{'C'=>0, 'F'=>32, 'K'=>273.15},
+                          {'C'=>100, 'F'=>212, 'K'=>373.15}])
     end
     it 'converts angles correctly' do
-        test_conversions([ [30,      'deg',    0.5235987755982988, 'rad',     1e-7],
-                           [ 1,      'rad',    57.29577951308232,  'deg',     1e-7] ])
+        test_conversions([{'deg'=>30, 'rad'=>0.5235987755982988, 'tolerance'=>1e-7}])
     end
 
     def test_conversions(conditions)
         conditions.each{|condition|
-            from_value = condition[0]
-            from_units = condition[1]
-            to_value = condition[2]
-            to_units = condition[3]
-            tolerance = condition[4] || 0
-            begin
-                result = subject.execute("#{from_value} #{from_units}>#{to_units}")
-                fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got #{result}.]"
-            rescue Exception => e
-                fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got \"#{e.message}\".]"
-            end
-            expect(result).to be_within(tolerance).of(to_value), fail_message
+            tolerance = condition.delete('tolerance') || 0
+            condition.to_a.permutation(2).to_a.each{|trial|
+                print "~"
+                trial = trial.flatten
+                from_units = trial[0]
+                from_value = trial[1]
+                to_units = trial[2]
+                to_value = trial[3]
+                begin
+                    result = subject.execute("#{from_value} #{from_units}>#{to_units}")
+                    fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got #{result}.]"
+                rescue Exception => e
+                    fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got \"#{e.message}\".]"
+                end
+                expect(result).to be_within(tolerance).of(to_value), fail_message
+            }
         }
     end
 
