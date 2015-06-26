@@ -33,6 +33,35 @@ describe Processor do
         expect(subject.parse_number('-')).to be_nil
         expect(subject.parse_number('foobar==')).to be_nil
     end
+    it 'parses binary numbers' do
+        subject.base = 2
+        expect(subject.parse_number('101')).to eq(5)
+        expect(subject.parse_number('123')).to be_nil
+        expect(subject.parse_number('1.0')).to be_nil
+        expect(subject.parse_number('-10')).to be_nil
+    end
+    it 'parses octal numbers' do
+        subject.base = 8
+        expect(subject.parse_number('37')).to eq(31)
+        expect(subject.parse_number('129')).to be_nil
+        expect(subject.parse_number('1.2')).to be_nil
+        expect(subject.parse_number('-12')).to be_nil
+    end
+    it 'parses decimal numbers' do
+        subject.base = 10
+        expect(subject.parse_number('153')).to eq(153)
+        expect(subject.parse_number('12a')).to be_nil
+        expect(subject.parse_number('1.2')).to be_nil
+        expect(subject.parse_number('-12')).to be_nil
+    end
+    it 'parses hexadecimal numbers' do
+        subject.base = 16
+        expect(subject.parse_number('1a')).to eq(26)
+        expect(subject.parse_number('1A')).to eq(26)
+        expect(subject.parse_number('12x')).to be_nil
+        expect(subject.parse_number('1.2')).to be_nil
+        expect(subject.parse_number('-12')).to be_nil
+    end
     it 'parses operators' do
         expect(subject.parse_operator('+')).to be_kind_of(Hash)
         expect(subject.parse_operator('123')).to be_nil
@@ -52,6 +81,27 @@ describe Processor do
     it 'will not allow pushing a nonexistent register' do
         subject.execute('12 widgets=')
         expect(subject.parse_register('=widgets')).to be_kind_of(MatchData)
+    end
+    it 'formats numbers for printing' do
+        expect(subject.format([1, 2, 3])).to eq("[1 2 3]")
+        expect(subject.format(123)).to eq("123")
+        expect(subject.format(-1.23)).to eq("-1.23")
+        subject.base = 2
+        expect(subject.format(12)).to eq("1100")
+        expect(subject.format(-23)).to eq("###")
+        expect(subject.format(12.7)).to eq("###")
+        subject.base = 8
+        expect(subject.format(12)).to eq("14")
+        expect(subject.format(-23)).to eq("###")
+        expect(subject.format(12.7)).to eq("###")
+        subject.base = 10
+        expect(subject.format(12)).to eq("12")
+        expect(subject.format(-23)).to eq("###")
+        expect(subject.format(12.7)).to eq("###")
+        subject.base = 16
+        expect(subject.format(12)).to eq("c")
+        expect(subject.format(-23)).to eq("###")
+        expect(subject.format(12.7)).to eq("###")
     end
 
     # Basic Arithmetic {{{1
@@ -375,5 +425,25 @@ describe Processor do
 
     # }}}
 
+    # Work in alternate bases {{{1
+    it 'switches to binary mode' do
+        expect(subject.execute('bin 1101')).to eq(13)
+    end
+    it 'switches to octal mode' do
+        expect(subject.execute('oct 1101')).to eq(577)
+    end
+    it 'switches to decimal mode' do
+        expect(subject.execute('dec 1101')).to eq(1101)
+    end
+    it 'switches to hexadecimal mode' do
+        expect(subject.execute('hex 1101')).to eq(4353)
+    end
+    it 'switches to real mode' do
+        expect(subject.execute('real 1101')).to eq(1101)
+    end
+    it 'adds numbers of different bases' do
+        expect(subject.execute('bin 1011 hex c2 oct 31 + +')).to eq(230)
+    end
+    # }}}
 end
 # vim:ft=ruby foldmethod=marker sw=4

@@ -66,6 +66,13 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                  '=foo'  => 'Push register named \'foo\' onto the stack',
                                  '==foo' => 'Replace stack with contents of register named \'foo\'',
                                  ''      => 'Register names consist of letters, numbers and underscores.'}},
+                   {'category' => 'Switching Input/Output Base',
+                    'groups' => [{'function' => 'custom_operator', 'operators' => {'bin' => 'Switch to binary',
+                                                                                   'oct' => 'Switch to octal',
+                                                                                   'dec' => 'Switch to decimal (integer)',
+                                                                                   'hex' => 'Switch to hexadecimal',
+                                                                                   'real' => 'Switch to real number'}}],
+                    'suffix' => {'' => 'BIN, OCT, DEC, and HEX work with non-negative integers only. Invalid numbers are shown as ###, but are still on the stack.'}},
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list'}}]}
             ]
@@ -133,13 +140,39 @@ UNITS_CONVERSION = [{'category'=>'length',
                                                   {'unit'=>'quart',  'to_std'=>'2 2 16 3 * * * *',     'from_std'=>'2 2 16 3 * * * /'},
                                                   {'unit'=>'gallon', 'to_std'=>'4 2 2 16 3 * * * * *', 'from_std'=>'4 2 2 16 3 * * * * /'}]}]}
                    ]
+BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'real'=>0}
 
 class Processor
     attr_reader :stack, :registers
+    attr_accessor :base
 
     def initialize
         @stack = []
         @registers = {}
+        @base = 0
+    end
+
+    def radix
+      return @base == 0 ? '' : BASES.key(@base).upcase
+    end
+
+    def format(value)
+      if value.kind_of?(Array)
+        return "[#{value.map{|v| format(v)}.join(' ')}]"
+      elsif value % 1 == 0
+        if @base > 0
+          return '###' if value < 0
+          return value.round.to_s(@base) unless value < 0
+        else
+          return value.round.to_s
+        end
+      else
+        if @base > 0
+          return '###'
+        else
+          value.to_s
+        end
+      end
     end
 
     def execute(text)
@@ -172,7 +205,18 @@ class Processor
     end
 
     def parse_number value
+      case @base
+      when 2
+        (value =~ /^[01]+$/).nil? ? nil : value.to_i(2)
+      when 8
+        (value =~ /^[0-7]+$/).nil? ? nil : value.to_i(8)
+      when 10
+        (value =~ /^[0-9]+$/i).nil? ? nil : value.to_i(10)
+      when 16
+        (value =~ /^[0-9a-f]+$/i).nil? ? nil : value.to_i(16)
+      else
         (value =~ /^-?((\.\d+)|\d+(\.\d+)?)(e[+-]?\d+)?$/).nil? ? nil : value.to_f
+      end
     end
 
     def parse_operator value
@@ -294,6 +338,8 @@ class Processor
             y = @stack.pop
             @stack.push x
             @stack.push y
+        when 'bin', 'oct', 'dec', 'hex', 'real'
+          @base = BASES[operator]
         when '?'
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
             VALID_OPERATORS.each{ |category|
