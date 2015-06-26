@@ -65,14 +65,15 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                  'foo'   => 'Push register named \'foo\' onto the stack',
                                  '=foo'  => 'Push register named \'foo\' onto the stack',
                                  '==foo' => 'Replace stack with contents of register named \'foo\'',
-                                 ''      => 'Register names consist of letters, numbers and underscores.'}},
+                                 '#HIDE#'      => 'Register names consist of letters, numbers and underscores.'}},
                    {'category' => 'Switching Input/Output Base',
                     'groups' => [{'function' => 'custom_operator', 'operators' => {'bin' => 'Switch to binary',
                                                                                    'oct' => 'Switch to octal',
                                                                                    'dec' => 'Switch to decimal (integer)',
                                                                                    'hex' => 'Switch to hexadecimal',
                                                                                    'real' => 'Switch to real number'}}],
-                    'suffix' => {'' => 'BIN, OCT, DEC, and HEX work with non-negative integers only. Invalid numbers are shown as ###, but are still on the stack.'}},
+                    'suffix' => {'#HIDE1#' => 'BIN, OCT, DEC, and HEX modes work with non-negative integers only.',
+                                 '#HIDE2#' => 'REAL numbers are shown as ###, but are still on the stack.'}},
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list'}}]}
             ]
@@ -367,7 +368,7 @@ class Processor
                 }
                 puts "" if total_width > 0
 
-                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['suffix'].nil?
+                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } if !category['suffix'].nil?
             }
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         end
