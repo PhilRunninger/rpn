@@ -346,7 +346,7 @@ class Processor
             VALID_OPERATORS.each{ |category|
                 puts "#{BLUE_TEXT}#{category['category']}"
 
-                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } if !category['prefix'].nil?
+                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } unless category['prefix'].nil?
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
@@ -368,7 +368,7 @@ class Processor
                 }
                 puts "" if total_width > 0
 
-                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } if !category['suffix'].nil?
+                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } unless category['suffix'].nil?
             }
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         end
