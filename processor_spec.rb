@@ -180,6 +180,9 @@ describe Processor do
     it 'displays a list of all functions' do
         expect{subject.execute('?')}.to_not raise_error
     end
+    it 'launches a web page of RPN tutorials' do
+        expect{subject.execute('??')}.to_not raise_error
+    end
 
     # Trigonometric {{{1
     it 'calculates sin of a number in radians' do

@@ -1,4 +1,5 @@
 require_relative 'common'
+require 'launchy'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
@@ -75,7 +76,8 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                     'suffix' => {'#HIDE1#' => 'BIN, OCT, DEC, and HEX modes work with non-negative integers only.',
                                  '#HIDE2#' => 'REAL numbers are shown as ###, but are still on the stack.'}},
                    {'category' => 'Help',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list'}}]}
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'?' => 'Display this list',
+                                                                                    '??' => 'Google list of RPN tutorials'}}]}
             ]
 
 UNITS_CONVERSION = [{'category'=>'length',
@@ -371,6 +373,8 @@ class Processor
                 category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } unless category['suffix'].nil?
             }
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+        when '??'
+            Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
         end
     end
 
