@@ -31,5 +31,5 @@ REVERSE_OFF = "\033[27m"
 
 def console_columns
     _, columns = IO.console.winsize
-    [columns, 80].max
+    [columns, 60].max
 end

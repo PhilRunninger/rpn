@@ -1,6 +1,6 @@
 $LOAD_PATH.unshift File.dirname($0)
 
-require "readline"
+require 'readline'
 require 'clipboard'
 require_relative 'processor'
 require_relative 'common'
@@ -17,12 +17,11 @@ begin
         puts "#{RED_TEXT}#{msg}"
     end
     processor.registers.each{|name, value|
-        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{processor.format(value)} " 
+        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{processor.format(value)} "
     }
     print "#{BLUE_TEXT}• " if processor.registers != {}
     processor.stack.each{|value| print "#{GRAY_TEXT}#{processor.format(value)} " }
-    print "#{GREEN_TEXT}#{processor.radix}► #{BROWN_TEXT}"
-    input = Readline.readline('', true)
+    input = Readline.readline("#{GREEN_TEXT}#{processor.radix}► #{BROWN_TEXT}", true)
     Readline::HISTORY.pop if Readline::HISTORY.length>1 &&  Readline::HISTORY[-1] == Readline::HISTORY[-2]
 end while input > ''
 
