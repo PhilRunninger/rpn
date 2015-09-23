@@ -349,14 +349,14 @@ class Processor
             VALID_OPERATORS.each{ |category|
                 puts "#{BLUE_TEXT}#{category['category']}"
 
-                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1, part2 } unless category['prefix'].nil?
+                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s\n", part1, part2 } unless category['prefix'].nil?
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
                 total_width = 0
                 operators.each{|op,description|
-                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s", op, description
+                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s", op, description
                     if total_width + text.length - 10 < console_columns
                         print "#{text}"
                         total_width = total_width + text.length - 10
@@ -371,7 +371,7 @@ class Processor
                 }
                 puts "" if total_width > 0
 
-                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{GRAY_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } unless category['suffix'].nil?
+                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } unless category['suffix'].nil?
             }
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         when '??'
@@ -433,7 +433,7 @@ class Processor
         when 'units'
           puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
           UNITS_CONVERSION.each{ |category|
-            puts "#{BLUE_TEXT}#{category['category']}:  #{GRAY_TEXT}#{category['systems'].map{|s| s['conversions'].map{|u| u['unit']}.join(', ')}.join(', ')}"
+            puts "#{BLUE_TEXT}#{category['category']}:  #{BLACK_TEXT}#{category['systems'].map{|s| s['conversions'].map{|u| u['unit']}.join(', ')}.join(', ')}"
           }
           puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
         end

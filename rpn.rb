@@ -17,10 +17,10 @@ begin
         puts "#{RED_TEXT}#{msg}"
     end
     processor.registers.each{|name, value|
-        print "#{BROWN_TEXT}#{name}#{GRAY_TEXT}=#{BROWN_TEXT}#{processor.format(value)} "
+        print "#{BROWN_TEXT}#{name}#{BLACK_TEXT}=#{BROWN_TEXT}#{processor.format(value)} "
     }
     print "#{BLUE_TEXT}• " if processor.registers != {}
-    processor.stack.each{|value| print "#{GRAY_TEXT}#{processor.format(value)} " }
+    processor.stack.each{|value| print "#{BLACK_TEXT}#{processor.format(value)} " }
     input = Readline.readline("#{GREEN_TEXT}#{processor.radix}► #{BROWN_TEXT}", true)
     Readline::HISTORY.pop if Readline::HISTORY.length>1 &&  Readline::HISTORY[-1] == Readline::HISTORY[-2]
 end while input > ''
@@ -28,6 +28,6 @@ end while input > ''
 puts "#{CYAN_TEXT}#{'═' * (console_columns - 23)} Thanks for using rpn."
 if !answer.nil?
     Clipboard.copy processor.format(answer).to_s
-    puts "#{GRAY_TEXT}#{processor.format(answer)} #{BROWN_TEXT}was copied to the clipboard."
+    puts "#{BLACK_TEXT}#{processor.format(answer)} #{BROWN_TEXT}was copied to the clipboard."
 end
 puts "#{RESET_COLORS} "
