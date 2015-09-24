@@ -176,7 +176,7 @@ describe Processor do
         expect(subject.execute('60 2 >>')).to eq(15)
     end
 
-    ## Help {{{1
+    # Help {{{1
     it 'displays a list of all functions' do
         expect{subject.execute('?')}.to_not raise_error
     end
@@ -426,8 +426,6 @@ describe Processor do
         }
     end
 
-    # }}}
-
     # Work in alternate bases {{{1
     it 'switches to binary mode' do
         expect(subject.execute('bin 1101')).to eq(13)
@@ -447,6 +445,18 @@ describe Processor do
     it 'adds numbers of different bases' do
         expect(subject.execute('bin 1011 hex c2 oct 31 + +')).to eq(230)
     end
+
+    # Work in different angle modes {{{1
+    it 'switches to radians' do
+        expect(subject.execute('rad 1 atan')).to be_within(0.00001).of(0.78539816)
+    end
+    it 'switches to degrees' do
+        expect(subject.execute('60 deg cos')).to eq(0.5)
+    end
+    it 'defaults to degrees' do
+        expect(subject.execute('30 sin')).to eq(0.5)
+    end
+
     # }}}
 end
 # vim:ft=ruby foldmethod=marker sw=4
