@@ -185,23 +185,23 @@ describe Processor do
     end
 
     # Trigonometric {{{1
-    it 'calculates sin of a number in radians' do
-        expect(subject.execute('0.5235987755982988 sin')).to be_within(0.000001).of(0.5)
+    it 'calculates sin of a number in degrees' do
+        expect(subject.execute('30 sin')).to be_within(0.000001).of(0.5)
     end
-    it 'calculates cos of a number in radians' do
-        expect(subject.execute('1.0471975511965976 cos')).to be_within(0.000001).of(0.5)
+    it 'calculates cos of a number in degrees' do
+        expect(subject.execute('60 cos')).to be_within(0.000001).of(0.5)
     end
-    it 'calculates tan of a number in radians' do
-        expect(subject.execute('0.7853981633974483 tan')).to be_within(0.000001).of(1.0)
+    it 'calculates tan of a number in degrees' do
+        expect(subject.execute('45 tan')).to be_within(0.000001).of(1.0)
     end
-    it 'calculates asin of a number in radians' do
-        expect(subject.execute('0.5 asin')).to be_within(0.000001).of(0.5235987755982988)
+    it 'calculates asin of a number in degrees' do
+        expect(subject.execute('0.5 asin')).to be_within(0.000001).of(30)
     end
-    it 'calculates acos of a number in radians' do
-        expect(subject.execute('0.5 acos')).to be_within(0.000001).of(1.0471975511965976)
+    it 'calculates acos of a number in degrees' do
+        expect(subject.execute('0.5 acos')).to be_within(0.000001).of(60)
     end
-    it 'calculates atan of a number in radians' do
-        expect(subject.execute('1 atan')).to be_within(0.000001).of(0.7853981633974483)
+    it 'calculates atan of a number in degrees' do
+        expect(subject.execute('1 atan')).to be_within(0.000001).of(45)
     end
 
     # Powers and Logarithms {{{1
@@ -451,10 +451,10 @@ describe Processor do
         expect(subject.execute('rad 1 atan')).to be_within(0.00001).of(0.78539816)
     end
     it 'switches to degrees' do
-        expect(subject.execute('60 deg cos')).to eq(0.5)
+        expect(subject.execute('60 deg cos')).to be_within(0.00001).of(0.5)
     end
     it 'defaults to degrees' do
-        expect(subject.execute('30 sin')).to eq(0.5)
+        expect(subject.execute('30 sin')).to be_within(0.00001).of(0.5)
     end
 
     # }}}
