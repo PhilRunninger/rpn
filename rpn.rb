@@ -20,8 +20,10 @@ begin
         print "#{BROWN_TEXT}#{name}#{BLACK_TEXT}=#{BROWN_TEXT}#{processor.format(value)} "
     }
     print "#{BLUE_TEXT}• " if processor.registers != {}
-    processor.stack.each{|value| print "#{BLACK_TEXT}#{processor.format(value)} " }
-    input = Readline.readline("#{GREEN_TEXT}#{processor.radix}► #{BROWN_TEXT}", true)
+    prompt  = processor.stack.map{|value| "#{processor.format(value)}" }.join(' ')
+    prompt += " #{GREEN_TEXT}#{processor.radix}" unless processor.radix == ''
+    prompt += " #{GREEN_TEXT}#{processor.angle_mode}► #{BROWN_TEXT}"
+    input = Readline.readline("#{BLACK_TEXT}" + prompt.strip, true)
     Readline::HISTORY.pop if Readline::HISTORY.length>1 &&  Readline::HISTORY[-1] == Readline::HISTORY[-2]
 end while input > ''
 

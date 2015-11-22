@@ -28,12 +28,12 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                     'log2'  => 'Log (base 2) of x'}},
                                  {'function' => 'custom_operator',  'operators' => {'\\'    => 'Reciprocal'}}]},
                    {'category' => 'Trigonometric',
-                    'groups' => [{'function' => 'Math_1_operator',  'operators' => {'sin'   => 'Sine of x in radians',
-                                                                                    'asin'  => 'Arcsine in radians of x',
-                                                                                    'cos'   => 'Cosine of x in radians',
-                                                                                    'acos'  => 'Arccosine in radians of x',
-                                                                                    'tan'   => 'Tangent of x in radians',
-                                                                                    'atan'  => 'Artangent in radians of x'}}]},
+                    'groups' => [{'function' => 'trig_operator',  'operators' => {'sin'   => 'Sine of x',
+                                                                                  'asin'  => 'Arcsine of x',
+                                                                                  'cos'   => 'Cosine of x',
+                                                                                  'acos'  => 'Arccosine of x',
+                                                                                  'tan'   => 'Tangent of x',
+                                                                                  'atan'  => 'Artangent of x'}}]},
                    {'category' => 'Statistics',
                     'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'       => 'Factorial',
                                                                                        'perm'    => 'Permutation(Y, X)',
@@ -75,6 +75,9 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                                                                                    'real' => 'Switch to real number'}}],
                     'suffix' => {'#HIDE1#' => 'BIN, OCT, DEC, and HEX modes work with non-negative integers only.',
                                  '#HIDE2#' => 'REAL numbers are shown as ###, but are still on the stack.'}},
+                   {'category' => 'Angle Mode',
+                    'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
+                                                                                   'deg' => 'Switch to degrees'}}]},
                    {'category' => 'Help',
                     'groups' => [{'function' => 'custom_operator',  'operators' => {'Enter' => 'Exit the calculator',
                                                                                     '?'     => 'Display this list',
@@ -154,6 +157,11 @@ class Processor
         @stack = []
         @registers = {}
         @base = 0
+        @angle = 'DEG'
+    end
+
+    def angle_mode
+      return @angle
     end
 
     def radix
@@ -264,6 +272,17 @@ class Processor
         @stack.push eval("Math.#{operator}(#{x})")
     end
 
+    def trig_operator operator
+      case operator
+      when 'sin', 'cos', 'tan'
+        x = @stack.pop * (@angle == 'RAD' ? 1 : Math::PI / 180.0)
+        @stack.push eval("Math.#{operator}(#{x})")
+      when 'asin', 'acos', 'atan'
+        x= @stack.pop
+        @stack.push eval("Math.#{operator}(#{x})") * (@angle == 'RAD' ? 1 : 180.0 / Math::PI)
+      end
+    end
+
     def statistics_operator operator
         case operator
         when '!'
@@ -344,6 +363,8 @@ class Processor
             @stack.push y
         when 'bin', 'oct', 'dec', 'hex', 'real'
           @base = BASES[operator]
+        when 'rad', 'deg'
+          @angle = operator.upcase
         when '?'
             puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
             VALID_OPERATORS.each{ |category|
