@@ -6,6 +6,9 @@ require_relative 'processor'
 require_relative 'common'
 
 processor = Processor.new
+puts processor.settings.stack
+processor.settings.stack = [42]
+puts processor.settings.stack
 
 puts "#{GREEN_TEXT}RPN Calculator, ©2014, Phil Runninger #{CYAN_TEXT}#{'═' * (console_columns - 57)} Enter ? for help."
 input = ''

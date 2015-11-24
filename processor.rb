@@ -151,18 +151,15 @@ UNITS_CONVERSION = [{'category'=>'length',
 BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'real'=>0}
 
 class Processor
-    attr_reader :stack, :registers
+    attr_reader :stack, :registers, :settings
     attr_accessor :base
 
     def initialize settings_file=File.join(Dir.home, '.rpnrc')
-        @settings_file = settings_file
-        hash = {}
-        hash = JSON.parse(File.read(settings_file)) if File.exist?(settings_file)
-
-        @stack = hash['stack'] || []
-        @registers = hash['registers'] || {}
-        @base = hash['base'] || 0
-        @angle = hash['angle'] || 'DEG'
+        @settings = Settings.new(settings_file)
+        @stack = @settings.stack || []
+        @registers = @settings.registers || {}
+        @base = @settings.base || 0
+        @angle = @settings.angle || 'DEG'
     end
 
     def angle_mode
@@ -220,13 +217,11 @@ class Processor
 
         @stack.delete(nil)
 
-        hash = {}
-        hash['stack'] = @stack unless @stack.empty?
-        hash['registers'] = @registers unless @registers.empty?
-        hash['base'] = @base
-        hash['angle'] = @angle
-
-        File.open(@settings_file,'w') {|f| f.write(hash.to_json)}
+        @settings.stack = @stack
+        @settings.registers = @registers
+        @settings.base = @base
+        @settings.angle = @angle
+        @settings.write
 
         @stack.last
     end
