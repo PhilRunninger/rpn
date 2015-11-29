@@ -156,10 +156,10 @@ class Processor
 
     def initialize settings_file=File.join(Dir.home, '.rpnrc')
         @settings = Settings.new(settings_file)
-        @stack = @settings.stack || []
-        @registers = @settings.registers || {}
-        @base = @settings.base || 0
-        @angle = @settings.angle || 'DEG'
+        @stack = @settings.stack
+        @registers = @settings.registers
+        @base = @settings.base
+        @angle = @settings.angle
     end
 
     def angle_mode
