@@ -33,39 +33,39 @@ describe Settings do
     it 'initializes angle to DEG' do
       expect(@settings.angle).to eq('DEG')
     end
-    it 'initializes normal text color to \033[30m' do
-      expect(@settings.color_normal).to eq('\033[30m')
+    it 'initializes normal text color to :black' do
+      expect(@settings.color_normal).to eq(:black)
     end
-    it 'initializes error text color to \033[31m' do
-      expect(@settings.color_error).to eq('\033[31m')
+    it 'initializes error text color to :red' do
+      expect(@settings.color_error).to eq(:red)
     end
-    it 'initializes title text color to \033[32m' do
-      expect(@settings.color_title).to eq('\033[32m')
+    it 'initializes title text color to :green' do
+      expect(@settings.color_title).to eq(:green)
     end
-    it 'initializes register text color to \033[33m' do
-      expect(@settings.color_register).to eq('\033[33m')
+    it 'initializes register text color to :yellow' do
+      expect(@settings.color_register).to eq(:yellow)
     end
-    it 'initializes help heading text color to \033[34m' do
-      expect(@settings.color_help_heading).to eq('\033[34m')
+    it 'initializes help heading text color to :blue' do
+      expect(@settings.color_help_heading).to eq(:blue)
     end
-    it 'initializes help text color to \033[36m' do
-      expect(@settings.color_help).to eq('\033[36m')
+    it 'initializes help text color to :cyan' do
+      expect(@settings.color_help).to eq(:cyan)
     end
   end
 
   # Processor initializes using the settings file {{{1
   context 'processor initializes using the settings file' do
     before(:each) do
-      @settings = Settings.new temp_settings_file({:stack=>[1,2],
-                                                   :registers=>{'a'=>3},
-                                                   :base=>8,
-                                                   :angle=>'RAD',
-                                                   :color_normal=>'black',
-                                                   :color_error=>'red',
-                                                   :color_title=>'green',
-                                                   :color_register=>'yellow',
-                                                   :color_help_heading=>'blue',
-                                                   :color_help=>'cyan'})
+      @settings = Settings.new temp_settings_file({'stack'=>[1,2],
+                                                   'registers'=>{'a'=>3},
+                                                   'base'=>8,
+                                                   'angle'=>'RAD',
+                                                   'color_normal'=>:black,
+                                                   'color_error'=>:red,
+                                                   'color_title'=>:green,
+                                                   'color_register'=>:yellow,
+                                                   'color_help_heading'=>:blue,
+                                                   'color_help'=>:cyan})
     end
     after(:each) do
       File.delete @rpnrc
@@ -85,12 +85,12 @@ describe Settings do
       expect(@settings.angle).to eq('RAD')
     end
     it 'returns the color properties' do
-      expect(@settings.color_normal).to eq('black')
-      expect(@settings.color_error).to eq('red')
-      expect(@settings.color_title).to eq('green')
-      expect(@settings.color_register).to eq('yellow')
-      expect(@settings.color_help_heading).to eq('blue')
-      expect(@settings.color_help).to eq('cyan')
+      expect(@settings.color_normal).to eq(:black)
+      expect(@settings.color_error).to eq(:red)
+      expect(@settings.color_title).to eq(:green)
+      expect(@settings.color_register).to eq(:yellow)
+      expect(@settings.color_help_heading).to eq(:blue)
+      expect(@settings.color_help).to eq(:cyan)
     end
 
     it 'writes changed settings to the file' do
@@ -99,12 +99,12 @@ describe Settings do
       @settings.registers = {'z'=>5}
       @settings.base = 16
       @settings.angle = 'DEG'
-      @settings.color_normal = 'a'
-      @settings.color_error = 'b'
-      @settings.color_title = 'c'
-      @settings.color_register = 'd'
-      @settings.color_help_heading = 'e'
-      @settings.color_help = 'f'
+      @settings.color_normal = :a
+      @settings.color_error = :b
+      @settings.color_title = :c
+      @settings.color_register = :d
+      @settings.color_help_heading = :e
+      @settings.color_help = :f
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
