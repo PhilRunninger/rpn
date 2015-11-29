@@ -1,4 +1,5 @@
 require_relative 'common'
+require_relative 'settings'
 require 'json'
 require 'launchy'
 
