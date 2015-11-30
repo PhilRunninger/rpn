@@ -196,10 +196,10 @@ describe Processor do
             expect(@processor.execute('60 2 >>')).to eq(15)
         end
 
-        # Help {{{2
-        it 'displays a list of all functions' do
-            expect{@processor.execute('?')}.to_not raise_error
-        end
+        ## Help {{{2
+        #it 'displays a list of all functions' do
+        #    expect{@processor.execute('?')}.to_not raise_error
+        #end
         #it 'launches a web page of RPN tutorials' do
         #    expect{@processor.execute('??')}.to_not raise_error
         #end
@@ -389,9 +389,9 @@ describe Processor do
         end
 
         # Unit Conversion {{{2
-        it 'shows a list of convertible units' do
-            expect{@processor.execute('units')}.to_not raise_error
-        end
+        #it 'shows a list of convertible units' do
+        #    expect{@processor.execute('units')}.to_not raise_error
+        #end
         it 'throws an exception for invalid units' do
             expect{@processor.execute('1 foobar>snafu')}.to raise_error
         end
