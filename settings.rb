@@ -82,5 +82,40 @@ class Settings
   def color_help
     (@hash['color_help'] || 'cyan').to_sym
   end
-end
 
+  def change_colors
+    items = {'Title'=>'color_title',
+             'Normal'=>'color_normal',
+             'Error'=>'color_error',
+             'Register'=>'color_register',
+             'Help Heading'=>'color_help_heading',
+             'Help'=>'color_help'}
+    colors = [:black, :light_black, :red, :light_red, :green, :light_green, :yellow, :light_yellow, :blue, :light_blue, :magenta, :light_magenta, :cyan, :light_cyan, :white, :light_white]
+    puts ''
+    puts 'Choose an item then a color. Press Enter to go back to the calculator.'
+    begin
+      print ' '
+      items.each_with_index{|(item,color_function),index| print " #{index}=#{item}".colorize(send(color_function))}
+      print '▷ '
+      begin
+        item = STDIN.getch.upcase
+      end while (item =~ /[0-5\r]/).nil?
+      print item
+
+      if item != "\r"
+        print '  '
+        colors.each_index{|i| print "#{i.to_s(16).upcase}•".colorize(colors[i])}
+        print '▷ '
+        begin
+          color = STDIN.getch.upcase
+        end while (color =~ /[0-9A-F\r]/).nil?
+        puts color
+
+        send(items.values[item.to_i]+'=', colors[color.to_i(16)].to_sym) unless color == "\r"
+      else
+        puts ''
+      end
+    end while item != "\r" and color != "\r"
+    puts ''
+  end
+end

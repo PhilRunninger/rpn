@@ -7,9 +7,6 @@ require_relative 'processor'
 require_relative 'common'
 
 processor = Processor.new
-puts processor.settings.stack
-processor.settings.stack = [42]
-puts processor.settings.stack
 
 puts "RPN Calculator, ©2014, Phil Runninger ".colorize(processor.settings.color_title) + 
   "#{'═' * (console_columns - 57)} Enter ? for help.".colorize(processor.settings.color_help)
@@ -28,7 +25,7 @@ begin
       ' '
   }
   print '• '.colorize(processor.settings.color_help_heading) if processor.registers != {}
-  prompt  = processor.stack.map{|value| "#{processor.format(value)}" }.join(' ')
+  prompt  = processor.stack.map{|value| "#{processor.format(value)}" }.join(' ').colorize(processor.settings.color_normal)
   prompt += ' ' + processor.radix.colorize(processor.settings.color_title) unless processor.radix == ''
   prompt += " #{processor.angle_mode}► ".colorize(processor.settings.color_title)
   input = Readline.readline(prompt.strip, true)

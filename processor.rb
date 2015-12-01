@@ -80,8 +80,9 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                    {'category' => 'Angle Mode',
                     'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
                                                                                    'deg' => 'Switch to degrees'}}]},
-                   {'category' => 'Help',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'Enter' => 'Exit the calculator',
+                   {'category' => 'Other',
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'<Enter>' => 'Exit the calculator',
+                                                                                    'colors' => 'Change colors',
                                                                                     '?'     => 'Display this list',
                                                                                     '??'    => 'Google list of RPN tutorials'}}]}
             ]
@@ -376,6 +377,8 @@ class Processor
           @base = BASES[operator]
         when 'rad', 'deg'
           @angle = operator.upcase
+        when 'colors'
+          @settings.change_colors
         when '?'
             puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
             VALID_OPERATORS.each{ |category|
