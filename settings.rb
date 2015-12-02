@@ -45,42 +45,42 @@ class Settings
     @hash['color_normal'] = color_normal
   end
   def color_normal
-    (@hash['color_normal'] || 'black').to_sym
+    (@hash['color_normal'] || 'default').to_sym
   end
 
   def color_error= color_error
     @hash['color_error'] = color_error
   end
   def color_error
-    (@hash['color_error'] || 'red').to_sym
+    (@hash['color_error'] || 'default').to_sym
   end
 
   def color_title= color_title
     @hash['color_title'] = color_title
   end
   def color_title
-    (@hash['color_title'] || 'green').to_sym
+    (@hash['color_title'] || 'default').to_sym
   end
 
   def color_register= color_register
     @hash['color_register'] = color_register
   end
   def color_register
-    (@hash['color_register'] || 'yellow').to_sym
+    (@hash['color_register'] || 'default').to_sym
   end
 
   def color_help_heading= color_help_heading
     @hash['color_help_heading'] = color_help_heading
   end
   def color_help_heading
-    (@hash['color_help_heading'] || 'blue').to_sym
+    (@hash['color_help_heading'] || 'default').to_sym
   end
 
   def color_help= color_help
     @hash['color_help'] = color_help
   end
   def color_help
-    (@hash['color_help'] || 'cyan').to_sym
+    (@hash['color_help'] || 'default').to_sym
   end
 
   def change_colors

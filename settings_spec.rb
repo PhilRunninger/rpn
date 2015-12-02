@@ -33,23 +33,23 @@ describe Settings do
     it 'initializes angle to DEG' do
       expect(@settings.angle).to eq('DEG')
     end
-    it 'initializes normal text color to :black' do
-      expect(@settings.color_normal).to eq(:black)
+    it 'initializes normal text color to :default' do
+      expect(@settings.color_normal).to eq(:default)
     end
-    it 'initializes error text color to :red' do
-      expect(@settings.color_error).to eq(:red)
+    it 'initializes error text color to :default' do
+      expect(@settings.color_error).to eq(:default)
     end
-    it 'initializes title text color to :green' do
-      expect(@settings.color_title).to eq(:green)
+    it 'initializes title text color to :default' do
+      expect(@settings.color_title).to eq(:default)
     end
-    it 'initializes register text color to :yellow' do
-      expect(@settings.color_register).to eq(:yellow)
+    it 'initializes register text color to :default' do
+      expect(@settings.color_register).to eq(:default)
     end
-    it 'initializes help heading text color to :blue' do
-      expect(@settings.color_help_heading).to eq(:blue)
+    it 'initializes help heading text color to :default' do
+      expect(@settings.color_help_heading).to eq(:default)
     end
-    it 'initializes help text color to :cyan' do
-      expect(@settings.color_help).to eq(:cyan)
+    it 'initializes help text color to :default' do
+      expect(@settings.color_help).to eq(:default)
     end
   end
 
