@@ -123,9 +123,9 @@ describe Processor do
             expect(@processor.format(-23)).to eq("###")
             expect(@processor.format(12.7)).to eq("###")
         end
-        it 'enables the user to select different colors' do
-           expect{@processor.execute('colors')}.to_not raise_error
-        end
+        #it 'enables the user to select different colors' do
+        #   expect{@processor.execute('colors')}.to_not raise_error
+        #end
 
         # Basic Arithmetic {{{2
         it 'adds two numbers' do

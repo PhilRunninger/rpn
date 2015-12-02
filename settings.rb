@@ -10,7 +10,7 @@ class Settings
   end
 
   def write
-    File.open(@settings_file,'w') {|f| f.write(@hash.to_json)}
+    File.open(@settings_file,'w') {|f| f.write(JSON.pretty_generate(@hash))}
   end
 
   def stack= stack
