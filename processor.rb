@@ -1,7 +1,7 @@
-require_relative 'common'
 require_relative 'settings'
 require 'json'
 require 'launchy'
+require 'io/console'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
@@ -487,6 +487,11 @@ class Processor
           puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
         end
       end
+    end
+
+    def console_columns
+      _, columns = IO.console.winsize
+      [columns, 60].max
     end
 
 end
