@@ -1,6 +1,7 @@
-require_relative 'common'
+require_relative 'settings'
 require 'json'
 require 'launchy'
+require 'io/console'
 
 OPERATOR_WIDTH = 8
 VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
@@ -79,8 +80,9 @@ VALID_OPERATORS = [{'category' => 'Basic Arithmetic',
                    {'category' => 'Angle Mode',
                     'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
                                                                                    'deg' => 'Switch to degrees'}}]},
-                   {'category' => 'Help',
-                    'groups' => [{'function' => 'custom_operator',  'operators' => {'Enter' => 'Exit the calculator',
+                   {'category' => 'Other',
+                    'groups' => [{'function' => 'custom_operator',  'operators' => {'<Enter>' => 'Exit the calculator',
+                                                                                    'colors' => 'Change colors',
                                                                                     '?'     => 'Display this list',
                                                                                     '??'    => 'Google list of RPN tutorials'}}]}
             ]
@@ -151,18 +153,15 @@ UNITS_CONVERSION = [{'category'=>'length',
 BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'real'=>0}
 
 class Processor
-    attr_reader :stack, :registers
+    attr_reader :stack, :registers, :settings
     attr_accessor :base
 
     def initialize settings_file=File.join(Dir.home, '.rpnrc')
-        @settings_file = settings_file
-        hash = {}
-        hash = JSON.parse(File.read(settings_file)) if File.exist?(settings_file)
-
-        @stack = hash['stack'] || []
-        @registers = hash['registers'] || {}
-        @base = hash['base'] || 0
-        @angle = hash['angle'] || 'DEG'
+        @settings = Settings.new(settings_file)
+        @stack = @settings.stack
+        @registers = @settings.registers
+        @base = @settings.base
+        @angle = @settings.angle
     end
 
     def angle_mode
@@ -220,13 +219,11 @@ class Processor
 
         @stack.delete(nil)
 
-        hash = {}
-        hash['stack'] = @stack unless @stack.empty?
-        hash['registers'] = @registers unless @registers.empty?
-        hash['base'] = @base
-        hash['angle'] = @angle
-
-        File.open(@settings_file,'w') {|f| f.write(hash.to_json)}
+        @settings.stack = @stack
+        @settings.registers = @registers
+        @settings.base = @base
+        @settings.angle = @angle
+        @settings.write
 
         @stack.last
     end
@@ -380,36 +377,51 @@ class Processor
           @base = BASES[operator]
         when 'rad', 'deg'
           @angle = operator.upcase
+        when 'colors'
+          @settings.change_colors
         when '?'
-            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+            puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
             VALID_OPERATORS.each{ |category|
-                puts "#{BLUE_TEXT}#{category['category']}"
+                puts category['category'].colorize(@settings.color_help_heading)
 
-                category['prefix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s\n", part1, part2 } unless category['prefix'].nil?
+                unless category['prefix'].nil?
+                  category['prefix'].each{|part1, part2|
+                      part1 = sprintf(" %#{OPERATOR_WIDTH}s  ", part1)
+                      puts part1.colorize(@settings.color_help) +
+                           part2.colorize(@settings.color_normal)
+                  }
+                end
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
                 description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
                 total_width = 0
                 operators.each{|op,description|
-                    text = sprintf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s", op, description
-                    if total_width + text.length - 10 < console_columns
-                        print "#{text}"
-                        total_width = total_width + text.length - 10
-                    elsif total_width + text.rstrip.length - 10 < console_columns
-                        puts "#{text.rstrip}"
+                    op = sprintf(" %#{OPERATOR_WIDTH}s  ", op)
+                    description = sprintf("%-#{description_width}s", description)
+                    if total_width + op.length + description.length + 3 < console_columns
+                        print op.colorize(@settings.color_help) + description.colorize(@settings.color_normal)
+                        total_width = total_width + op.length + description.length + 3
+                    elsif total_width + op.length + description.rstrip.length + 3 < console_columns
+                        puts op.colorize(@settings.color_help) + description.rstrip.colorize(@settings.color_normal)
                         total_width = 0
                     else
-                        puts ""
-                        print "#{text}"
-                        total_width = text.length - 10
+                        puts ''
+                        print op.colorize(@settings.color_help) + description.colorize(@settings.color_normal)
+                        total_width = op.length + description.length + 3
                     end
                 }
-                puts "" if total_width > 0
+                puts '' if total_width > 0
 
-                category['suffix'].each{|part1, part2| printf " #{CYAN_TEXT}%#{OPERATOR_WIDTH}s  #{BLACK_TEXT}%-#{description_width}s\n", part1 =~ /^\#HIDE.*\#$/ ? '' : part1, part2 } unless category['suffix'].nil?
+                unless category['suffix'].nil?
+                  category['suffix'].each{|part1, part2|
+                      part1 = sprintf(" %#{OPERATOR_WIDTH}s  ", part1 =~ /^\#HIDE.*\#$/ ? '' : part1)
+                      puts part1.colorize(@settings.color_help) +
+                           part2.colorize(@settings.color_normal)
+                      }
+                end
             }
-            puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+            puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
         when '??'
             Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
         end
@@ -467,13 +479,19 @@ class Processor
       else
         case parts
         when 'units'
-          puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+          puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
           UNITS_CONVERSION.each{ |category|
-            puts "#{BLUE_TEXT}#{category['category']}:  #{BLACK_TEXT}#{category['systems'].map{|s| s['conversions'].map{|u| u['unit']}.join(', ')}.join(', ')}"
+            puts "#{category['category']}: ".colorize(@settings.color_help_heading) +
+                 "#{category['systems'].map{|s| s['conversions'].map{|u| u['unit']}.join(', ')}.join(', ')}".colorize(@settings.color_normal)
           }
-          puts "#{CYAN_TEXT}#{'─' * (console_columns - 1)}"
+          puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
         end
       end
+    end
+
+    def console_columns
+      _, columns = IO.console.winsize
+      [columns, 60].max
     end
 
 end

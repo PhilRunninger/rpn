@@ -14,12 +14,12 @@ end
 
 describe Processor do
 
-    # No previous settings file {{{1
-    context 'no previous settings' do
+    # Processor works with default settings {{{1
+    context 'processor works with default settings' do
         before (:each) do
             @processor = Processor.new temp_settings_file({})
         end
-        after (:all) do
+        after (:each) do
             File.delete @rpnrc
         end
 
@@ -123,6 +123,9 @@ describe Processor do
             expect(@processor.format(-23)).to eq("###")
             expect(@processor.format(12.7)).to eq("###")
         end
+        #it 'enables the user to select different colors' do
+        #   expect{@processor.execute('colors')}.to_not raise_error
+        #end
 
         # Basic Arithmetic {{{2
         it 'adds two numbers' do
@@ -196,10 +199,10 @@ describe Processor do
             expect(@processor.execute('60 2 >>')).to eq(15)
         end
 
-        # Help {{{2
-        it 'displays a list of all functions' do
-            expect{@processor.execute('?')}.to_not raise_error
-        end
+        ## Help {{{2
+        #it 'displays a list of all functions' do
+        #    expect{@processor.execute('?')}.to_not raise_error
+        #end
         #it 'launches a web page of RPN tutorials' do
         #    expect{@processor.execute('??')}.to_not raise_error
         #end
@@ -389,9 +392,9 @@ describe Processor do
         end
 
         # Unit Conversion {{{2
-        it 'shows a list of convertible units' do
-            expect{@processor.execute('units')}.to_not raise_error
-        end
+        #it 'shows a list of convertible units' do
+        #    expect{@processor.execute('units')}.to_not raise_error
+        #end
         it 'throws an exception for invalid units' do
             expect{@processor.execute('1 foobar>snafu')}.to raise_error
         end
@@ -485,7 +488,7 @@ describe Processor do
         before (:each) do
             @processor = Processor.new temp_settings_file({'stack'=>[1,2,3], 'registers'=>{'a'=>4, 'b'=>5.6}, 'base'=>2, 'angle'=>'RAD'})
         end
-        after (:all) do
+        after (:each) do
             File.delete @rpnrc
         end
 
@@ -504,12 +507,12 @@ describe Processor do
         end
     end
 
-    # Processor save settings file after execute {{{1
+    # Processor saves settings file after execute {{{1
     context 'processor saves settings file after execute' do
         before (:each) do
             @processor = Processor.new temp_settings_file({})
         end
-        after (:all) do
+        after (:each) do
             File.delete @rpnrc
         end
 
@@ -527,7 +530,7 @@ describe Processor do
         end
         it 'saves the registers after one is defined' do
             @processor.execute '1'
-            expect(settings_file_hash['registers']).to be_nil
+            expect(settings_file_hash['registers']).to eq({})
             @processor.execute 'a='
             expect(settings_file_hash['registers']).to eq({'a'=>1})
         end
@@ -542,6 +545,18 @@ describe Processor do
             expect(settings_file_hash['angle']).to eq('DEG')
             @processor.execute 'rad'
             expect(settings_file_hash['angle']).to eq('RAD')
+        end
+        it 'removes the stack from settings when cleared' do
+            @processor.execute '1'
+            expect(settings_file_hash['stack']).to eq([1])
+            @processor.execute 'cs'
+            expect(settings_file_hash['stack']).to eq([])
+        end
+        it 'removes the registers from settings when cleared' do
+            @processor.execute '1 a='
+            expect(settings_file_hash['registers']).to eq({'a'=>1})
+            @processor.execute 'cr'
+            expect(settings_file_hash['registers']).to eq({})
         end
     end
 
