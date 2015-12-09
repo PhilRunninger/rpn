@@ -14,8 +14,8 @@ end
 
 describe Processor do
 
-    # Processor works with default settings {{{1
-    context 'processor works with default settings' do
+    # When working with an empty settings file {{{1
+    context 'when working with an empty settings file, ' do
         before (:each) do
             @processor = Processor.new temp_settings_file({})
         end
@@ -52,6 +52,8 @@ describe Processor do
             expect(@processor.parse_number('4.2.3')).to be_nil
             expect(@processor.parse_number('-')).to be_nil
             expect(@processor.parse_number('foobar==')).to be_nil
+            expect(@processor.parse_register('func(')).to be_nil
+            expect(@processor.parse_register(')')).to be_nil
         end
         it 'parses binary numbers' do
             @processor.base = 2
@@ -87,17 +89,31 @@ describe Processor do
             expect(@processor.parse_operator('123')).to be_nil
             expect(@processor.parse_operator('fubar=')).to be_nil
             expect(@processor.parse_operator('=fubar')).to be_nil
+            expect(@processor.parse_register('func(')).to be_nil
+            expect(@processor.parse_register(')')).to be_nil
         end
         it 'parses registers' do
             expect(@processor.parse_register('123')).to be_nil
             expect(@processor.parse_register('**')).to be_nil
             expect(@processor.parse_register('hot!=')).to be_nil
+            expect(@processor.parse_register('func(')).to be_nil
+            expect(@processor.parse_register(')')).to be_nil
             expect(@processor.parse_register('a1a=')).to be_kind_of(MatchData)
             expect(@processor.parse_register('abc==')).to be_kind_of(MatchData)
             expect(@processor.parse_register('==def')).to be_kind_of(MatchData)
             expect(@processor.parse_register('=ghi')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('j_k')).to be_kind_of(MatchData)
         end
+        it 'parses macros' do
+            expect(@processor.parse_macro('123')).to be_nil
+            expect(@processor.parse_macro('**')).to be_nil
+            expect(@processor.parse_macro('abc=')).to be_nil
+            expect(@processor.parse_macro('a1a(')).to be_kind_of(MatchData)
+            expect(@processor.parse_macro(')')).to be_kind_of(MatchData)
+            expect(@processor.parse_macro('f()')).to be_kind_of(MatchData)
+            expect(@processor.parse_macro('f')).to be_nil
+
+        end
+
         it 'will not allow pushing a nonexistent register' do
             @processor.execute('12 widgets=')
             expect(@processor.parse_register('=widgets')).to be_kind_of(MatchData)
@@ -162,7 +178,6 @@ describe Processor do
             expect {@processor.execute ('2 +')}.to raise_error
         end
         it 'raises an error if given an unknown operator/register' do
-            expect {@processor.execute('1 2 snafu')}.to raise_error
             expect {@processor.execute('1 2 =foobar')}.to raise_error
         end
         it 'restores the stack to what it was before an exception was raised' do
@@ -318,12 +333,6 @@ describe Processor do
             expect(@processor.stack).to eq([13, 13])
             expect(@processor.registers['a']).to eq(13)
         end
-        it 'puts the named register location\'s value on the stack without equal sign' do
-            @processor.execute('13 a=')
-            @processor.execute('a')
-            expect(@processor.stack).to eq([13, 13])
-            expect(@processor.registers['a']).to eq(13)
-        end
         it 'replaces the stack with the named register location\'s value' do
             @processor.execute('12 11 13 a=')
             @processor.execute('==a')
@@ -346,11 +355,14 @@ describe Processor do
         it 'will not allow the use of an operator for a register name' do
             expect {@processor.execute('5 pi=')}.to raise_error
         end
+        it 'will not allow the use of a macro for a register name' do
+            expect {@processor.execute('f( 3 * ) 5 f=')}.to raise_error
+        end
         it 'throws an exception when nothing to put into register' do
             expect {@processor.execute('foo=')}.to raise_error
         end
         it 'throws an exception when register is not defined' do
-            expect {@processor.execute('foo')}.to raise_error
+            expect {@processor.execute('=foo')}.to raise_error
         end
 
         # Statistics {{{2
@@ -480,42 +492,60 @@ describe Processor do
             expect(@processor.execute('30 sin')).to be_within(0.00001).of(0.5)
         end
 
-        # }}}
-    end
+        # Create and run macros {{{2
+        it 'stores a macro in the macros hash' do
+            @processor.execute('f( 1 2 3 )')
+            expect(@processor.macros).to eq({'f' => ['1', '2', '3']})
+        end
+        it 'stores a macro in the middle of an input string' do
+            @processor.execute('90 sin f( 1 2 4 ) 3 5')
+            expect(@processor.macros).to eq({'f' => ['1', '2', '4']})
+        end
+        it 'stores a macro that spans multiple input strings' do
+            @processor.execute('f( 1 2 4')
+            @processor.execute('8 16')
+            @processor.execute('32 )')
+            expect(@processor.macros).to eq({'f' => ['1', '2', '4', '8', '16', '32']})
+        end
+        it 'does not affect the stack when storing a macro' do
+            @processor.execute('4 f( 1 2 3 ) 5')
+            expect(@processor.stack).to eq([4, 5])
+        end
+        it 'clears a macro with an empty function declaration' do
+            @processor.execute('f( 1 2 3 )')
+            expect(@processor.macros).to eq({'f' => ['1', '2', '3']})
+            @processor.execute('f( )')
+            expect(@processor.macros).to eq({})
+        end
+        it 'clears a macro with a single operator' do
+            @processor.execute('f( 1 2 3 )')
+            expect(@processor.macros).to eq({'f' => ['1', '2', '3']})
+            @processor.execute('f()')
+            expect(@processor.macros).to eq({})
+        end
+        it 'clears all macros' do
+            @processor.execute('f( 3 * ) g( 4 + )')
+            expect(@processor.macros).to eq({'f' => ['3', '*'], 'g' => ['4', '+']})
+            @processor.execute('cm')
+            expect(@processor.macros).to eq({})
+        end
+        it 'executes a macro' do
+            @processor.execute('f( 3 * ) g( 4 + )')
+            expect(@processor.execute('1 f')).to eq(3)
+        end
+        it 'executes multiple macros' do
+            @processor.execute('f( 3 * ) g( 4 + )')
+            expect(@processor.execute('1 f f g g')).to eq(17)
+        end
+        it 'raises an error when using a register as a macro name' do
+            @processor.execute('12 f=')
+            expect {@processor.execute ('f( 13 * )')}.to raise_error
+        end
+        it 'raises an error when using an operator as a macro name' do
+            expect {@processor.execute ('pi( 123 )')}.to raise_error
+        end
 
-    # Processor initializes using the settings file {{{1
-    context 'processor initializes using the settings file' do
-        before (:each) do
-            @processor = Processor.new temp_settings_file({'stack'=>[1,2,3], 'registers'=>{'a'=>4, 'b'=>5.6}, 'base'=>2, 'angle'=>'RAD'})
-        end
-        after (:each) do
-            File.delete @rpnrc
-        end
-
-        it 'remembers the stack from the previous session' do
-            expect(@processor.stack).to eq([1,2,3])
-        end
-        it 'remembers the registers from previous session' do
-            expect(@processor.registers['a']).to eq(4)
-            expect(@processor.registers['b']).to eq(5.6)
-        end
-        it 'remembers the base used in last session' do
-            expect(@processor.radix).to eq('BIN')
-        end
-        it 'remembers the angle mode used in last session' do
-            expect(@processor.angle_mode).to eq('RAD')
-        end
-    end
-
-    # Processor saves settings file after execute {{{1
-    context 'processor saves settings file after execute' do
-        before (:each) do
-            @processor = Processor.new temp_settings_file({})
-        end
-        after (:each) do
-            File.delete @rpnrc
-        end
-
+        # Saving settings in the settings file. {{{2
         it 'saves the stack after one execute' do
             @processor.execute '1'
             expect(settings_file_hash['stack']).to eq([1])
@@ -533,6 +563,12 @@ describe Processor do
             expect(settings_file_hash['registers']).to eq({})
             @processor.execute 'a='
             expect(settings_file_hash['registers']).to eq({'a'=>1})
+        end
+        it 'saves the macros after one is defined' do
+            @processor.execute '1'
+            expect(settings_file_hash['macros']).to eq({})
+            @processor.execute 'f( 4 * )'
+            expect(settings_file_hash['macros']).to eq({'f'=>['4', '*']})
         end
         it 'saves the base always' do
             @processor.execute '1'
@@ -557,6 +593,44 @@ describe Processor do
             expect(settings_file_hash['registers']).to eq({'a'=>1})
             @processor.execute 'cr'
             expect(settings_file_hash['registers']).to eq({})
+        end
+        it 'removes the macros from settings when cleared' do
+            @processor.execute 'f( 3 * )'
+            expect(settings_file_hash['macros']).to eq({'f'=>['3','*']})
+            @processor.execute 'cm'
+            expect(settings_file_hash['macros']).to eq({})
+        end
+    end
+
+    # When using an exising non-empty settings file {{{1
+    context 'when using an exsting non-empty settings file,' do
+        before (:each) do
+            @processor = Processor.new temp_settings_file({'stack'=>[1,2,3], 'registers'=>{'a'=>4, 'b'=>5.6}, 'macros'=>{'f'=>['3','*'], 'g'=>['4','+']}, 'base'=>2, 'angle'=>'RAD'})
+        end
+        after (:each) do
+            File.delete @rpnrc
+        end
+
+        it 'remembers the stack from the previous session' do
+            expect(@processor.stack).to eq([1,2,3])
+        end
+        it 'remembers the registers from previous session' do
+            expect(@processor.registers['a']).to eq(4)
+            expect(@processor.registers['b']).to eq(5.6)
+        end
+        it 'remembers the macros from previous session' do
+            expect(@processor.macros['f']).to eq(['3', '*'])
+            expect(@processor.macros['g']).to eq(['4', '+'])
+        end
+        it 'remembers the base used in last session' do
+            expect(@processor.radix).to eq('BIN')
+        end
+        it 'remembers the angle mode used in last session' do
+            expect(@processor.angle_mode).to eq('RAD')
+        end
+
+        it 'parses a non-macro as a nil' do
+            expect(@processor.parse_macro('h')).to be_nil
         end
     end
 

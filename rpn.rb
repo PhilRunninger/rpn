@@ -18,7 +18,10 @@ begin
     puts exception.message.colorize(processor.settings.color_error)
   end
 
-  prompt = processor.registers.map{|name, value|
+  prompt = ''
+  prompt += "Recording #{processor.recording}... ".colorize(processor.settings.color_error) unless processor.recording.nil?
+  prompt += "#{processor.macros.keys.join(', ')}  ".colorize(processor.settings.color_help) unless processor.macros == {}
+  prompt += processor.registers.map{|name, value|
     name.colorize(processor.settings.color_register) +
     '='.colorize(processor.settings.color_normal) +
     processor.format(value).colorize(processor.settings.color_register)}.join(' ')
