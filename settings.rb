@@ -27,6 +27,13 @@ class Settings
     @hash['registers'] || {}
   end
 
+  def macros= macros
+    @hash['macros'] = macros
+  end
+  def macros
+    @hash['macros'] || {}
+  end
+
   def base= base
     @hash['base'] = base
   end

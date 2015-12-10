@@ -12,8 +12,8 @@ def settings_file_hash
 end
 
 describe Settings do
-  # Default settings {{{1
-  context 'default settings' do
+  # When working with an empty settings file {{{1
+  context 'when working with an empty settings file,' do
     before(:each) do
       @settings = Settings.new temp_settings_file({})
     end
@@ -26,6 +26,9 @@ describe Settings do
     end
     it 'initializes registers to {}' do
       expect(@settings.registers).to eq({})
+    end
+    it 'initializes macros to {}' do
+      expect(@settings.macros).to eq({})
     end
     it 'initializes base to 0' do
       expect(@settings.base).to eq(0)
@@ -53,11 +56,12 @@ describe Settings do
     end
   end
 
-  # Processor initializes using the settings file {{{1
-  context 'processor initializes using the settings file' do
+  # When working with a non-empty settings file {{{1
+  context 'when working with a non-empty settings file,' do
     before(:each) do
       @settings = Settings.new temp_settings_file({'stack'=>[1,2],
                                                    'registers'=>{'a'=>3},
+                                                   'macros'=>{'f'=>['3','*']},
                                                    'base'=>8,
                                                    'angle'=>'RAD',
                                                    'color_normal'=>:black,
@@ -78,6 +82,9 @@ describe Settings do
       expect(@settings.registers).to_not be_nil
       expect(@settings.registers['a']).to eq(3)
     end
+    it 'returns the macros' do
+        expect(@settings.macros).to eq({'f'=>['3','*']})
+    end
     it 'returns the base' do
       expect(@settings.base).to eq(8)
     end
@@ -97,6 +104,7 @@ describe Settings do
       File.delete @rpnrc
       @settings.stack = [3,4]
       @settings.registers = {'z'=>5}
+      @settings.macros = {'f'=>['4','/']}
       @settings.base = 16
       @settings.angle = 'DEG'
       @settings.color_normal = :a
@@ -110,6 +118,7 @@ describe Settings do
       expect(settings_file_hash).to eq(
         {'stack'=>[3,4],
          'registers'=>{'z'=>5},
+         'macros'=>{'f'=>['4','/']},
          'base'=>16,
          'angle'=>'DEG',
          'color_normal'=>'a',
