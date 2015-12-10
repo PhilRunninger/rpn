@@ -537,7 +537,12 @@ class Processor   #{{{1
         when 'cm'
           @macros = {}
         else
-          execute @macros[parts].join(' ') unless @macros[parts].nil?
+            if @recording
+                raise ArgumentError, "A macro cannot call itself. It will never finish." if parts == @recording
+                @macros[@recording] << parts
+            else
+                execute @macros[parts].join(' ') unless @macros[parts].nil?
+            end
         end
       end
     end

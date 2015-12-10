@@ -544,6 +544,15 @@ describe Processor do
         it 'raises an error when using an operator as a macro name' do
             expect {@processor.execute ('pi( 123 )')}.to raise_error
         end
+        it 'can define macros that call other macros' do
+            @processor.execute('f( 2 * ) g( f 2 ** )')
+            expect(@processor.macros).to eq({'f'=>['2', '*'], 'g'=>['f', '2', '**']})
+            expect(@processor.execute('3 g')).to eq(36)
+        end
+        it 'raises an error if a macro calls itself' do
+            expect {@processor.execute ('f( 10 * f )')}.to raise_error
+        end
+
 
         # Saving settings in the settings file. {{{2
         it 'saves the stack after one execute' do
