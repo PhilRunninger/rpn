@@ -1,6 +1,7 @@
 require 'json'
 require 'rspec'
 require_relative 'processor'
+require_relative 'number'
 
 def temp_settings_file(hash)
     @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
@@ -23,32 +24,32 @@ describe Processor do
             File.delete @rpnrc
         end
 
-        # Basic stack pushing and popping {{{2
+        # # Basic stack pushing and popping {{{2
         it 'parses a string with one number into a stack with one number' do
             @processor.execute '123'
-            expect(@processor.stack).to eq([123])
+            expect(@processor.stack).to eq([Number.new('123')])
         end
         it 'adds to the stack with subsequent calls to execute' do
             @processor.execute '42'
             @processor.execute '73'
-            expect(@processor.stack).to eq([42, 73])
+            expect(@processor.stack).to eq([Number.new('42'), Number.new('73')])
         end
         it 'parses a string of two numbers into a stack with two numbers' do
             @processor.execute '1.5 32'
-            expect(@processor.stack).to eq([1.5, 32])
+            expect(@processor.stack).to eq([Number.new('1.5'), Number.new('32')])
         end
         it 'returns an answer' do
-            expect(@processor.execute ('2 3 4 5')).to eq(5)
+            expect((@processor.execute ('2 3 4 5')).value).to eq(5)
         end
 
         # Internal utility functions {{{2
         it 'parses a number' do
-            expect(@processor.parse_number('23')).to eq(23.0)
-            expect(@processor.parse_number('2.3')).to eq(2.3)
-            expect(@processor.parse_number('-42')).to eq(-42)
-            expect(@processor.parse_number('-.25')).to eq(-0.25)
-            expect(@processor.parse_number('3.14e4')).to eq(31400.0)
-            expect(@processor.parse_number('5e-3')).to eq(0.005)
+            expect(@processor.parse_number('23')).to eq(Number.new('23'))
+            expect(@processor.parse_number('2.3')).to eq(Number.new('2.3'))
+            expect(@processor.parse_number('-42')).to eq(Number.new('-42'))
+            expect(@processor.parse_number('-.25')).to eq(Number.new('-0.25'))
+            expect(@processor.parse_number('3.14e4')).to eq(Number.new('31400.0'))
+            expect(@processor.parse_number('5e-3')).to eq(Number.new('0.005'))
             expect(@processor.parse_number('4.2.3')).to be_nil
             expect(@processor.parse_number('-')).to be_nil
             expect(@processor.parse_number('foobar==')).to be_nil
@@ -56,33 +57,22 @@ describe Processor do
             expect(@processor.parse_register(')')).to be_nil
         end
         it 'parses binary numbers' do
-            @processor.base = 2
-            expect(@processor.parse_number('101')).to eq(5)
-            expect(@processor.parse_number('123')).to be_nil
-            expect(@processor.parse_number('1.0')).to be_nil
-            expect(@processor.parse_number('-10')).to be_nil
+            expect(@processor.parse_number('0b101')).to eq(Number.new('0b101'))
+            expect(@processor.parse_number('-0b10')).to eq(Number.new('-0b10'))
         end
         it 'parses octal numbers' do
-            @processor.base = 8
-            expect(@processor.parse_number('37')).to eq(31)
-            expect(@processor.parse_number('129')).to be_nil
-            expect(@processor.parse_number('1.2')).to be_nil
-            expect(@processor.parse_number('-12')).to be_nil
+            expect(@processor.parse_number('037')).to eq(Number.new('037'))
+            expect(@processor.parse_number('-012')).to eq(Number.new('-012'))
         end
         it 'parses decimal numbers' do
-            @processor.base = 10
-            expect(@processor.parse_number('153')).to eq(153)
-            expect(@processor.parse_number('12a')).to be_nil
-            expect(@processor.parse_number('1.2')).to be_nil
-            expect(@processor.parse_number('-12')).to be_nil
+            expect(@processor.parse_number('153')).to eq(Number.new('153'))
+            expect(@processor.parse_number('1.2')).to eq(Number.new('1.2'))
+            expect(@processor.parse_number('-12')).to eq(Number.new('-12'))
         end
         it 'parses hexadecimal numbers' do
-            @processor.base = 16
-            expect(@processor.parse_number('1a')).to eq(26)
-            expect(@processor.parse_number('1A')).to eq(26)
-            expect(@processor.parse_number('12x')).to be_nil
-            expect(@processor.parse_number('1.2')).to be_nil
-            expect(@processor.parse_number('-12')).to be_nil
+            expect(@processor.parse_number('0x1a')).to eq(Number.new('0x1a'))
+            expect(@processor.parse_number('0x1A')).to eq(Number.new('0x1a'))
+            expect(@processor.parse_number('-0x12')).to eq(Number.new('-0x12'))
         end
         it 'parses operators' do
             expect(@processor.parse_operator('+')).to be_kind_of(Hash)
@@ -119,25 +109,25 @@ describe Processor do
             expect(@processor.parse_register('=widgets')).to be_kind_of(MatchData)
         end
         it 'formats numbers for printing' do
-            expect(@processor.format([1, 2, 3])).to eq("[1 2 3]")
-            expect(@processor.format(123)).to eq("123")
-            expect(@processor.format(-1.23)).to eq("-1.23")
+            expect(@processor.format([Number.new("1"), Number.new("2"), Number.new("3")])).to eq("[1 2 3]")
+            expect(@processor.format(Number.new("123"))).to eq("123")
+            expect(@processor.format(Number.new("-1.23"))).to eq("-1.23")
             @processor.base = 2
-            expect(@processor.format(12)).to eq("1100")
-            expect(@processor.format(-23)).to eq("###")
-            expect(@processor.format(12.7)).to eq("###")
+            expect(@processor.format(Number.new("12"))).to eq("0b1100")
+            expect(@processor.format(Number.new("-23"))).to eq("-0b10111")
+            expect(@processor.format(Number.new("12.7"))).to eq("0b1101")
             @processor.base = 8
-            expect(@processor.format(12)).to eq("14")
-            expect(@processor.format(-23)).to eq("###")
-            expect(@processor.format(12.7)).to eq("###")
+            expect(@processor.format(Number.new("12"))).to eq("014")
+            expect(@processor.format(Number.new("-23"))).to eq("-027")
+            expect(@processor.format(Number.new("12.7"))).to eq("015")
             @processor.base = 10
-            expect(@processor.format(12)).to eq("12")
-            expect(@processor.format(-23)).to eq("###")
-            expect(@processor.format(12.7)).to eq("###")
+            expect(@processor.format(Number.new("12"))).to eq("12")
+            expect(@processor.format(Number.new("-23"))).to eq("-23")
+            expect(@processor.format(Number.new("12.7"))).to eq("13")
             @processor.base = 16
-            expect(@processor.format(12)).to eq("c")
-            expect(@processor.format(-23)).to eq("###")
-            expect(@processor.format(12.7)).to eq("###")
+            expect(@processor.format(Number.new("12"))).to eq("0xc")
+            expect(@processor.format(Number.new("-23"))).to eq("-0x17")
+            expect(@processor.format(Number.new("12.7"))).to eq("0xd")
         end
         #it 'enables the user to select different colors' do
         #   expect{@processor.execute('colors')}.to_not raise_error
@@ -145,32 +135,32 @@ describe Processor do
 
         # Basic Arithmetic {{{2
         it 'adds two numbers' do
-            expect(@processor.execute ('1 2 +')).to eq(3)
+            expect((@processor.execute ('1 2 +')).value).to eq(3)
         end
         it 'subtracts two numbers' do
-            expect(@processor.execute ('1 2 -')).to eq(-1)
+            expect((@processor.execute ('1 2 -')).value).to eq(-1)
         end
         it 'multiplies two numbers' do
-            expect(@processor.execute ('3.14 2 *')).to eq(6.28)
+            expect((@processor.execute ('3.14 2 *')).value).to eq(6.28)
         end
         it 'divides two numbers' do
-            expect(@processor.execute ('1 2 /')).to eq(0.5)
+            expect((@processor.execute ('1 2 /')).value).to eq(0.5)
         end
         it 'returns the integer part of division' do
-            expect(@processor.execute('45.4 7 div')).to eq(6)
+            expect((@processor.execute('45.4 7 div')).value).to eq(6)
         end
         it 'finds the modulus of a number' do
-            expect(@processor.execute ('23 4 %')).to eq(3)
+            expect((@processor.execute ('23 4 %')).value).to eq(3)
         end
         it 'raises a number to a power' do
-            expect(@processor.execute ('2 5 **')).to eq(32)
+            expect((@processor.execute ('2 5 **')).value).to eq(32)
         end
         it 'changes the sign of the top number' do
-            expect(@processor.execute('12 chs')).to eq(-12)
+            expect((@processor.execute('12 chs')).value).to eq(-12)
         end
         it 'calculates the absolute value of a number' do
-            expect(@processor.execute('-5 abs')).to eq(5)
-            expect(@processor.execute('3.14 abs')).to eq(3.14)
+            expect((@processor.execute('-5 abs')).value).to eq(5)
+            expect((@processor.execute('3.14 abs')).value).to eq(3.14)
         end
 
         # Error Handling {{{2
@@ -183,35 +173,35 @@ describe Processor do
         it 'restores the stack to what it was before an exception was raised' do
             @processor.execute('42')
             expect {@processor.execute('+')}.to raise_error
-            expect(@processor.stack).to eq([42])
+            expect(@processor.stack).to eq([Number.new(42)])
         end
 
         # Constants {{{2
         it 'knows the value of pi' do
-            expect(@processor.execute('pi')).to be_within(0.00001).of(3.14159)
+            expect((@processor.execute('pi')).value).to be_within(0.00001).of(3.14159)
         end
         it 'knows the value of e' do
-            expect(@processor.execute('e')).to be_within(0.0000001).of(2.718281828)
+            expect((@processor.execute('e')).value).to be_within(0.0000001).of(2.718281828)
         end
 
         # Bitwise {{{2
         it 'does bitwise AND' do
-            expect(@processor.execute('60 13 &')).to eq(12)
+            expect((@processor.execute('60 13 &')).value).to eq(12)
         end
         it 'does bitwise OR' do
-            expect(@processor.execute('60 13 |')).to eq(61)
+            expect((@processor.execute('60 13 |')).value).to eq(61)
         end
         it 'does bitwise XOR' do
-            expect(@processor.execute('60 13 ^')).to eq(49)
+            expect((@processor.execute('60 13 ^')).value).to eq(49)
         end
         it 'does ones complement' do
-            expect(@processor.execute('60 ~')).to eq(-61)
+            expect((@processor.execute('60 ~')).value).to eq(-61)
         end
         it 'does left shift' do
-            expect(@processor.execute('60 2 <<')).to eq(240)
+            expect((@processor.execute('60 2 <<')).value).to eq(240)
         end
         it 'does right shift' do
-            expect(@processor.execute('60 2 >>')).to eq(15)
+            expect((@processor.execute('60 2 >>')).value).to eq(15)
         end
 
         ## Help {{{2
@@ -224,131 +214,131 @@ describe Processor do
 
         # Trigonometric {{{2
         it 'calculates sin of a number in degrees' do
-            expect(@processor.execute('30 sin')).to be_within(0.000001).of(0.5)
+            expect((@processor.execute('30 sin')).value).to be_within(0.000001).of(0.5)
         end
         it 'calculates cos of a number in degrees' do
-            expect(@processor.execute('60 cos')).to be_within(0.000001).of(0.5)
+            expect((@processor.execute('60 cos')).value).to be_within(0.000001).of(0.5)
         end
         it 'calculates tan of a number in degrees' do
-            expect(@processor.execute('45 tan')).to be_within(0.000001).of(1.0)
+            expect((@processor.execute('45 tan')).value).to be_within(0.000001).of(1.0)
         end
         it 'calculates asin of a number in degrees' do
-            expect(@processor.execute('0.5 asin')).to be_within(0.000001).of(30)
+            expect((@processor.execute('0.5 asin')).value).to be_within(0.000001).of(30)
         end
         it 'calculates acos of a number in degrees' do
-            expect(@processor.execute('0.5 acos')).to be_within(0.000001).of(60)
+            expect((@processor.execute('0.5 acos')).value).to be_within(0.000001).of(60)
         end
         it 'calculates atan of a number in degrees' do
-            expect(@processor.execute('1 atan')).to be_within(0.000001).of(45)
+            expect((@processor.execute('1 atan')).value).to be_within(0.000001).of(45)
         end
 
         # Powers and Logarithms {{{2
         it 'calculates the square root of a number' do
-            expect(@processor.execute('64 sqrt')).to eq(8)
+            expect((@processor.execute('64 sqrt')).value).to eq(8)
         end
         it 'calculates the reciprocal of a number' do
-            expect(@processor.execute('4 \\')).to eq(0.25)
+            expect((@processor.execute('4 \\')).value).to eq(0.25)
         end
         it 'calculates e^x' do
-            expect(@processor.execute('10 exp')).to be_within(0.000001).of(22026.4657948)
+            expect((@processor.execute('10 exp')).value).to be_within(0.000001).of(22026.4657948)
         end
         it 'calculates the natural log of x' do
-            expect(@processor.execute('99 log')).to be_within(0.000001).of(4.59511985014)
+            expect((@processor.execute('99 log')).value).to be_within(0.000001).of(4.59511985014)
         end
         it 'calculates the log (base 10) of x' do
-            expect(@processor.execute('99 log10')).to be_within(0.000001).of(1.9956351946)
+            expect((@processor.execute('99 log10')).value).to be_within(0.000001).of(1.9956351946)
         end
         it 'calculates the log (base 2) of x' do
-            expect(@processor.execute('99 log2')).to be_within(0.000001).of(6.62935662008)
+            expect((@processor.execute('99 log2')).value).to be_within(0.000001).of(6.62935662008)
         end
 
         # Stack Manipulation {{{2
         it 'copies the top value on the stack' do
             @processor.execute('5 copy')
-            expect(@processor.stack).to eq([5,5])
+            expect(@processor.stack).to eq([Number.new(5),Number.new(5)])
         end
         it 'deletes the top value from the stack' do
             @processor.execute('5 3 del')
-            expect(@processor.stack).to eq([5])
+            expect(@processor.stack).to eq([Number.new(5)])
         end
         it 'clears the stack completely' do
-            @processor.execute('1 2 3 4')
-            expect(@processor.stack).to eq([1,2,3,4])
+            @processor.execute('1 2 3')
+            expect(@processor.stack).to eq([Number.new(1),Number.new(2),Number.new(3)])
             @processor.execute('cs')
             expect(@processor.stack).to eq([])
         end
         it 'exchanges the values in X and Y' do
             @processor.execute('1 3 4 xy')
-            expect(@processor.stack).to eq([1,4,3])
+            expect(@processor.stack).to eq([Number.new(1),Number.new(4),Number.new(3)])
         end
 
         # Rounding {{{2
         it 'rounds to the nearest integer' do
-            expect(@processor.execute('3.4 round')).to eq(3)
-            expect(@processor.execute('4.5 round')).to eq(5)
-            expect(@processor.execute('7.8 round')).to eq(8)
-            expect(@processor.execute('-4.2 round')).to eq(-4)
-            expect(@processor.execute('-4.5 round')).to eq(-5)
-            expect(@processor.execute('-5.6 round')).to eq(-6)
+            expect((@processor.execute('3.4 round')).value).to eq(3)
+            expect((@processor.execute('4.5 round')).value).to eq(5)
+            expect((@processor.execute('7.8 round')).value).to eq(8)
+            expect((@processor.execute('-4.2 round')).value).to eq(-4)
+            expect((@processor.execute('-4.5 round')).value).to eq(-5)
+            expect((@processor.execute('-5.6 round')).value).to eq(-6)
         end
         it 'rounds down to the nearest integer' do
-            expect(@processor.execute('3.4 floor')).to eq(3)
-            expect(@processor.execute('4.5 floor')).to eq(4)
-            expect(@processor.execute('7.8 floor')).to eq(7)
-            expect(@processor.execute('-4.2 floor')).to eq(-5)
-            expect(@processor.execute('-4.5 floor')).to eq(-5)
-            expect(@processor.execute('-5.6 floor')).to eq(-6)
+            expect((@processor.execute('3.4 floor')).value).to eq(3)
+            expect((@processor.execute('4.5 floor')).value).to eq(4)
+            expect((@processor.execute('7.8 floor')).value).to eq(7)
+            expect((@processor.execute('-4.2 floor')).value).to eq(-5)
+            expect((@processor.execute('-4.5 floor')).value).to eq(-5)
+            expect((@processor.execute('-5.6 floor')).value).to eq(-6)
         end
         it 'rounds up to the nearest integer' do
-            expect(@processor.execute('3.4 ceil')).to eq(4)
-            expect(@processor.execute('4.5 ceil')).to eq(5)
-            expect(@processor.execute('7.8 ceil')).to eq(8)
-            expect(@processor.execute('-4.2 ceil')).to eq(-4)
-            expect(@processor.execute('-4.5 ceil')).to eq(-4)
-            expect(@processor.execute('-5.6 ceil')).to eq(-5)
+            expect((@processor.execute('3.4 ceil')).value).to eq(4)
+            expect((@processor.execute('4.5 ceil')).value).to eq(5)
+            expect((@processor.execute('7.8 ceil')).value).to eq(8)
+            expect((@processor.execute('-4.2 ceil')).value).to eq(-4)
+            expect((@processor.execute('-4.5 ceil')).value).to eq(-4)
+            expect((@processor.execute('-5.6 ceil')).value).to eq(-5)
         end
         it 'truncates to the nearest integer' do
-            expect(@processor.execute('3.4 truncate')).to eq(3)
-            expect(@processor.execute('4.5 truncate')).to eq(4)
-            expect(@processor.execute('7.8 truncate')).to eq(7)
-            expect(@processor.execute('-4.2 truncate')).to eq(-4)
-            expect(@processor.execute('-4.5 truncate')).to eq(-4)
-            expect(@processor.execute('-5.6 truncate')).to eq(-5)
+            expect((@processor.execute('3.4 truncate')).value).to eq(3)
+            expect((@processor.execute('4.5 truncate')).value).to eq(4)
+            expect((@processor.execute('7.8 truncate')).value).to eq(7)
+            expect((@processor.execute('-4.2 truncate')).value).to eq(-4)
+            expect((@processor.execute('-4.5 truncate')).value).to eq(-4)
+            expect((@processor.execute('-5.6 truncate')).value).to eq(-5)
         end
 
         # Registers {{{2
         it 'copies x to a named register location' do
             @processor.execute('12 a=')
-            expect(@processor.stack).to eq([12])
-            expect(@processor.registers['a']).to eq(12)
+            expect(@processor.stack).to eq([Number.new(12)])
+            expect(@processor.registers['a']).to eq(Number.new(12))
         end
         it 'copies the entire stack to an array value in the named register' do
             @processor.execute('4 3 2 1 a==')
-            expect(@processor.stack).to eq([4,3,2,1])
-            expect(@processor.registers['a']).to eq([4,3,2,1])
+            expect(@processor.stack).to eq([Number.new(4),Number.new(3),Number.new(2),Number.new(1)])
+            expect(@processor.registers['a']).to eq([Number.new(4),Number.new(3),Number.new(2),Number.new(1)])
         end
         it 'puts the named register location\'s value on the stack' do
             @processor.execute('13 a=')
             @processor.execute('=a')
-            expect(@processor.stack).to eq([13, 13])
-            expect(@processor.registers['a']).to eq(13)
+            expect(@processor.stack).to eq([Number.new(13), Number.new(13)])
+            expect(@processor.registers['a']).to eq(Number.new(13))
         end
         it 'replaces the stack with the named register location\'s value' do
             @processor.execute('12 11 13 a=')
             @processor.execute('==a')
-            expect(@processor.stack).to eq([13])
+            expect(@processor.stack).to eq([Number.new(13)])
         end
         it 'puts the values of an array stored in the register onto the stack' do
-            @processor.registers['sample'] = [1,2,3]
+            @processor.registers['sample'] = [Number.new(1),Number.new(2),Number.new(3)]
             @processor.execute('=sample')
-            expect(@processor.stack).to eq([1,2,3])
+            expect(@processor.stack).to eq([Number.new(1),Number.new(2),Number.new(3)])
         end
         it 'returns the value of x as an answer' do
-            expect(@processor.execute('14 a=')).to eq(14)
+            expect((@processor.execute('14 a=')).value).to eq(14)
         end
         it 'clears all registers' do
             @processor.execute('13 a=')
-            expect(@processor.registers['a']).to eq(13)
+            expect(@processor.registers['a']).to eq(Number.new(13))
             @processor.execute('cr')
             expect(@processor.registers['a']).to be_nil
         end
@@ -367,40 +357,40 @@ describe Processor do
 
         # Statistics {{{2
         it 'calculates the factorial of x' do
-            expect(@processor.execute('0 !')).to eq(1)
-            expect(@processor.execute('6 !')).to eq(720)
-            expect(@processor.execute('3.14 !')).to eq(6)
+            expect((@processor.execute('0 !')).value).to eq(1)
+            expect((@processor.execute('6 !')).value).to eq(720)
+            expect((@processor.execute('3.14 !')).value).to eq(6)
             expect {@processor.execute('-5 !')}.to raise_error
         end
         it 'calculates permutation' do
-            expect(@processor.execute('5 3 perm')).to eq(60)
+            expect((@processor.execute('5 3 perm')).value).to eq(60)
         end
         it 'calculates combination' do
-            expect(@processor.execute('5 3 comb')).to eq(10)
+            expect((@processor.execute('5 3 comb')).value).to eq(10)
         end
         it 'calculates the product of all numbers on the stack' do
-            expect(@processor.execute('5 4 2 product')).to eq(40)
-            expect(@processor.registers['sample']).to eq([5,4,2])
+            expect((@processor.execute('5 4 2 product')).value).to eq(40)
+            expect(@processor.registers['sample']).to eq([Number.new(5),Number.new(4),Number.new(2)])
         end
         it 'calculates the sum of the stack' do
-            expect(@processor.execute('1 2 5 sum')).to eq(8)
-            expect(@processor.registers['sample']).to eq([1,2,5])
+            expect((@processor.execute('1 2 5 sum')).value).to eq(8)
+            expect(@processor.registers['sample']).to eq([Number.new(1),Number.new(2),Number.new(5)])
         end
         it 'calculates the mean of the stack' do
-            expect(@processor.execute('2 5 7 11 mean')).to eq(6.25)
-            expect(@processor.registers['sample']).to eq([2, 5, 7, 11])
+            expect((@processor.execute('2 5 7 11 mean')).value).to eq(6.25)
+            expect(@processor.registers['sample']).to eq([Number.new(2), Number.new(5), Number.new(7), Number.new(11)])
         end
         it 'calculates the median of the stack' do
-            expect(@processor.execute('2 5 7 11 median')).to eq(6)
-            expect(@processor.registers['sample']).to eq([2, 5, 7, 11])
+            expect((@processor.execute('2 5 7 11 median')).value).to eq(6)
+            expect(@processor.registers['sample']).to eq([Number.new(2), Number.new(5), Number.new(7), Number.new(11)])
         end
         it 'calculates the standard deviation of the stack' do
-            expect(@processor.execute('2 5 7 11 std')).to be_within(0.000001).of(3.774917218)
-            expect(@processor.registers['sample']).to eq([2, 5, 7, 11])
+            expect((@processor.execute('2 5 7 11 std')).value).to be_within(0.000001).of(3.774917218)
+            expect(@processor.registers['sample']).to eq([Number.new(2), Number.new(5), Number.new(7), Number.new(11)])
         end
         it 'calculates the count of the stack' do
-            expect(@processor.execute('2 5 7 11 count')).to eq(4)
-            expect(@processor.registers['sample']).to eq([2, 5, 7, 11])
+            expect((@processor.execute('2 5 7 11 count')).value).to eq(4)
+            expect(@processor.registers['sample']).to eq([Number.new(2), Number.new(5), Number.new(7), Number.new(11)])
         end
 
         # Unit Conversion {{{2
@@ -456,40 +446,20 @@ describe Processor do
                     rescue Exception => e
                         fail_message = "[Expected #{from_value} #{from_units}>#{to_units} to equal #{to_value}. Got \"#{e.message}\".]"
                     end
-                    expect(result).to be_within(tolerance).of(to_value), fail_message
+                    expect(result.value).to be_within(tolerance).of(to_value), fail_message
                 }
             }
         end
 
-        # Work in alternate bases {{{2
-        it 'switches to binary mode' do
-            expect(@processor.execute('bin 1101')).to eq(13)
-        end
-        it 'switches to octal mode' do
-            expect(@processor.execute('oct 1101')).to eq(577)
-        end
-        it 'switches to decimal mode' do
-            expect(@processor.execute('dec 1101')).to eq(1101)
-        end
-        it 'switches to hexadecimal mode' do
-            expect(@processor.execute('hex 1101')).to eq(4353)
-        end
-        it 'switches to real mode' do
-            expect(@processor.execute('real 1101')).to eq(1101)
-        end
-        it 'adds numbers of different bases' do
-            expect(@processor.execute('bin 1011 hex c2 oct 31 + +')).to eq(230)
-        end
-
         # Work in different angle modes {{{2
         it 'switches to radians' do
-            expect(@processor.execute('rad 1 atan')).to be_within(0.00001).of(0.78539816)
+            expect((@processor.execute('rad 1 atan')).value).to be_within(0.00001).of(0.78539816)
         end
         it 'switches to degrees' do
-            expect(@processor.execute('60 deg cos')).to be_within(0.00001).of(0.5)
+            expect((@processor.execute('60 deg cos')).value).to be_within(0.00001).of(0.5)
         end
         it 'defaults to degrees' do
-            expect(@processor.execute('30 sin')).to be_within(0.00001).of(0.5)
+            expect((@processor.execute('30 sin')).value).to be_within(0.00001).of(0.5)
         end
 
         # Create and run macros {{{2
@@ -509,7 +479,7 @@ describe Processor do
         end
         it 'does not affect the stack when storing a macro' do
             @processor.execute('4 f( 1 2 3 ) 5')
-            expect(@processor.stack).to eq([4, 5])
+            expect(@processor.stack).to eq([Number.new(4), Number.new(5)])
         end
         it 'clears a macro with an empty function declaration' do
             @processor.execute('f( 1 2 3 )')
@@ -531,11 +501,11 @@ describe Processor do
         end
         it 'executes a macro' do
             @processor.execute('f( 3 * ) g( 4 + )')
-            expect(@processor.execute('1 f')).to eq(3)
+            expect((@processor.execute('1 f')).value).to eq(3)
         end
         it 'executes multiple macros' do
             @processor.execute('f( 3 * ) g( 4 + )')
-            expect(@processor.execute('1 f f g g')).to eq(17)
+            expect((@processor.execute('1 f f g g')).value).to eq(17)
         end
         it 'raises an error when using a register as a macro name' do
             @processor.execute('12 f=')
@@ -547,7 +517,7 @@ describe Processor do
         it 'can define macros that call other macros' do
             @processor.execute('f( 2 * ) g( f 2 ** )')
             expect(@processor.macros).to eq({'f'=>['2', '*'], 'g'=>['f', '2', '**']})
-            expect(@processor.execute('3 g')).to eq(36)
+            expect((@processor.execute('3 g')).value).to eq(36)
         end
         it 'raises an error if a macro calls itself' do
             expect {@processor.execute ('f( 10 * f )')}.to raise_error
@@ -557,21 +527,21 @@ describe Processor do
         # Saving settings in the settings file. {{{2
         it 'saves the stack after one execute' do
             @processor.execute '1'
-            expect(settings_file_hash['stack']).to eq([1])
+            expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
         end
         it 'saves the stack after each execute' do
             @processor.execute '1'
-            expect(settings_file_hash['stack']).to eq([1])
+            expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
             @processor.execute '2'
-            expect(settings_file_hash['stack']).to eq([1,2])
+            expect(settings_file_hash['stack']).to eq([Number.new(1).to_h,Number.new(2).to_h])
             @processor.execute '+'
-            expect(settings_file_hash['stack']).to eq([3])
+            expect(settings_file_hash['stack']).to eq([Number.new(3).to_h])
         end
         it 'saves the registers after one is defined' do
             @processor.execute '1'
             expect(settings_file_hash['registers']).to eq({})
             @processor.execute 'a='
-            expect(settings_file_hash['registers']).to eq({'a'=>1})
+            expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
         end
         it 'saves the macros after one is defined' do
             @processor.execute '1'
@@ -593,13 +563,13 @@ describe Processor do
         end
         it 'removes the stack from settings when cleared' do
             @processor.execute '1'
-            expect(settings_file_hash['stack']).to eq([1])
+            expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
             @processor.execute 'cs'
             expect(settings_file_hash['stack']).to eq([])
         end
         it 'removes the registers from settings when cleared' do
             @processor.execute '1 a='
-            expect(settings_file_hash['registers']).to eq({'a'=>1})
+            expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
             @processor.execute 'cr'
             expect(settings_file_hash['registers']).to eq({})
         end
@@ -614,18 +584,22 @@ describe Processor do
     # When using an exising non-empty settings file {{{1
     context 'when using an exsting non-empty settings file,' do
         before (:each) do
-            @processor = Processor.new temp_settings_file({'stack'=>[1,2,3], 'registers'=>{'a'=>4, 'b'=>5.6}, 'macros'=>{'f'=>['3','*'], 'g'=>['4','+']}, 'base'=>2, 'angle'=>'RAD'})
+            @processor = Processor.new temp_settings_file({'stack'=>[Number.new("1").to_h,Number.new("2").to_h,Number.new("3").to_h],
+                                                           'registers'=>{'a'=>Number.new("4").to_h, 'b'=>Number.new("5.6").to_h},
+                                                           'macros'=>{'f'=>['3','*'], 'g'=>['4','+']},
+                                                           'base'=>2,
+                                                           'angle'=>'RAD'})
         end
         after (:each) do
             File.delete @rpnrc
         end
 
         it 'remembers the stack from the previous session' do
-            expect(@processor.stack).to eq([1,2,3])
+            expect(@processor.stack).to eq([Number.new("1"),Number.new("2"),Number.new("3")])
         end
         it 'remembers the registers from previous session' do
-            expect(@processor.registers['a']).to eq(4)
-            expect(@processor.registers['b']).to eq(5.6)
+            expect(@processor.registers['a']).to eq(Number.new("4"))
+            expect(@processor.registers['b']).to eq(Number.new("5.6"))
         end
         it 'remembers the macros from previous session' do
             expect(@processor.macros['f']).to eq(['3', '*'])
