@@ -77,12 +77,12 @@ VALID_OPERATORS =   #{{{1
                    ')' => 'Finish the definition of the current macro',
                    'foo()' => 'Clear the macro named \'foo\''}},
      {'category' => 'Switching Displayed Base',
-      'groups' => [{'function' => 'custom_operator', 'operators' => {'bin'  => 'Binary:  0b[01]+',
-                                                                     'oct'  => 'Octal:  0[0-7]+',
-                                                                     'hex'  => 'Hexadecimal:  0x[0-9a-f]+',
-                                                                     'dcl'  => 'Decimal (integer)',
+      'groups' => [{'function' => 'custom_operator', 'operators' => {'bin'  => 'Binary: 0b[01]+',
+                                                                     'oct'  => 'Octal: 0[0-7]+',
+                                                                     'hex'  => 'Hexadecimal: 0x[0-9a-f]+',
+                                                                     'dec'  => 'Decimal (integer)',
                                                                      'norm' => 'Normal mode'}}],
-      'suffix' => {'#HIDE1#' => 'BIN, OCT, HEX, and DCL modes display numbers as rounded integers. Use caution.',
+      'suffix' => {'#HIDE1#' => 'BIN, OCT, HEX, and DEC modes display numbers as rounded integers. Use caution.',
                    '#HIDE2#' => 'Numbers of any base can be entered in any display mode.'}},
      {'category' => 'Angle Mode',
       'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
@@ -158,7 +158,7 @@ UNITS_CONVERSION = #{{{1
                                    {'unit'=>'quart',  'to_std'=>'2 2 16 3 * * * *',     'from_std'=>'2 2 16 3 * * * /'},
                                    {'unit'=>'gallon', 'to_std'=>'4 2 2 16 3 * * * * *', 'from_std'=>'4 2 2 16 3 * * * * /'}]}]}
     ]
-BASES = {'bin'=>2, 'oct'=>8, 'dcl'=>10, 'hex'=>16, 'norm'=>0}   # {{{1
+BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'norm'=>0}   # {{{1
 
 class Processor   #{{{1
     attr_reader :stack, :registers, :macros, :recording, :settings
@@ -374,7 +374,7 @@ class Processor   #{{{1
             y = @stack.pop
             @stack.push x
             @stack.push y
-        when 'bin', 'oct', 'dcl', 'hex', 'norm'
+        when 'bin', 'oct', 'dec', 'hex', 'norm'
           @base = BASES[operator]
         when 'rad', 'deg'
           @angle = operator.upcase
