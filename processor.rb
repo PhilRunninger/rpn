@@ -1,3 +1,4 @@
+require_relative 'number'
 require_relative 'settings'
 require 'json'
 require 'launchy'
@@ -75,14 +76,14 @@ VALID_OPERATORS =   #{{{1
       'suffix' => {'foo(' => 'Start the definition of a macro named \'foo\'',
                    ')' => 'Finish the definition of the current macro',
                    'foo()' => 'Clear the macro named \'foo\''}},
-     {'category' => 'Switching Input/Output Base',
-      'groups' => [{'function' => 'custom_operator', 'operators' => {'bin'  => 'Switch to binary',
-                                                                     'oct'  => 'Switch to octal',
-                                                                     'dec'  => 'Switch to decimal (integer)',
-                                                                     'hex'  => 'Switch to hexadecimal',
-                                                                     'real' => 'Switch to real number'}}],
-      'suffix' => {'#HIDE1#' => 'BIN, OCT, DEC, and HEX modes work with non-negative integers only.',
-                   '#HIDE2#' => 'REAL numbers are shown as ###, but are still on the stack.'}},
+     {'category' => 'Switching Displayed Base',
+      'groups' => [{'function' => 'custom_operator', 'operators' => {'bin'  => 'Binary: 0b[01]+',
+                                                                     'oct'  => 'Octal: 0[0-7]+',
+                                                                     'hex'  => 'Hexadecimal: 0x[0-9a-f]+',
+                                                                     'dec'  => 'Decimal (integer)',
+                                                                     'norm' => 'Normal mode'}}],
+      'suffix' => {'#HIDE1#' => 'BIN, OCT, HEX, and DEC modes display numbers as rounded integers. Use caution.',
+                   '#HIDE2#' => 'Numbers of any base can be entered in any display mode.'}},
      {'category' => 'Angle Mode',
       'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
                                                                      'deg' => 'Switch to degrees'}}]},
@@ -157,7 +158,7 @@ UNITS_CONVERSION = #{{{1
                                    {'unit'=>'quart',  'to_std'=>'2 2 16 3 * * * *',     'from_std'=>'2 2 16 3 * * * /'},
                                    {'unit'=>'gallon', 'to_std'=>'4 2 2 16 3 * * * * *', 'from_std'=>'4 2 2 16 3 * * * * /'}]}]}
     ]
-BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'real'=>0}
+BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'norm'=>0}   # {{{1
 
 class Processor   #{{{1
     attr_reader :stack, :registers, :macros, :recording, :settings
@@ -182,22 +183,8 @@ class Processor   #{{{1
     end
 
     def format(value)   #{{{2
-      if value.kind_of?(Array)
-        return "[#{value.map{|v| format(v)}.join(' ')}]"
-      elsif value % 1 == 0
-        if @base > 0
-          return '###' if value < 0
-          return value.round.to_s(@base) unless value < 0
-        else
-          return value.round.to_s
-        end
-      else
-        if @base > 0
-          return '###'
-        else
-          value.to_s
-        end
-      end
+      return "[#{value.map{|v| v.format(@base)}.join(' ')}]" if value.kind_of?(Array)
+      return value.format(@base)
     end
 
     def execute(text)   #{{{2
@@ -244,18 +231,11 @@ class Processor   #{{{1
     end
 
     def parse_number value   #{{{2
-      case @base
-      when 2
-        (value =~ /^[01]+$/).nil? ? nil : value.to_i(2)
-      when 8
-        (value =~ /^[0-7]+$/).nil? ? nil : value.to_i(8)
-      when 10
-        (value =~ /^[0-9]+$/i).nil? ? nil : value.to_i(10)
-      when 16
-        (value =~ /^[0-9a-f]+$/i).nil? ? nil : value.to_i(16)
-      else
-        (value =~ /^-?((\.\d+)|\d+(\.\d+)?)(e[+-]?\d+)?$/).nil? ? nil : value.to_f
-      end
+        begin
+            return Number.new(value)
+        rescue
+            return nil
+        end
     end
 
     def parse_operator value   #{{{2
@@ -276,78 +256,78 @@ class Processor   #{{{1
       return value.match(/^((\w+)(\(?))?(\))?$/)
     end
 
-    def float_1_operator operator
+    def float_1_operator operator   #{{{2
         x = @stack.pop
-        @stack.push x.send(operator.to_sym)
+        @stack.push Number.new(x.value.send(operator.to_sym))
     end
-    def float_2_operator operator
+    def float_2_operator operator   #{{{2
         x = @stack.pop
         y = @stack.pop
-        @stack.push y.send(operator.to_sym, x)
+        @stack.push Number.new(y.value.send(operator.to_sym, x.value))
     end
 
-    def int_1_operator operator
-        x = @stack.pop.to_i
-        @stack.push x.send(operator.to_sym)
+    def int_1_operator operator   #{{{2
+        x = @stack.pop.value.to_i
+        @stack.push Number.new(x.send(operator.to_sym))
     end
-    def int_2_operator operator
-        x = @stack.pop.to_i
-        y = @stack.pop.to_i
-        @stack.push y.send(operator.to_sym, x)
-    end
-
-    def Math_constant value
-        @stack.push eval("Math::#{value.upcase}")
+    def int_2_operator operator   #{{{2
+        x = @stack.pop.value.to_i
+        y = @stack.pop.value.to_i
+        @stack.push Number.new(y.send(operator.to_sym, x))
     end
 
-    def Math_1_operator operator
-        x = @stack.pop
-        @stack.push eval("Math.#{operator}(#{x})")
+    def Math_constant value   #{{{2
+        @stack.push Number.new(eval("Math::#{value.upcase}"))
     end
 
-    def trig_operator operator
+    def Math_1_operator operator   #{{{2
+        x = @stack.pop.value
+        @stack.push Number.new(eval("Math.#{operator}(#{x})"))
+    end
+
+    def trig_operator operator   #{{{2
       case operator
       when 'sin', 'cos', 'tan'
-        x = @stack.pop * (@angle == 'RAD' ? 1 : Math::PI / 180.0)
-        @stack.push eval("Math.#{operator}(#{x})")
+        x = @stack.pop.value * (@angle == 'RAD' ? 1 : Math::PI / 180.0)
+        @stack.push Number.new(eval("Math.#{operator}(#{x})"))
       when 'asin', 'acos', 'atan'
-        x= @stack.pop
-        @stack.push eval("Math.#{operator}(#{x})") * (@angle == 'RAD' ? 1 : 180.0 / Math::PI)
+        x= @stack.pop.value
+        @stack.push Number.new(eval("Math.#{operator}(#{x})") * (@angle == 'RAD' ? 1 : 180.0 / Math::PI))
       end
     end
 
     def statistics_operator operator   #{{{2
         case operator
         when '!'
-            x = @stack.pop
+            x = @stack.pop.value
             raise RangeError, "x must be non-negative." if x < 0
-            @stack.push factorial(x)
+            @stack.push Number.new(factorial(x))
         when 'perm'
-            x = @stack.pop
-            y = @stack.pop
-            @stack.push factorial(y) / factorial(y - x)
+            x = @stack.pop.value
+            y = @stack.pop.value
+            @stack.push Number.new(factorial(y) / factorial(y - x))
         when 'comb'
-            x = @stack.pop
-            y = @stack.pop
-            @stack.push factorial(y) / (factorial(y - x) * factorial(x))
+            x = @stack.pop.value
+            y = @stack.pop.value
+            @stack.push Number.new(factorial(y) / (factorial(y - x) * factorial(x)))
         when 'sum'
             @registers['sample'] = @stack.dup
-            @stack = [sum(@stack)]
+            @stack = [Number.new(sum(@stack.map{|i| i.value}))]
         when 'product'
             @registers['sample'] = @stack.dup
-            @stack = [product(@stack)]
+            @stack = [Number.new(product(@stack.map{|i| i.value}))]
         when 'count'
             @registers['sample'] = @stack.dup
-            @stack = [@stack.size]
+            @stack = [Number.new(@stack.size)]
         when 'mean'
             @registers['sample'] = @stack.dup
-            @stack = [mean(@stack)]
+            @stack = [Number.new(mean(@stack.map{|i| i.value}))]
         when 'median'
             @registers['sample'] = @stack.dup
-            @stack = [median(@stack)]
+            @stack = [Number.new(median(@stack.map{|i| i.value}))]
         when 'std'
             @registers['sample'] = @stack.dup
-            @stack = [standard_deviation(@stack)]
+            @stack = [Number.new(standard_deviation(@stack.map{|i| i.value}))]
         end
     end
 
@@ -355,7 +335,7 @@ class Processor   #{{{1
         n == 0 ? 1 : (1..n).reduce(:*)
     end
     def sum(a)
-        a.inject(0){ |accum, i| accum + i }
+        a.inject(0){ |accum, i| accum + i}
     end
     def product(a)
         a.inject(1){ |accum, i| accum * i }
@@ -380,9 +360,9 @@ class Processor   #{{{1
     def custom_operator operator   #{{{2
         case operator
         when 'chs'
-            @stack.push (-@stack.pop)
+            @stack.push Number.new(-@stack.pop.value)
         when '\\'
-            @stack.push 1/@stack.pop
+            @stack.push Number.new(1/@stack.pop.value)
         when 'copy'
             @stack.push @stack.last
         when 'del'
@@ -394,7 +374,7 @@ class Processor   #{{{1
             y = @stack.pop
             @stack.push x
             @stack.push y
-        when 'bin', 'oct', 'dec', 'hex', 'real'
+        when 'bin', 'oct', 'dec', 'hex', 'norm'
           @base = BASES[operator]
         when 'rad', 'deg'
           @angle = operator.upcase

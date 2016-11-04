@@ -7,7 +7,7 @@ require_relative 'processor'
 
 processor = Processor.new
 
-puts "RPN Calculator, ©2014, Phil Runninger ".colorize(processor.settings.color_title) + 
+puts "RPN Calculator, ©2016, Phil Runninger ".colorize(processor.settings.color_title) + 
   "#{'═' * (processor.console_columns - 57)} Enter ? for help.".colorize(processor.settings.color_help)
 input = ''
 begin
@@ -19,8 +19,10 @@ begin
   end
 
   prompt = ''
+
   prompt += "Recording #{processor.recording}... ".colorize(processor.settings.color_error) unless processor.recording.nil?
   prompt += "#{processor.macros.keys.join(', ')}  ".colorize(processor.settings.color_help) unless processor.macros == {}
+
   prompt += processor.registers.map{|name, value|
     name.colorize(processor.settings.color_register) +
     '='.colorize(processor.settings.color_normal) +

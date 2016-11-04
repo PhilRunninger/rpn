@@ -1,4 +1,5 @@
 require 'rspec'
+require_relative 'number'
 require_relative 'settings'
 
 def temp_settings_file(hash)
@@ -59,8 +60,8 @@ describe Settings do
   # When working with a non-empty settings file {{{1
   context 'when working with a non-empty settings file,' do
     before(:each) do
-      @settings = Settings.new temp_settings_file({'stack'=>[1,2],
-                                                   'registers'=>{'a'=>3},
+      @settings = Settings.new temp_settings_file({'stack'=>[Number.new("1").to_h, Number.new("02").to_h],
+                                                   'registers'=>{'a'=>Number.new("0x3").to_h},
                                                    'macros'=>{'f'=>['3','*']},
                                                    'base'=>8,
                                                    'angle'=>'RAD',
@@ -76,12 +77,17 @@ describe Settings do
     end
 
     it 'returns the stack' do
-      expect(@settings.stack).to eq([1,2])
+      expect(@settings.stack).to eq([Number.new("1"), Number.new("02")])
     end
     it 'returns the registers' do
       expect(@settings.registers).to_not be_nil
-      expect(@settings.registers['a']).to eq(3)
+      expect(@settings.registers['a']).to eq(Number.new("0x3"))
     end
+    it 'stores an array of Number objects in a single register' do
+      @settings.registers = {'z'=>[Number.new("0x5"), Number.new("0b101")]}
+      expect(@settings.registers['z']).to eq([Number.new("0x5"), Number.new("0b101")])
+    end
+
     it 'returns the macros' do
         expect(@settings.macros).to eq({'f'=>['3','*']})
     end
@@ -102,8 +108,8 @@ describe Settings do
 
     it 'writes changed settings to the file' do
       File.delete @rpnrc
-      @settings.stack = [3,4]
-      @settings.registers = {'z'=>5}
+      @settings.stack = [Number.new("3"),Number.new("04")]
+      @settings.registers = {'z'=>Number.new("0x5")}
       @settings.macros = {'f'=>['4','/']}
       @settings.base = 16
       @settings.angle = 'DEG'
@@ -116,8 +122,8 @@ describe Settings do
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
-        {'stack'=>[3,4],
-         'registers'=>{'z'=>5},
+        {'stack'=>[{"value"=>3.0, "base_as_entered"=>0},{"value"=>4.0, "base_as_entered"=>8}],
+         'registers'=>{'z'=>{"value"=>5.0, "base_as_entered"=>16}},
          'macros'=>{'f'=>['4','/']},
          'base'=>16,
          'angle'=>'DEG',

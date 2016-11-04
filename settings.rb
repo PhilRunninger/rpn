@@ -14,17 +14,19 @@ class Settings
   end
 
   def stack= stack
-    @hash['stack'] = stack
+    @hash['stack'] = stack.map{|x| x.to_h}
   end
   def stack
-    @hash['stack'] || []
+    return [] if @hash['stack'].nil?
+    return @hash['stack'].map{|x| Number.from_h(x)}
   end
 
   def registers= registers
-    @hash['registers'] = registers
+    @hash['registers'] = Hash[registers.map{|k,v| [k,v.kind_of?(Array) ? v.map{|n| n.to_h} : v.to_h]}]
   end
   def registers
-    @hash['registers'] || {}
+    return {} if @hash['registers'].nil?
+    return Hash[@hash['registers'].map{|k,v| [k,v.kind_of?(Array) ? v.map{|n| Number.from_h(n)} : Number.from_h(v)]}]
   end
 
   def macros= macros
