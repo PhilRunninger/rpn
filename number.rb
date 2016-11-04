@@ -8,13 +8,13 @@ class Number
     elsif !(value =~ /^-?0b[01]+$/).nil?
       @value = Integer(value).to_f
       @base_as_entered = 2
-    elsif !(value =~ /^-?0x[0-9a-fA-F]+$/).nil?
+    elsif !(value =~ /^-?0x[0-9a-f]+$/i).nil?
       @value = Integer(value).to_f
       @base_as_entered = 16
     elsif !(value =~ /^-?0[0-7]+$/).nil?
       @value = Integer(value).to_f
       @base_as_entered = 8
-    elsif !(value =~ /^-?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/).nil?
+    elsif !(value =~ /^-?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/i).nil?
       @value = value.to_f
       @base_as_entered = 0
     elsif value.is_a?(Numeric)

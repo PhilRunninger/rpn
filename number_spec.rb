@@ -7,6 +7,7 @@ describe Number do
                          {:input=>'12.34',   :value=>12.34,   :base_as_entered=>0},
                          {:input=>'-12.34',  :value=>-12.34,  :base_as_entered=>0},
                          {:input=>'12e3',    :value=>12000,   :base_as_entered=>0},
+                         {:input=>'1.2E3',   :value=>1200,    :base_as_entered=>0},
                          {:input=>'-12e4',   :value=>-120000, :base_as_entered=>0},
                          {:input=>'0b1001',  :value=>9,       :base_as_entered=>2},
                          {:input=>'-0b1001', :value=>-9,      :base_as_entered=>2},
@@ -15,7 +16,9 @@ describe Number do
                          {:input=>'12',      :value=>12,      :base_as_entered=>0},
                          {:input=>'-12',     :value=>-12,     :base_as_entered=>0},
                          {:input=>'0x12',    :value=>18,      :base_as_entered=>16},
+                         {:input=>'0x1a',    :value=>26,      :base_as_entered=>16},
                          {:input=>'-0x12',   :value=>-18,     :base_as_entered=>16},
+                         {:input=>'-0x2c',   :value=>-44,      :base_as_entered=>16},
                          {:input=>42,        :value=>42,      :base_as_entered=>0},
                          {:input=>4.2,       :value=>4.2,     :base_as_entered=>0}
         ])
