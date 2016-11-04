@@ -64,8 +64,9 @@ VALID_OPERATORS =   #{{{1
                                                                       'cs'   => 'Clear the stack',
                                                                       'xy'   => 'Swap x and y'}}]},
      {'category' => 'Registers',
-      'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear register values'}}],
-      'suffix' => {'foo='   => 'Copy x into the register named \'foo\'',
+      'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear all register values'}}],
+      'suffix' => {'cr:foo' => 'Clear the register named \'foo\'',
+                   'foo='   => 'Copy x into the register named \'foo\'',
                    'foo=='  => 'Copy the entire stack into the register named \'foo\'',
                    '=foo'   => 'Push register named \'foo\' onto the stack',
                    '==foo'  => 'Replace stack with contents of register named \'foo\'',
@@ -247,7 +248,7 @@ class Processor   #{{{1
     end
 
     def parse_register value   #{{{2
-        value.match(/^((==?)(\w*[a-z]+\w*)|(\w*[a-z]+\w*)(==?))$/)
+        value.match(/^((cr:|==?)(\w*[a-z]+\w*)|(\w*[a-z]+\w*)(==?))$/)
     end
 
     def parse_macro value   #{{{2
@@ -447,6 +448,9 @@ class Processor   #{{{1
             when '==[name]'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 @stack = [@registers[name]].flatten.dup
+            when 'cr:[name]'
+                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+                @registers.delete(name)
             end
         else
             case parts

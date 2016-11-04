@@ -88,6 +88,7 @@ describe Processor do
             expect(@processor.parse_register('hot!=')).to be_nil
             expect(@processor.parse_register('func(')).to be_nil
             expect(@processor.parse_register(')')).to be_nil
+            expect(@processor.parse_register('cr:a1a')).to be_kind_of(MatchData)
             expect(@processor.parse_register('a1a=')).to be_kind_of(MatchData)
             expect(@processor.parse_register('abc==')).to be_kind_of(MatchData)
             expect(@processor.parse_register('==def')).to be_kind_of(MatchData)
@@ -341,6 +342,14 @@ describe Processor do
             expect(@processor.registers['a']).to eq(Number.new(13))
             @processor.execute('cr')
             expect(@processor.registers['a']).to be_nil
+        end
+        it 'clears a single register' do
+            @processor.execute('13 a= b=')
+            expect(@processor.registers['a']).to eq(Number.new(13))
+            expect(@processor.registers['b']).to eq(Number.new(13))
+            @processor.execute('cr:a')
+            expect(@processor.registers['a']).to be_nil
+            expect(@processor.registers['b']).to eq(Number.new(13))
         end
         it 'will not allow the use of an operator for a register name' do
             expect {@processor.execute('5 pi=')}.to raise_error
