@@ -5,8 +5,11 @@ class Settings
 
   def initialize(settings_file)
     @settings_file = settings_file
-    @hash = {}
-    @hash = JSON.parse(File.read(settings_file)) if File.exist?(settings_file)
+    begin
+      @hash = JSON.parse(File.read(settings_file)) if File.exist?(settings_file)
+    rescue Exception
+      @hash = {}
+    end
   end
 
   def write

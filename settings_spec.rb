@@ -8,6 +8,12 @@ def temp_settings_file(hash)
     @rpnrc
 end
 
+def empty_settings_file()
+    @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
+    File.open(@rpnrc, 'w') {}
+    @rpnrc
+end
+
 def settings_file_hash
     JSON.parse(File.read(@rpnrc))
 end
@@ -15,6 +21,50 @@ end
 describe Settings do
   # When working with an empty settings file {{{1
   context 'when working with an empty settings file,' do
+    before(:each) do
+      @settings = Settings.new empty_settings_file()
+    end
+    after(:each) do
+      File.delete @rpnrc
+    end
+
+    it 'initializes stack to []' do
+      expect(@settings.stack).to eq([])
+    end
+    it 'initializes registers to {}' do
+      expect(@settings.registers).to eq({})
+    end
+    it 'initializes macros to {}' do
+      expect(@settings.macros).to eq({})
+    end
+    it 'initializes base to 0' do
+      expect(@settings.base).to eq(0)
+    end
+    it 'initializes angle to DEG' do
+      expect(@settings.angle).to eq('DEG')
+    end
+    it 'initializes normal text color to :default' do
+      expect(@settings.color_normal).to eq(:default)
+    end
+    it 'initializes error text color to :default' do
+      expect(@settings.color_error).to eq(:default)
+    end
+    it 'initializes title text color to :default' do
+      expect(@settings.color_title).to eq(:default)
+    end
+    it 'initializes register text color to :default' do
+      expect(@settings.color_register).to eq(:default)
+    end
+    it 'initializes help heading text color to :default' do
+      expect(@settings.color_help_heading).to eq(:default)
+    end
+    it 'initializes help text color to :default' do
+      expect(@settings.color_help).to eq(:default)
+    end
+  end
+
+  # When working with a settings file with an empty hash {{{1
+  context 'when working with a settings file with an empty hash,' do
     before(:each) do
       @settings = Settings.new temp_settings_file({})
     end
