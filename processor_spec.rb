@@ -588,6 +588,29 @@ describe Processor do
             @processor.execute 'cm'
             expect(settings_file_hash['macros']).to eq({})
         end
+        it 'removes the stack, registers, and macros from the settings when cleared' do
+            @processor.execute '1 a= f( 3 * )'
+            expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
+            expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
+            expect(settings_file_hash['macros']).to eq({'f'=>['3','*']})
+            @processor.execute 'ca'
+            expect(settings_file_hash['stack']).to eq([])
+            expect(settings_file_hash['registers']).to eq({})
+            expect(settings_file_hash['macros']).to eq({})
+        end
+
+
+        # Miscellaneous Commands  {{{2
+        it 'clears the stack, registers, and macros with one command' do
+            @processor.execute '1 a= f( 3 * )'
+            expect(@processor.stack).to eq([Number.new(1)])
+            expect(@processor.registers).to eq({'a'=>Number.new(1)})
+            expect(@processor.macros).to eq({'f'=>['3','*']})
+            @processor.execute 'ca'
+            expect(@processor.stack).to eq([])
+            expect(@processor.registers).to eq({})
+            expect(@processor.macros).to eq({})
+        end
     end
 
     # When using an exising non-empty settings file {{{1

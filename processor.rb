@@ -89,10 +89,11 @@ VALID_OPERATORS =   #{{{1
       'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
                                                                      'deg' => 'Switch to degrees'}}]},
      {'category' => 'Other',
-      'groups' => [{'function' => 'custom_operator',  'operators' => {'<Enter>' => 'Exit the calculator',
+      'groups' => [{'function' => 'custom_operator',  'operators' => {'ca' => 'Clear all',
+                                                                      '<Enter>' => 'Exit calculator',
                                                                       'colors' => 'Change colors',
                                                                       '?'     => 'Display this list',
-                                                                      '??'    => 'Google list of RPN tutorials'}}]}
+                                                                      '??'    => 'Google: RPN tutorials'}}]}
     ]
 
 UNITS_CONVERSION = #{{{1
@@ -370,6 +371,10 @@ class Processor   #{{{1
             @stack.pop
         when 'cs'
             @stack = []
+        when 'ca'
+            @stack = []
+            @macros = {}
+            @registers = {}
         when 'xy'
             x = @stack.pop
             y = @stack.pop
@@ -382,8 +387,9 @@ class Processor   #{{{1
         when 'colors'
           @settings.change_colors
         when '?'
-            puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
+            print "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
             VALID_OPERATORS.each{ |category|
+                puts
                 puts category['category'].colorize(@settings.color_help_heading)
 
                 unless category['prefix'].nil?
