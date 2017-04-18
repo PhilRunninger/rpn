@@ -34,7 +34,7 @@ begin
 
   prompt += processor.radix.colorize(processor.settings.color_title) + ' ' unless processor.radix.empty?
 
-  prompt += "#{processor.angle_mode}► ".colorize(processor.settings.color_title)
+  prompt += "#{processor.angle}► ".colorize(processor.settings.color_title)
 
   input = Readline.readline(prompt.strip, true)
   Readline::HISTORY.pop if Readline::HISTORY.length>1 &&  Readline::HISTORY[-1] == Readline::HISTORY[-2]

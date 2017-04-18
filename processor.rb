@@ -164,7 +164,7 @@ BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'norm'=>0}   # {{{1
 
 class Processor   #{{{1
     attr_reader :stack, :registers, :macros, :recording, :settings
-    attr_accessor :base
+    attr_accessor :base, :angle
 
     def initialize settings_file=File.join(Dir.home, '.rpnrc')   #{{{2
         @settings = Settings.new(settings_file)
@@ -375,6 +375,8 @@ class Processor   #{{{1
             @stack = []
             @macros = {}
             @registers = {}
+            @base = 0
+            @angle = 'DEG'
         when 'xy'
             x = @stack.pop
             y = @stack.pop

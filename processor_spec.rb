@@ -588,28 +588,36 @@ describe Processor do
             @processor.execute 'cm'
             expect(settings_file_hash['macros']).to eq({})
         end
-        it 'removes the stack, registers, and macros from the settings when cleared' do
-            @processor.execute '1 a= f( 3 * )'
+        it 'removes the stack, registers, and macros from the settings and returns to NORM mode when cleared' do
+            @processor.execute '1 a= f( 3 * ) hex rad'
             expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
             expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
             expect(settings_file_hash['macros']).to eq({'f'=>['3','*']})
+            expect(settings_file_hash['base']).to eq(16)
+            expect(settings_file_hash['angle']).to eq('RAD')
             @processor.execute 'ca'
             expect(settings_file_hash['stack']).to eq([])
             expect(settings_file_hash['registers']).to eq({})
             expect(settings_file_hash['macros']).to eq({})
+            expect(settings_file_hash['base']).to eq(0)
+            expect(settings_file_hash['angle']).to eq('DEG')
         end
 
 
         # Miscellaneous Commands  {{{2
         it 'clears the stack, registers, and macros with one command' do
-            @processor.execute '1 a= f( 3 * )'
+            @processor.execute '1 a= f( 3 * ) hex rad'
             expect(@processor.stack).to eq([Number.new(1)])
             expect(@processor.registers).to eq({'a'=>Number.new(1)})
             expect(@processor.macros).to eq({'f'=>['3','*']})
+            expect(@processor.base).to eq(16)
+            expect(@processor.angle).to eq("RAD")
             @processor.execute 'ca'
             expect(@processor.stack).to eq([])
             expect(@processor.registers).to eq({})
             expect(@processor.macros).to eq({})
+            expect(@processor.base).to eq(0)
+            expect(@processor.angle).to eq("DEG")
         end
     end
 
