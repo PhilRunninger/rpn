@@ -53,8 +53,9 @@ VALID_OPERATORS =   #{{{1
                                                                       '>>' => 'Right Shift'}},
                    {'function' => 'int_1_operator',   'operators' => {'~'  => "1's complement"}}]},
      {'category' => 'Constants',
-      'groups' => [{'function' => 'Math_constant',    'operators' => {'pi' => '3.141592653....',
-                                                                      'e'  => '2.718281828...'}}]},
+      'groups' => [{'function' => 'Math_constant',    'operators' => {'pi'  => '3.141592653....',
+                                                                      'e'   => '2.718281828...',
+                                                                      'phi' => '0.618033989...'}}]},
      {'category' => 'Unit Conversion',
       'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit conversions.'}}],
       'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units, eg. mi>km'}},
@@ -279,7 +280,12 @@ class Processor   #{{{1
     end
 
     def Math_constant value   #{{{2
-        @stack.push Number.new(eval("Math::#{value.upcase}"))
+        case value
+        when 'phi'
+            @stack.push Number.new((Math.sqrt(5)-1)/2)
+        else
+            @stack.push Number.new(eval("Math::#{value.upcase}"))
+        end
     end
 
     def Math_1_operator operator   #{{{2

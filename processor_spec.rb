@@ -184,6 +184,10 @@ describe Processor do
         it 'knows the value of e' do
             expect((@processor.execute('e')).value).to be_within(0.0000001).of(2.718281828)
         end
+        it 'knows the value of phi' do
+            expect((@processor.execute('phi')).value).to be_within(0.0000001).of(0.618033989)
+        end
+
 
         # Bitwise {{{2
         it 'does bitwise AND' do
