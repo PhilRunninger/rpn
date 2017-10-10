@@ -526,10 +526,10 @@ class Processor   #{{{1
       else
         case parts
         when 'lm'
-          width = @macros.map{|name,definition| name.length}.max
-          @macros.map{|name,definition|
-            name = sprintf("  %#{width}s ", name)
-            print "#{name} ".colorize(settings.color_help)
+          width = @macros.map{|macro_name,definition| macro_name.length}.max
+          @macros.map{|macro_name,definition|
+            macro_name = sprintf("  %#{width}s ", macro_name)
+            print "#{macro_name} ".colorize(settings.color_help)
             puts "#{definition.join(' ')}".colorize(settings.color_normal)
           }
         when 'cm'
