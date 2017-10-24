@@ -282,7 +282,7 @@ class Processor   #{{{1
     def Math_constant value   #{{{2
         case value
         when 'phi'
-            @stack.push Number.new((Math.sqrt(5)-1)/2)
+            @stack.push Number.new((Math.sqrt(5)+1)/2)
         else
             @stack.push Number.new(eval("Math::#{value.upcase}"))
         end
