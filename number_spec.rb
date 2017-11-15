@@ -83,11 +83,11 @@ describe Number do
 
   it 'hashes a Number object)' do
     x = Number.new('0x1f')
-    expect(x.to_h).to eq({"value"=>31.0, "base_as_entered"=>16})
+    expect(x.to_h).to eq({"16"=>31.0})
   end
 
   it 'unhashes into a Number object' do
-    x = Number.from_h({"value"=>30.0, "base_as_entered"=>8})
+    x = Number.from_h({"8"=>30.0})
     expect(x.value).to eq(30)
     expect(x.base_as_entered).to eq(8)
   end

@@ -46,11 +46,11 @@ class Number
   end
 
   def to_h
-    instance_variables.map {|var| [var[1..-1], instance_variable_get(var)]}.to_h
+    {@base_as_entered.to_s =>  @value}
   end
 
   def self.from_h data
-    self.new data["value"], data["base_as_entered"]
+    self.new data.values[0], data.keys[0].to_i
   end
 
 end

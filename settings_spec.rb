@@ -172,8 +172,8 @@ describe Settings do
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
-        {'stack'=>[{"value"=>3.0, "base_as_entered"=>0},{"value"=>4.0, "base_as_entered"=>8}],
-         'registers'=>{'z'=>{"value"=>5.0, "base_as_entered"=>16}},
+        {'stack'=>[{"0"=>3.0},{"8"=>4.0}],
+         'registers'=>{'z'=>{"16"=>5.0}},
          'macros'=>{'f'=>['4','/']},
          'base'=>16,
          'angle'=>'DEG',
