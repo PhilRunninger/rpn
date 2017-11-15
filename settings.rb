@@ -53,46 +53,56 @@ class Settings
     @hash['angle'] || 'DEG'
   end
 
-  def color_normal= color_normal
-    @hash['color_normal'] = color_normal
+  def get_color(type)
+    return :default if @hash['colors'].nil?
+    (@hash['colors'][type] || 'default').to_sym
+  end
+
+  def set_color(type, value)
+    @hash['colors'] = {} if @hash['colors'].nil?
+    @hash['colors'][type] = value
+  end
+
+  def color_normal= value
+    set_color 'normal', value
   end
   def color_normal
-    (@hash['color_normal'] || 'default').to_sym
+    get_color 'normal'
   end
 
-  def color_error= color_error
-    @hash['color_error'] = color_error
+  def color_error= value
+    set_color 'error', value
   end
   def color_error
-    (@hash['color_error'] || 'default').to_sym
+    get_color 'error'
   end
 
-  def color_title= color_title
-    @hash['color_title'] = color_title
+  def color_title= value
+    set_color 'title', value
   end
   def color_title
-    (@hash['color_title'] || 'default').to_sym
+    get_color 'title'
   end
 
-  def color_register= color_register
-    @hash['color_register'] = color_register
+  def color_register= value
+    set_color 'register', value
   end
   def color_register
-    (@hash['color_register'] || 'default').to_sym
+    get_color 'register'
   end
 
-  def color_help_heading= color_help_heading
-    @hash['color_help_heading'] = color_help_heading
+  def color_help_heading= value
+    set_color 'help_heading', value
   end
   def color_help_heading
-    (@hash['color_help_heading'] || 'default').to_sym
+    get_color 'help_heading'
   end
 
-  def color_help= color_help
-    @hash['color_help'] = color_help
+  def color_help= value
+    set_color 'help', value
   end
   def color_help
-    (@hash['color_help'] || 'default').to_sym
+    get_color 'help'
   end
 
   def change_colors

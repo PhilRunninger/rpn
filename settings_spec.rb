@@ -115,15 +115,16 @@ describe Settings do
                                                    'macros'=>{'f'=>['3','*']},
                                                    'base'=>8,
                                                    'angle'=>'RAD',
-                                                   'color_normal'=>:black,
-                                                   'color_error'=>:red,
-                                                   'color_title'=>:green,
-                                                   'color_register'=>:yellow,
-                                                   'color_help_heading'=>:blue,
-                                                   'color_help'=>:cyan})
+                                                   'colors'=>{
+                                                       'normal'=>:black,
+                                                       'error'=>:red,
+                                                       'title'=>:green,
+                                                       'register'=>:yellow,
+                                                       'help_heading'=>:blue,
+                                                       'help'=>:cyan}})
     end
     after(:each) do
-      File.delete @rpnrc
+        File.delete @rpnrc
     end
 
     it 'returns the stack' do
@@ -177,12 +178,13 @@ describe Settings do
          'macros'=>{'f'=>['4','/']},
          'base'=>16,
          'angle'=>'DEG',
-         'color_normal'=>'a',
-         'color_error'=>'b',
-         'color_title'=>'c',
-         'color_register'=>'d',
-         'color_help_heading'=>'e',
-         'color_help'=>'f'})
+         'colors'=>{
+         'normal'=>'a',
+         'error'=>'b',
+         'title'=>'c',
+         'register'=>'d',
+         'help_heading'=>'e',
+         'help'=>'f'}})
     end
   end
 
