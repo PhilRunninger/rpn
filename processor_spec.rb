@@ -89,10 +89,10 @@ describe Processor do
             expect(@processor.parse_register('func(')).to be_nil
             expect(@processor.parse_register(')')).to be_nil
             expect(@processor.parse_register('cr:a1a')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('a1a=')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('abc==')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('==def')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('=ghi')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('>a1a')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('>>abc')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('<<def')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('<ghi')).to be_kind_of(MatchData)
         end
         it 'parses macros' do
             expect(@processor.parse_macro('123')).to be_nil
@@ -106,8 +106,8 @@ describe Processor do
         end
 
         it 'will not allow pushing a nonexistent register' do
-            @processor.execute('12 widgets=')
-            expect(@processor.parse_register('=widgets')).to be_kind_of(MatchData)
+            @processor.execute('12 >widgets')
+            expect(@processor.parse_register('<widgets')).to be_kind_of(MatchData)
         end
         it 'formats numbers for printing' do
             expect(@processor.format([Number.new("1"), Number.new("2"), Number.new("3")])).to eq("[1 2 3]")
@@ -313,42 +313,42 @@ describe Processor do
 
         # Registers {{{2
         it 'copies x to a named register location' do
-            @processor.execute('12 a=')
+            @processor.execute('12 >a')
             expect(@processor.stack).to eq([Number.new(12)])
             expect(@processor.registers['a']).to eq(Number.new(12))
         end
         it 'copies the entire stack to an array value in the named register' do
-            @processor.execute('4 3 2 1 a==')
+            @processor.execute('4 3 2 1 >>a')
             expect(@processor.stack).to eq([Number.new(4),Number.new(3),Number.new(2),Number.new(1)])
             expect(@processor.registers['a']).to eq([Number.new(4),Number.new(3),Number.new(2),Number.new(1)])
         end
         it 'puts the named register location\'s value on the stack' do
-            @processor.execute('13 a=')
-            @processor.execute('=a')
+            @processor.execute('13 >a')
+            @processor.execute('<a')
             expect(@processor.stack).to eq([Number.new(13), Number.new(13)])
             expect(@processor.registers['a']).to eq(Number.new(13))
         end
         it 'replaces the stack with the named register location\'s value' do
-            @processor.execute('12 11 13 a=')
-            @processor.execute('==a')
+            @processor.execute('12 11 13 >a')
+            @processor.execute('<<a')
             expect(@processor.stack).to eq([Number.new(13)])
         end
         it 'puts the values of an array stored in the register onto the stack' do
             @processor.registers['sample'] = [Number.new(1),Number.new(2),Number.new(3)]
-            @processor.execute('=sample')
+            @processor.execute('<sample')
             expect(@processor.stack).to eq([Number.new(1),Number.new(2),Number.new(3)])
         end
         it 'returns the value of x as an answer' do
-            expect((@processor.execute('14 a=')).value).to eq(14)
+            expect((@processor.execute('14 >a')).value).to eq(14)
         end
         it 'clears all registers' do
-            @processor.execute('13 a=')
+            @processor.execute('13 >a')
             expect(@processor.registers['a']).to eq(Number.new(13))
             @processor.execute('cr')
             expect(@processor.registers['a']).to be_nil
         end
         it 'clears a single register' do
-            @processor.execute('13 a= b=')
+            @processor.execute('13 >a >b')
             expect(@processor.registers['a']).to eq(Number.new(13))
             expect(@processor.registers['b']).to eq(Number.new(13))
             @processor.execute('cr:a')
@@ -359,13 +359,13 @@ describe Processor do
             expect {@processor.execute('5 pi=')}.to raise_error
         end
         it 'will not allow the use of a macro for a register name' do
-            expect {@processor.execute('f( 3 * ) 5 f=')}.to raise_error
+            expect {@processor.execute('f( 3 * ) 5 >f')}.to raise_error
         end
         it 'throws an exception when nothing to put into register' do
-            expect {@processor.execute('foo=')}.to raise_error
+            expect {@processor.execute('>foo')}.to raise_error
         end
         it 'throws an exception when register is not defined' do
-            expect {@processor.execute('=foo')}.to raise_error
+            expect {@processor.execute('<foo')}.to raise_error
         end
 
         # Statistics {{{2
@@ -521,7 +521,7 @@ describe Processor do
             expect((@processor.execute('1 f f g g')).value).to eq(17)
         end
         it 'raises an error when using a register as a macro name' do
-            @processor.execute('12 f=')
+            @processor.execute('12 >f')
             expect {@processor.execute ('f( 13 * )')}.to raise_error
         end
         it 'raises an error when using an operator as a macro name' do
@@ -553,7 +553,7 @@ describe Processor do
         it 'saves the registers after one is defined' do
             @processor.execute '1'
             expect(settings_file_hash['registers']).to eq({})
-            @processor.execute 'a='
+            @processor.execute '>a'
             expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
         end
         it 'saves the macros after one is defined' do
@@ -581,7 +581,7 @@ describe Processor do
             expect(settings_file_hash['stack']).to eq([])
         end
         it 'removes the registers from settings when cleared' do
-            @processor.execute '1 a='
+            @processor.execute '1 >a'
             expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
             @processor.execute 'cr'
             expect(settings_file_hash['registers']).to eq({})
@@ -593,7 +593,7 @@ describe Processor do
             expect(settings_file_hash['macros']).to eq({})
         end
         it 'removes the stack, registers, and macros from the settings and returns to NORM mode when cleared' do
-            @processor.execute '1 a= f( 3 * ) hex rad'
+            @processor.execute '1 >a f( 3 * ) hex rad'
             expect(settings_file_hash['stack']).to eq([Number.new(1).to_h])
             expect(settings_file_hash['registers']).to eq({'a'=>Number.new(1).to_h})
             expect(settings_file_hash['macros']).to eq({'f'=>['3','*']})
@@ -610,7 +610,7 @@ describe Processor do
 
         # Miscellaneous Commands  {{{2
         it 'clears the stack, registers, and macros with one command' do
-            @processor.execute '1 a= f( 3 * ) hex rad'
+            @processor.execute '1 >a f( 3 * ) hex rad'
             expect(@processor.stack).to eq([Number.new(1)])
             expect(@processor.registers).to eq({'a'=>Number.new(1)})
             expect(@processor.macros).to eq({'f'=>['3','*']})

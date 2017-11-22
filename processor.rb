@@ -67,10 +67,10 @@ VALID_OPERATORS =   #{{{1
      {'category' => 'Registers',
       'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear all register values'}}],
       'suffix' => {'cr:foo' => 'Clear the register named \'foo\'',
-                   'foo='   => 'Copy x into the register named \'foo\'',
-                   'foo=='  => 'Copy the entire stack into the register named \'foo\'',
-                   '=foo'   => 'Push register named \'foo\' onto the stack',
-                   '==foo'  => 'Replace stack with contents of register named \'foo\'',
+                   '>foo'   => 'Copy x into the register named \'foo\'',
+                   '>>foo'  => 'Copy the entire stack into the register named \'foo\'',
+                   '<foo'   => 'Push register named \'foo\' onto the stack',
+                   '<<foo'  => 'Replace stack with contents of register named \'foo\'',
                    '#HIDE#' => 'Register names consist of letters, numbers and underscores.'}},
      {'category' => 'Macros',
       'groups' => [{'function' => 'macro_function', 'operators' => {'lm' => 'List macro definitions',
@@ -250,7 +250,7 @@ class Processor   #{{{1
     end
 
     def parse_register value   #{{{2
-        value.match(/^((cr:|==?)(\w*[a-z]+\w*)|(\w*[a-z]+\w*)(==?))$/)
+        value.match(/^(cr:|>>?|<<?)(\w*[a-z]+\w*)$/)
     end
 
     def parse_macro value   #{{{2
@@ -445,24 +445,23 @@ class Processor   #{{{1
 
     def register_function parts   #{{{2
         if parts.kind_of?(MatchData)
-            operator = "#{parts.captures[1]}[name]#{parts.captures[4]}"
-            name =  parts.captures[2] || parts.captures[3]
+            name = parts.captures[1]
             raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
             raise ArgumentError, "The name #{name} is already used to idenfity a macro." unless @macros[name].nil?
-            case operator
-            when '[name]='
+            case parts.captures[0]
+            when '>'
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
                 @registers[name] = @stack.last
-            when '[name]=='
+            when '>>'
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
                 @registers[name] = @stack.dup
-            when '=[name]'
+            when '<'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 [@registers[name]].flatten.each{|value| @stack.push value}
-            when '==[name]'
+            when '<<'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 @stack = [@registers[name]].flatten.dup
-            when 'cr:[name]'
+            when 'cr:'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 @registers.delete(name)
             end
