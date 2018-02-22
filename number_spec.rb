@@ -35,8 +35,8 @@ describe Number do
   end
 
   it 'throws an exception for invalid numbers' do
-      expect{Number.new('0129')}.to raise_error
-      expect{Number.new('sin')}.to raise_error
+      expect{Number.new('0129')}.to raise_error(ArgumentError)
+      expect{Number.new('sin')}.to raise_error(ArgumentError)
   end
 
   it 'formats numbers properly given current mode' do

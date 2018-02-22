@@ -166,14 +166,14 @@ describe Processor do
 
         # Error Handling {{{2
         it 'raises an error if not enough operands' do
-            expect {@processor.execute ('2 +')}.to raise_error
+            expect {@processor.execute ('2 +')}.to raise_error(NoMethodError)
         end
         it 'raises an error if given an unknown operator/register' do
-            expect {@processor.execute('1 2 =foobar')}.to raise_error
+            expect {@processor.execute('1 2 =foobar')}.to raise_error(NotImplementedError)
         end
         it 'restores the stack to what it was before an exception was raised' do
             @processor.execute('42')
-            expect {@processor.execute('+')}.to raise_error
+            expect {@processor.execute('+')}.to raise_error(NoMethodError)
             expect(@processor.stack).to eq([Number.new(42)])
         end
 
@@ -356,16 +356,16 @@ describe Processor do
             expect(@processor.registers['b']).to eq(Number.new(13))
         end
         it 'will not allow the use of an operator for a register name' do
-            expect {@processor.execute('5 pi=')}.to raise_error
+            expect {@processor.execute('5 pi=')}.to raise_error(NotImplementedError)
         end
         it 'will not allow the use of a macro for a register name' do
-            expect {@processor.execute('f( 3 * ) 5 >f')}.to raise_error
+            expect {@processor.execute('f( 3 * ) 5 >f')}.to raise_error(ArgumentError)
         end
         it 'throws an exception when nothing to put into register' do
-            expect {@processor.execute('>foo')}.to raise_error
+            expect {@processor.execute('>foo')}.to raise_error(ArgumentError)
         end
         it 'throws an exception when register is not defined' do
-            expect {@processor.execute('<foo')}.to raise_error
+            expect {@processor.execute('<foo')}.to raise_error(ArgumentError)
         end
 
         # Statistics {{{2
@@ -373,7 +373,7 @@ describe Processor do
             expect((@processor.execute('0 !')).value).to eq(1)
             expect((@processor.execute('6 !')).value).to eq(720)
             expect((@processor.execute('3.14 !')).value).to eq(6)
-            expect {@processor.execute('-5 !')}.to raise_error
+            expect {@processor.execute('-5 !')}.to raise_error(RangeError)
         end
         it 'calculates permutation' do
             expect((@processor.execute('5 3 perm')).value).to eq(60)
@@ -411,13 +411,13 @@ describe Processor do
         #    expect{@processor.execute('units')}.to_not raise_error
         #end
         it 'throws an exception for invalid units' do
-            expect{@processor.execute('1 foobar>snafu')}.to raise_error
+            expect{@processor.execute('1 foobar>snafu')}.to raise_error(ArgumentError)
         end
         it 'throws an exception for incompatible units' do
-            expect{@processor.execute('1 in>rad')}.to raise_error
+            expect{@processor.execute('1 in>rad')}.to raise_error(ArgumentError)
         end
         it 'throws an exception when nothing to convert' do
-            expect{@processor.execute('mi>km')}.to raise_error
+            expect{@processor.execute('mi>km')}.to raise_error(NoMethodError)
         end
 
         it 'converts lengths correctly' do
@@ -522,10 +522,10 @@ describe Processor do
         end
         it 'raises an error when using a register as a macro name' do
             @processor.execute('12 >f')
-            expect {@processor.execute ('f( 13 * )')}.to raise_error
+            expect {@processor.execute ('f( 13 * )')}.to raise_error(ArgumentError)
         end
         it 'raises an error when using an operator as a macro name' do
-            expect {@processor.execute ('pi( 123 )')}.to raise_error
+            expect {@processor.execute ('pi( 123 )')}.to raise_error(ArgumentError)
         end
         it 'can define macros that call other macros' do
             @processor.execute('f( 2 * ) g( f 2 ** )')
@@ -533,7 +533,7 @@ describe Processor do
             expect((@processor.execute('3 g')).value).to eq(36)
         end
         it 'raises an error if a macro calls itself' do
-            expect {@processor.execute ('f( 10 * f )')}.to raise_error
+            expect {@processor.execute ('f( 10 * f )')}.to raise_error(ArgumentError)
         end
 
 
