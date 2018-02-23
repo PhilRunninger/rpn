@@ -61,8 +61,8 @@ describe Processor do
             expect(@processor.parse_number('-0b10')).to eq(Number.new('-0b10'))
         end
         it 'parses octal numbers' do
-            expect(@processor.parse_number('037')).to eq(Number.new('037'))
-            expect(@processor.parse_number('-012')).to eq(Number.new('-012'))
+            expect(@processor.parse_number('0o37')).to eq(Number.new('0o37'))
+            expect(@processor.parse_number('-0o12')).to eq(Number.new('-0o12'))
         end
         it 'parses decimal numbers' do
             expect(@processor.parse_number('153')).to eq(Number.new('153'))
@@ -118,9 +118,9 @@ describe Processor do
             expect(@processor.format(Number.new("-23"))).to eq("-0b10111")
             expect(@processor.format(Number.new("12.7"))).to eq("0b1101")
             @processor.base = 8
-            expect(@processor.format(Number.new("12"))).to eq("014")
-            expect(@processor.format(Number.new("-23"))).to eq("-027")
-            expect(@processor.format(Number.new("12.7"))).to eq("015")
+            expect(@processor.format(Number.new("12"))).to eq("0o14")
+            expect(@processor.format(Number.new("-23"))).to eq("-0o27")
+            expect(@processor.format(Number.new("12.7"))).to eq("0o15")
             @processor.base = 10
             expect(@processor.format(Number.new("12"))).to eq("12")
             expect(@processor.format(Number.new("-23"))).to eq("-23")

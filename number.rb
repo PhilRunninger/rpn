@@ -1,27 +1,35 @@
 class Number
   attr_accessor :value, :base_as_entered
 
-  def initialize value, base_as_entered = nil
+  def initialize value, base_as_entered=nil
     if !base_as_entered.nil?
       @value = value
       @base_as_entered = base_as_entered
-    elsif !(value =~ /^-?0b[01]+$/).nil?
-      @value = Integer(value).to_f
-      @base_as_entered = 2
-    elsif !(value =~ /^-?0x[0-9a-f]+$/i).nil?
-      @value = Integer(value).to_f
-      @base_as_entered = 16
-    elsif !(value =~ /^-?0[0-7]+$/).nil?
-      @value = Integer(value).to_f
-      @base_as_entered = 8
-    elsif !(value =~ /^-?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/i).nil?
-      @value = value.to_f
-      @base_as_entered = 0
     elsif value.is_a?(Numeric)
       @value = value.to_f
       @base_as_entered = 0
     else
-      raise ArgumentError, "#{value} is not a parsable number."
+      complex_test = value.match(/^([+-]?(0b[01]+|0x[0-9A-Fa-f]+|0o[0-7]+|(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)([Ee][+-]?\d+)?))([+-](0b[01]+|0x[0-9A-Fa-f]+|0o[0-7]+|(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)([Ee][+-]?\d+)?))i/)
+      if !complex_test.nil?
+        real = Number.new(complex_test.captures[0])
+        imaginary = Number.new(complex_test.captures[6])
+        @value = Complex(real.value, imaginary.value)
+        @base_as_entered = -1
+      elsif !(value =~ /^[+-]?0b[01]+$/).nil?
+        @value = Integer(value).to_f
+        @base_as_entered = 2
+      elsif !(value =~ /^[+-]?0x[0-9A-Fa-f]+$/).nil?
+        @value = Integer(value).to_f
+        @base_as_entered = 16
+      elsif !(value =~ /^[+-]?0o[0-7]+$/).nil?
+        @value = Integer(value).to_f
+        @base_as_entered = 8
+      elsif !(value =~ /^[+-]?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/i).nil?
+        @value = value.to_f
+        @base_as_entered = 0
+      else
+        raise ArgumentError, "#{value} is not a parsable number."
+      end
     end
   end
 
@@ -37,7 +45,7 @@ class Number
       prefix = (value < 0) ? "-" : ""
       prefix += "0x" if base == 16
       prefix += "0b" if base == 2
-      prefix += "0" if base == 8
+      prefix += "0o" if base == 8
       return "#{prefix}#{@value.abs.round.to_s(base)}"
     else
       return @value.round.to_s if @value % 1 == 0
