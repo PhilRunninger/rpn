@@ -91,14 +91,33 @@ describe Number do
   end
 
   it 'hashes a Number object)' do
-    x = Number.new('0x1f')
-    expect(x.to_h).to eq({"16"=>31.0})
+      test_to_h([{:input=>'0x1f', :expected=>{"16"=>31.0}},
+                 {:input=>'3+2i', :expected=>{"0"=>"3+2i"}},
+                 {:input=>'0o3+0x12i', :expected=>{"0"=>"3+18i"}}
+      ])
+  end
+
+  def test_to_h(conditions)
+    conditions.each{|condition|
+      print "~"
+      x = Number.new(condition[:input])
+      expect(x.to_h).to eq(condition[:expected])
+    }
   end
 
   it 'unhashes into a Number object' do
-    x = Number.from_h({"8"=>30.0})
-    expect(x.value).to eq(30)
-    expect(x.base_as_entered).to eq(8)
+    test_from_h([{:input=>{"8"=>30.0}, :expected=>Number.new("0o36")},
+                 {:input=>{"0"=>12}, :expected=>Number.new("12")},
+                 {:input=>{"0"=>"3+7i"}, :expected=>Number.new("3+7i")}
+    ])
+  end
+
+  def test_from_h(conditions)
+    conditions.each{|condition|
+      print "~"
+      x = Number.from_h(condition[:input])
+      expect(x).to eq(condition[:expected])
+    }
   end
 
 end

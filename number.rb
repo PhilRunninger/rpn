@@ -60,11 +60,13 @@ class Number
   end
 
   def to_h
-    {@base_as_entered.to_s =>  @value}
+    return {@base_as_entered.to_s => self.format(0)} if @value.is_a?(Complex)
+    return {@base_as_entered.to_s => @value} unless @value.is_a?(Complex)
   end
 
   def self.from_h data
-    self.new data.values[0], data.keys[0].to_i
+    return self.new Complex(data.values[0]), data.keys[0].to_i if data.values[0].is_a?(String)
+    return self.new data.values[0], data.keys[0].to_i unless data.values[0].is_a?(String)
   end
 
 end
