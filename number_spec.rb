@@ -21,10 +21,10 @@ describe Number do
                          {:input=>'-0x2c',       :value=>-44,      :type=>"Float",   :base_as_entered=>16},
                          {:input=>42,            :value=>42,       :type=>"Float",   :base_as_entered=>0},
                          {:input=>4.2,           :value=>4.2,      :type=>"Float",   :base_as_entered=>0},
-                         {:input=>'1+2i',        :value=>1+2i,     :type=>"Complex", :base_as_entered=>-1},
-                         {:input=>'0b101+0o72i', :value=>5+58i,    :type=>"Complex", :base_as_entered=>-1},
-                         {:input=>'0x2A+1.2E3i', :value=>42+1200i, :type=>"Complex", :base_as_entered=>-1},
-                         {:input=>'0x2A+0b111i', :value=>42+7i,    :type=>"Complex", :base_as_entered=>-1}
+                         {:input=>'1+2i',        :value=>1+2i,     :type=>"Complex", :base_as_entered=>0},
+                         {:input=>'0b101+0o72i', :value=>5+58i,    :type=>"Complex", :base_as_entered=>0},
+                         {:input=>'0x2A+1.2E3i', :value=>42+1200i, :type=>"Complex", :base_as_entered=>0},
+                         {:input=>'0x2A+0b111i', :value=>42+7i,    :type=>"Complex", :base_as_entered=>0}
         ])
     end
 
@@ -49,26 +49,31 @@ describe Number do
                    {:input=>"0xa",   :base=>0,  :expected=>"0xa"},
                    {:input=>"0o15",  :base=>0,  :expected=>"0o15"},
                    {:input=>"0b101", :base=>0,  :expected=>"0b101"},
+                   {:input=>"2+3i",  :base=>0,  :expected=>"2+3i"},
                    {:input=>"123",   :base=>10, :expected=>"123"},
                    {:input=>"9.7",   :base=>10, :expected=>"10"},
                    {:input=>"0xa",   :base=>10, :expected=>"10"},
                    {:input=>"0o15",  :base=>10, :expected=>"13"},
                    {:input=>"0b101", :base=>10, :expected=>"5"},
+                   {:input=>"2+3i",  :base=>10, :expected=>"2+3i"},
                    {:input=>"123",   :base=>16, :expected=>"0x7b"},
                    {:input=>"9.7",   :base=>16, :expected=>"0xa"},
                    {:input=>"0xa",   :base=>16, :expected=>"0xa"},
                    {:input=>"0o15",  :base=>16, :expected=>"0xd"},
                    {:input=>"0b101", :base=>16, :expected=>"0x5"},
+                   {:input=>"2+3i",  :base=>16, :expected=>"0x2+0x3i"},
                    {:input=>"123",   :base=>8,  :expected=>"0o173"},
                    {:input=>"9.7",   :base=>8,  :expected=>"0o12"},
                    {:input=>"0xa",   :base=>8,  :expected=>"0o12"},
                    {:input=>"0o15",  :base=>8,  :expected=>"0o15"},
                    {:input=>"0b101", :base=>8,  :expected=>"0o5"},
+                   {:input=>"2+3i",  :base=>8,  :expected=>"0o2+0o3i"},
                    {:input=>"123",   :base=>2,  :expected=>"0b1111011"},
                    {:input=>"9.7",   :base=>2,  :expected=>"0b1010"},
                    {:input=>"0xa",   :base=>2,  :expected=>"0b1010"},
                    {:input=>"0o15",  :base=>2,  :expected=>"0b1101"},
-                   {:input=>"0b101", :base=>2,  :expected=>"0b101"}
+                   {:input=>"0b101", :base=>2,  :expected=>"0b101"},
+                   {:input=>"2+3i",  :base=>2,  :expected=>"0b10+0b11i"}
       ])
   end
 

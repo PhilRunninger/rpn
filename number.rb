@@ -14,7 +14,7 @@ class Number
         real = Number.new(complex_test.captures[0])
         imaginary = Number.new(complex_test.captures[6])
         @value = Complex(real.value, imaginary.value)
-        @base_as_entered = -1
+        @base_as_entered = 0
       elsif !(value =~ /^[+-]?0b[01]+$/).nil?
         @value = Integer(value).to_f
         @base_as_entered = 2
@@ -40,16 +40,22 @@ class Number
 
   def format base
     return "" if @value.nil?
-    base = @base_as_entered if base == 0
-    if base > 0
-      prefix = (value < 0) ? "-" : ""
-      prefix += "0x" if base == 16
-      prefix += "0b" if base == 2
-      prefix += "0o" if base == 8
-      return "#{prefix}#{@value.abs.round.to_s(base)}"
+    if @value.is_a?(Complex)
+      real = Number.new(@value.real).format(base)
+      imaginary = Number.new(@value.imaginary).format(base)
+      return real + (imaginary.start_with?('-') ? imaginary : '+' + imaginary) + 'i'
     else
-      return @value.round.to_s if @value % 1 == 0
-      return @value.to_s unless @value % 1 == 0
+      base = @base_as_entered if base == 0
+      if base > 0
+        prefix = (value < 0) ? "-" : ""
+        prefix += "0x" if base == 16
+        prefix += "0b" if base == 2
+        prefix += "0o" if base == 8
+        return "#{prefix}#{@value.abs.round.to_s(base)}"
+      else
+        return @value.round.to_s if @value % 1 == 0
+        return @value.to_s unless @value % 1 == 0
+      end
     end
   end
 
