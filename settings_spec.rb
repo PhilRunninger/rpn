@@ -159,7 +159,7 @@ describe Settings do
 
     it 'writes changed settings to the file' do
       File.delete @rpnrc
-      @settings.stack = [Number.new("3"),Number.new("0o4")]
+      @settings.stack = [Number.new("3"),Number.new("0o4"),Number.new("1.2-3.4i")]
       @settings.registers = {'z'=>Number.new("0x5")}
       @settings.macros = {'f'=>['4','/']}
       @settings.base = 16
@@ -173,18 +173,18 @@ describe Settings do
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
-        {'stack'=>[{"0"=>3.0},{"8"=>4.0}],
-         'registers'=>{'z'=>{"16"=>5.0}},
-         'macros'=>{'f'=>['4','/']},
-         'base'=>16,
-         'angle'=>'DEG',
-         'colors'=>{
-         'normal'=>'a',
-         'error'=>'b',
-         'title'=>'c',
-         'register'=>'d',
-         'help_heading'=>'e',
-         'help'=>'f'}})
+          {'stack'=>[{"0"=>3.0},{"8"=>4.0},{"0"=>"1.2-3.4i"}],
+           'registers'=>{'z'=>{"16"=>5.0}},
+           'macros'=>{'f'=>['4','/']},
+           'base'=>16,
+           'angle'=>'DEG',
+           'colors'=>{
+               'normal'=>'a',
+               'error'=>'b',
+               'title'=>'c',
+               'register'=>'d',
+               'help_heading'=>'e',
+               'help'=>'f'}})
     end
   end
 

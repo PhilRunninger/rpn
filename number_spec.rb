@@ -24,7 +24,8 @@ describe Number do
                          {:input=>'1+2i',        :value=>1+2i,     :type=>"Complex", :base_as_entered=>0},
                          {:input=>'0b101+0o72i', :value=>5+58i,    :type=>"Complex", :base_as_entered=>0},
                          {:input=>'0x2A+1.2E3i', :value=>42+1200i, :type=>"Complex", :base_as_entered=>0},
-                         {:input=>'0x2A+0b111i', :value=>42+7i,    :type=>"Complex", :base_as_entered=>0}
+                         {:input=>'0x2A+0b111i', :value=>42+7i,    :type=>"Complex", :base_as_entered=>0},
+                         {:input=>1+2i,          :value=>1+2i,     :type=>"Complex", :base_as_entered=>0}
         ])
     end
 

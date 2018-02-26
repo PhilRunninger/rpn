@@ -5,6 +5,9 @@ class Number
     if !base_as_entered.nil?
       @value = value
       @base_as_entered = base_as_entered
+    elsif value.is_a?(Complex)
+      @value = value
+      @base_as_entered = 0
     elsif value.is_a?(Numeric)
       @value = value.to_f
       @base_as_entered = 0
