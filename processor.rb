@@ -55,7 +55,8 @@ VALID_OPERATORS =   #{{{1
      {'category' => 'Constants',
       'groups' => [{'function' => 'Math_constant',    'operators' => {'pi'  => '3.141592653....',
                                                                       'e'   => '2.718281828...',
-                                                                      'phi' => '0.618033989...'}}]},
+                                                                      'phi' => '0.618033989...',
+                                                                      'i' => 'sqrt(-1)'}}]},
      {'category' => 'Unit Conversion',
       'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit conversions.'}}],
       'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units, eg. mi>km'}},
@@ -283,6 +284,8 @@ class Processor   #{{{1
         case value
         when 'phi'
             @stack.push Number.new((Math.sqrt(5)+1)/2)
+        when 'i'
+            @stack.push Number.new(0+1i)
         else
             @stack.push Number.new(eval("Math::#{value.upcase}"))
         end

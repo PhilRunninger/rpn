@@ -110,7 +110,7 @@ describe Settings do
   # When working with a non-empty settings file {{{1
   context 'when working with a non-empty settings file,' do
     before(:each) do
-      @settings = Settings.new temp_settings_file({'stack'=>[Number.new("1").to_h, Number.new("02").to_h],
+      @settings = Settings.new temp_settings_file({'stack'=>[Number.new("1").to_h, Number.new("0o2").to_h],
                                                    'registers'=>{'a'=>Number.new("0x3").to_h},
                                                    'macros'=>{'f'=>['3','*']},
                                                    'base'=>8,
@@ -128,7 +128,7 @@ describe Settings do
     end
 
     it 'returns the stack' do
-      expect(@settings.stack).to eq([Number.new("1"), Number.new("02")])
+      expect(@settings.stack).to eq([Number.new("1"), Number.new("0o2")])
     end
     it 'returns the registers' do
       expect(@settings.registers).to_not be_nil
@@ -159,7 +159,7 @@ describe Settings do
 
     it 'writes changed settings to the file' do
       File.delete @rpnrc
-      @settings.stack = [Number.new("3"),Number.new("04")]
+      @settings.stack = [Number.new("3"),Number.new("0o4"),Number.new("1.2-3.4i")]
       @settings.registers = {'z'=>Number.new("0x5")}
       @settings.macros = {'f'=>['4','/']}
       @settings.base = 16
@@ -173,18 +173,18 @@ describe Settings do
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
-        {'stack'=>[{"0"=>3.0},{"8"=>4.0}],
-         'registers'=>{'z'=>{"16"=>5.0}},
-         'macros'=>{'f'=>['4','/']},
-         'base'=>16,
-         'angle'=>'DEG',
-         'colors'=>{
-         'normal'=>'a',
-         'error'=>'b',
-         'title'=>'c',
-         'register'=>'d',
-         'help_heading'=>'e',
-         'help'=>'f'}})
+          {'stack'=>[{"0"=>3.0},{"8"=>4.0},{"0"=>"1.2-3.4i"}],
+           'registers'=>{'z'=>{"16"=>5.0}},
+           'macros'=>{'f'=>['4','/']},
+           'base'=>16,
+           'angle'=>'DEG',
+           'colors'=>{
+               'normal'=>'a',
+               'error'=>'b',
+               'title'=>'c',
+               'register'=>'d',
+               'help_heading'=>'e',
+               'help'=>'f'}})
     end
   end
 

@@ -61,8 +61,8 @@ describe Processor do
             expect(@processor.parse_number('-0b10')).to eq(Number.new('-0b10'))
         end
         it 'parses octal numbers' do
-            expect(@processor.parse_number('037')).to eq(Number.new('037'))
-            expect(@processor.parse_number('-012')).to eq(Number.new('-012'))
+            expect(@processor.parse_number('0o37')).to eq(Number.new('0o37'))
+            expect(@processor.parse_number('-0o12')).to eq(Number.new('-0o12'))
         end
         it 'parses decimal numbers' do
             expect(@processor.parse_number('153')).to eq(Number.new('153'))
@@ -74,18 +74,24 @@ describe Processor do
             expect(@processor.parse_number('0x1A')).to eq(Number.new('0x1a'))
             expect(@processor.parse_number('-0x12')).to eq(Number.new('-0x12'))
         end
+        it 'parses complex numbers' do
+            expect(@processor.parse_number('5+3i')).to eq(Number.new('5+3i'))
+            expect(@processor.parse_number('-2+5i')).to eq(Number.new('-2+5i'))
+            expect(@processor.parse_number('4-7i')).to eq(Number.new('4-7i'))
+            expect(@processor.parse_number('-.4-.7i')).to eq(Number.new('-.4-.7i'))
+        end
         it 'parses operators' do
             expect(@processor.parse_operator('+')).to be_kind_of(Hash)
             expect(@processor.parse_operator('123')).to be_nil
-            expect(@processor.parse_operator('fubar=')).to be_nil
-            expect(@processor.parse_operator('=fubar')).to be_nil
+            expect(@processor.parse_operator('>fubar')).to be_nil
+            expect(@processor.parse_operator('<fubar')).to be_nil
             expect(@processor.parse_register('func(')).to be_nil
             expect(@processor.parse_register(')')).to be_nil
         end
         it 'parses registers' do
             expect(@processor.parse_register('123')).to be_nil
             expect(@processor.parse_register('**')).to be_nil
-            expect(@processor.parse_register('hot!=')).to be_nil
+            expect(@processor.parse_register('>hot!')).to be_nil
             expect(@processor.parse_register('func(')).to be_nil
             expect(@processor.parse_register(')')).to be_nil
             expect(@processor.parse_register('cr:a1a')).to be_kind_of(MatchData)
@@ -97,7 +103,7 @@ describe Processor do
         it 'parses macros' do
             expect(@processor.parse_macro('123')).to be_nil
             expect(@processor.parse_macro('**')).to be_nil
-            expect(@processor.parse_macro('abc=')).to be_nil
+            expect(@processor.parse_macro('>abc')).to be_nil
             expect(@processor.parse_macro('a1a(')).to be_kind_of(MatchData)
             expect(@processor.parse_macro(')')).to be_kind_of(MatchData)
             expect(@processor.parse_macro('f()')).to be_kind_of(MatchData)
@@ -113,22 +119,27 @@ describe Processor do
             expect(@processor.format([Number.new("1"), Number.new("2"), Number.new("3")])).to eq("[1 2 3]")
             expect(@processor.format(Number.new("123"))).to eq("123")
             expect(@processor.format(Number.new("-1.23"))).to eq("-1.23")
+            expect(@processor.format(Number.new("4-2i"))).to eq("4-2i")
             @processor.base = 2
             expect(@processor.format(Number.new("12"))).to eq("0b1100")
             expect(@processor.format(Number.new("-23"))).to eq("-0b10111")
             expect(@processor.format(Number.new("12.7"))).to eq("0b1101")
+            expect(@processor.format(Number.new("4-2i"))).to eq("0b100-0b10i")
             @processor.base = 8
-            expect(@processor.format(Number.new("12"))).to eq("014")
-            expect(@processor.format(Number.new("-23"))).to eq("-027")
-            expect(@processor.format(Number.new("12.7"))).to eq("015")
+            expect(@processor.format(Number.new("12"))).to eq("0o14")
+            expect(@processor.format(Number.new("-23"))).to eq("-0o27")
+            expect(@processor.format(Number.new("12.7"))).to eq("0o15")
+            expect(@processor.format(Number.new("4-2i"))).to eq("0o4-0o2i")
             @processor.base = 10
             expect(@processor.format(Number.new("12"))).to eq("12")
             expect(@processor.format(Number.new("-23"))).to eq("-23")
             expect(@processor.format(Number.new("12.7"))).to eq("13")
+            expect(@processor.format(Number.new("4-2i"))).to eq("4-2i")
             @processor.base = 16
             expect(@processor.format(Number.new("12"))).to eq("0xc")
             expect(@processor.format(Number.new("-23"))).to eq("-0x17")
             expect(@processor.format(Number.new("12.7"))).to eq("0xd")
+            expect(@processor.format(Number.new("4-2i"))).to eq("0x4-0x2i")
         end
         #it 'enables the user to select different colors' do
         #   expect{@processor.execute('colors')}.to_not raise_error
@@ -163,6 +174,9 @@ describe Processor do
             expect((@processor.execute('-5 abs')).value).to eq(5)
             expect((@processor.execute('3.14 abs')).value).to eq(3.14)
         end
+        it 'adds to complex numbers' do
+            expect((@processor.execute('1+2i 4-7i +')).value).to eq(5-5i)
+        end
 
         # Error Handling {{{2
         it 'raises an error if not enough operands' do
@@ -186,6 +200,9 @@ describe Processor do
         end
         it 'knows the value of phi' do
             expect((@processor.execute('phi')).value).to be_within(0.0000001).of(1.618033989)
+        end
+        it 'knows the value of i' do
+            expect((@processor.execute('i')).value).to eq(0+1i)
         end
 
 
@@ -628,7 +645,7 @@ describe Processor do
     # When using an exising non-empty settings file {{{1
     context 'when using an exsting non-empty settings file,' do
         before (:each) do
-            @processor = Processor.new temp_settings_file({'stack'=>[Number.new("1").to_h,Number.new("2").to_h,Number.new("3").to_h],
+            @processor = Processor.new temp_settings_file({'stack'=>[Number.new("1").to_h,Number.new("2").to_h,Number.new("3").to_h,Number.new("1-2i").to_h],
                                                            'registers'=>{'a'=>Number.new("4").to_h, 'b'=>Number.new("5.6").to_h},
                                                            'macros'=>{'f'=>['3','*'], 'g'=>['4','+']},
                                                            'base'=>2,
@@ -639,7 +656,7 @@ describe Processor do
         end
 
         it 'remembers the stack from the previous session' do
-            expect(@processor.stack).to eq([Number.new("1"),Number.new("2"),Number.new("3")])
+            expect(@processor.stack).to eq([Number.new("1"),Number.new("2"),Number.new("3"),Number.new("1-2i")])
         end
         it 'remembers the registers from previous session' do
             expect(@processor.registers['a']).to eq(Number.new("4"))
