@@ -168,7 +168,7 @@ class Processor   #{{{1
     attr_reader :stack, :registers, :macros, :recording, :settings
     attr_accessor :base, :angle
 
-    def initialize settings_file=File.join(Dir.home, '.rpnrc')   #{{{2
+    def initialize settings_file   #{{{2
         @settings = Settings.new(settings_file)
         @stack = @settings.stack
         @registers = @settings.registers
