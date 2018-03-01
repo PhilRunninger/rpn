@@ -9,11 +9,11 @@ require_relative 'processor'
 if ARGV.length > 0
   processor = Processor.new nil
   answer = processor.execute(ARGV.join(' '))
-  puts processor.stack.map{|value| "#{processor.format(value)}" }.join(' ').colorize(processor.settings.color_normal)
+  puts processor.stack.map{|value| "#{processor.format(value)}" }.join('  ').colorize(processor.settings.color_normal)
   Clipboard.copy processor.format(answer).to_s unless answer.nil?
 else
   processor = Processor.new File.join(Dir.home, '.rpnrc')
-  puts "RPN Calculator, ©2016, Phil Runninger ".colorize(processor.settings.color_title) + 
+  puts "RPN Calculator, ©2016, Phil Runninger ".colorize(processor.settings.color_title) +
     "#{'═' * (processor.console_columns - 57)} Enter ? for help.".colorize(processor.settings.color_help)
   input = ''
   begin
