@@ -9,7 +9,7 @@ processor = Processor.new
 
 if ARGV.length > 0
   answer = processor.execute(ARGV.join(' '))
-  puts processor.format(answer).colorize(processor.settings.color_normal)
+  puts processor.stack.map{|value| "#{processor.format(value)}" }.join(' ').colorize(processor.settings.color_normal)
   Clipboard.copy processor.format(answer).to_s unless answer.nil?
 else
   puts "RPN Calculator, ©2016, Phil Runninger ".colorize(processor.settings.color_title) + 
