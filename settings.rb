@@ -5,6 +5,7 @@ class Settings
 
   def initialize(settings_file)
     @settings_file = settings_file
+    @hash = {}
     begin
       @hash = JSON.parse(File.read(settings_file)) if File.exist?(settings_file)
     rescue Exception
@@ -13,7 +14,7 @@ class Settings
   end
 
   def write
-    File.open(@settings_file,'w') {|f| f.write(JSON.pretty_generate(@hash))}
+    File.open(@settings_file,'w') {|f| f.write(JSON.pretty_generate(@hash))} unless @settings_file.nil?
   end
 
   def stack= stack
