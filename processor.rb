@@ -70,8 +70,7 @@ VALID_OPERATORS =   #{{{1
       'suffix' => {'cr:foo' => 'Clear the register named \'foo\'',
                    '>foo'   => 'Copy x into the register named \'foo\'',
                    '>>foo'  => 'Copy the entire stack into the register named \'foo\'',
-                   '<foo'   => 'Push register named \'foo\' onto the stack',
-                   '<<foo'  => 'Replace stack with contents of register named \'foo\'',
+                   'foo'    => 'Push register named \'foo\' onto the stack',
                    '#HIDE#' => 'Register names consist of letters, numbers and underscores.'}},
      {'category' => 'Macros',
       'groups' => [{'function' => 'macro_function', 'operators' => {'lm' => 'List macro definitions',
@@ -251,7 +250,12 @@ class Processor   #{{{1
     end
 
     def parse_register value   #{{{2
-        value.match(/^(cr:|>>?|<<?)(\w*[a-z]+\w*)$/)
+        # value.match(/^(cr:|>>?|<<?)(\w*[a-z]+\w*)$/)
+        parts = value.match(/^(cr:|>>?)?(\w*[a-z]+\w*)$/)
+        return nil if parts.nil? || parts.captures[1].nil?
+        return nil unless @macros[parts.captures[1]].nil?
+        return nil if parts.captures[0].nil? && @registers[parts.captures[1]].nil?
+        return parts
     end
 
     def parse_macro value   #{{{2
@@ -458,12 +462,9 @@ class Processor   #{{{1
             when '>>'
                 raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
                 @registers[name] = @stack.dup
-            when '<'
+            when nil
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 [@registers[name]].flatten.each{|value| @stack.push value}
-            when '<<'
-                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
-                @stack = [@registers[name]].flatten.dup
             when 'cr:'
                 raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
                 @registers.delete(name)

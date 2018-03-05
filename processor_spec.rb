@@ -97,8 +97,7 @@ describe Processor do
             expect(@processor.parse_register('cr:a1a')).to be_kind_of(MatchData)
             expect(@processor.parse_register('>a1a')).to be_kind_of(MatchData)
             expect(@processor.parse_register('>>abc')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('<<def')).to be_kind_of(MatchData)
-            expect(@processor.parse_register('<ghi')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('nosuchregister')).to be_nil
         end
         it 'parses macros' do
             expect(@processor.parse_macro('123')).to be_nil
@@ -113,7 +112,7 @@ describe Processor do
 
         it 'will not allow pushing a nonexistent register' do
             @processor.execute('12 >widgets')
-            expect(@processor.parse_register('<widgets')).to be_kind_of(MatchData)
+            expect(@processor.parse_register('widgets')).to be_kind_of(MatchData)
         end
         it 'formats numbers for printing' do
             expect(@processor.format([Number.new("1"), Number.new("2"), Number.new("3")])).to eq("[1 2 3]")
@@ -341,18 +340,13 @@ describe Processor do
         end
         it 'puts the named register location\'s value on the stack' do
             @processor.execute('13 >a')
-            @processor.execute('<a')
+            @processor.execute('a')
             expect(@processor.stack).to eq([Number.new(13), Number.new(13)])
             expect(@processor.registers['a']).to eq(Number.new(13))
         end
-        it 'replaces the stack with the named register location\'s value' do
-            @processor.execute('12 11 13 >a')
-            @processor.execute('<<a')
-            expect(@processor.stack).to eq([Number.new(13)])
-        end
         it 'puts the values of an array stored in the register onto the stack' do
             @processor.registers['sample'] = [Number.new(1),Number.new(2),Number.new(3)]
-            @processor.execute('<sample')
+            @processor.execute('sample')
             expect(@processor.stack).to eq([Number.new(1),Number.new(2),Number.new(3)])
         end
         it 'returns the value of x as an answer' do
@@ -373,16 +367,18 @@ describe Processor do
             expect(@processor.registers['b']).to eq(Number.new(13))
         end
         it 'will not allow the use of an operator for a register name' do
-            expect {@processor.execute('5 pi=')}.to raise_error(NotImplementedError)
+            expect {@processor.execute('5 >pi')}.to raise_error(ArgumentError)
+            expect {@processor.execute('5 >phi')}.to raise_error(ArgumentError)
+            expect {@processor.execute('5 >i')}.to raise_error(ArgumentError)
         end
         it 'will not allow the use of a macro for a register name' do
-            expect {@processor.execute('f( 3 * ) 5 >f')}.to raise_error(ArgumentError)
+            expect {@processor.execute('f( 3 * ) 5 >f')}.to raise_error(NotImplementedError)
         end
         it 'throws an exception when nothing to put into register' do
             expect {@processor.execute('>foo')}.to raise_error(ArgumentError)
         end
         it 'throws an exception when register is not defined' do
-            expect {@processor.execute('<foo')}.to raise_error(ArgumentError)
+            expect {@processor.execute('foo')}.to raise_error(NotImplementedError)
         end
 
         # Statistics {{{2
