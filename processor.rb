@@ -250,7 +250,6 @@ class Processor   #{{{1
     end
 
     def parse_register value   #{{{2
-        # value.match(/^(cr:|>>?|<<?)(\w*[a-z]+\w*)$/)
         parts = value.match(/^(cr:|>>?)?(\w*[a-z]+\w*)$/)
         return nil if parts.nil? || parts.captures[1].nil?
         return nil unless @macros[parts.captures[1]].nil?
