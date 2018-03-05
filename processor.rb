@@ -77,6 +77,7 @@ VALID_OPERATORS =   #{{{1
                                                                     'cm' => 'Clear all macros'}}],
       'suffix' => {'bar(' => 'Start the definition of a macro named \'bar\'',
                    ')' => 'Finish the definition of the current macro',
+                   'bar' => 'Run the macro named \'bar\'',
                    'bar()' => 'Clear the macro named \'bar\''}},
      {'category' => 'Display Mode',
       'groups' => [{'function' => 'custom_operator', 'operators' => {'bin'  => 'Binary: 0b[01]+',
