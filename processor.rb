@@ -4,9 +4,8 @@ require 'json'
 require 'launchy'
 require 'io/console'
 
-OPERATOR_WIDTH = 8
 VALID_OPERATORS =   #{{{1
-    [{'category' => 'Basic Arithmetic',
+    [{'category' => 'Arithmetic',
       'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'    => 'Addition',
                                                                       '*'    => 'Multiplication',
                                                                       '-'    => 'Subtraction',
@@ -21,14 +20,14 @@ VALID_OPERATORS =   #{{{1
                                                                       'truncate' => 'Truncate to integer',
                                                                       'floor'    => 'Round down to nearest integer',
                                                                       'ceil'     => 'Round up to nearest integer'}}]},
-     {'category' => 'Powers and Logarithms',
+     {'category' => 'Powers & Logs',
       'groups' => [{'function' => 'Math_1_operator',  'operators' => {'exp'   => 'Raise e to the x power',
                                                                       'log'   => 'Natural Log of x',
                                                                       'log10' => 'Log (base 10) of x',
                                                                       'log2'  => 'Log (base 2) of x',
                                                                       'sqrt'  => 'Square Root'}},
                    {'function' => 'custom_operator',  'operators' => {'\\'    => 'Reciprocal'}}]},
-     {'category' => 'Trigonometric',
+     {'category' => 'Trigonometry',
       'groups' => [{'function' => 'trig_operator',  'operators' => {'sin'   => 'Sine of x',
                                                                     'asin'  => 'Arcsine of x',
                                                                     'cos'   => 'Cosine of x',
@@ -39,12 +38,12 @@ VALID_OPERATORS =   #{{{1
       'groups' => [{'function' => 'statistics_operator', 'operators' => {'!'       => 'Factorial',
                                                                          'perm'    => 'Permutation(Y, X)',
                                                                          'comb'    => 'Combination(Y, X)',
-                                                                         'sum'     => 'Sum of the stack',
-                                                                         'product' => 'Product of the stack',
+                                                                         'sum'     => 'Sum of stack',
+                                                                         'product' => 'Product of stack',
                                                                          'mean'    => 'Mean average',
                                                                          'median'  => 'Median average',
                                                                          'std'     => 'Standard Deviation',
-                                                                         'count'   => 'Size of the stack'}}]},
+                                                                         'count'   => 'Size of stack'}}]},
      {'category' => 'Bitwise',
       'groups' => [{'function' => 'int_2_operator',   'operators' => {'&'  => 'AND',
                                                                       '|'  => 'OR',
@@ -57,10 +56,10 @@ VALID_OPERATORS =   #{{{1
                                                                       'e'   => '2.718281828...',
                                                                       'phi' => '0.618033989...',
                                                                       'i' => 'sqrt(-1)'}}]},
-     {'category' => 'Unit Conversion',
-      'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit conversions.'}}],
+     {'category' => 'Units',
+      'groups' => [{'function' => 'convert_unit', 'operators' => {'units' => 'Show list of available unit of measure conversions.'}}],
       'suffix' => {'FROM>TO' => 'Convert x from \'FROM\' units to \'TO\' units, eg. mi>km'}},
-     {'category' => 'Stack Manipulation',
+     {'category' => 'Stack',
       'groups' => [{'function' => 'custom_operator',  'operators' => {'copy' => 'Copy top value on stack',
                                                                       'del'  => 'Delete top value from stack',
                                                                       'cs'   => 'Clear the stack',
@@ -402,49 +401,35 @@ class Processor   #{{{1
         when 'colors'
           @settings.change_colors
         when '?'
-            print "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
+            puts "#{'~-._.-' * console_columns.div(6)}".colorize(@settings.color_help)
+            category_width = VALID_OPERATORS.inject(0) {|len,category| [len,category['category'].length].max}
             VALID_OPERATORS.each{ |category|
-                puts
-                puts category['category'].colorize(@settings.color_help_heading)
-
-                unless category['prefix'].nil?
-                  category['prefix'].each{|part1, part2|
-                      part1 = sprintf(" %#{OPERATOR_WIDTH}s  ", part1)
-                      puts part1.colorize(@settings.color_help) +
-                           part2.colorize(@settings.color_normal)
-                  }
-                end
+                heading = sprintf("%#{category_width}s: ", category['category'])
+                print heading.colorize(@settings.color_help_heading)
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
-                description_width = operators.values.inject(0) {|sum, text| [sum, text.length].max}
 
-                total_width = 0
+                total_width = category_width + 1
                 operators.each{|op,description|
-                    op = sprintf(" %#{OPERATOR_WIDTH}s  ", op)
-                    description = sprintf("%-#{description_width}s", description)
                     if total_width + op.length + description.length + 3 < console_columns
-                        print op.colorize(@settings.color_help) + description.colorize(@settings.color_normal)
-                        total_width = total_width + op.length + description.length + 3
-                    elsif total_width + op.length + description.rstrip.length + 3 < console_columns
-                        puts op.colorize(@settings.color_help) + description.rstrip.colorize(@settings.color_normal)
-                        total_width = 0
+                        print op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
                     else
                         puts ''
-                        print op.colorize(@settings.color_help) + description.colorize(@settings.color_normal)
-                        total_width = op.length + description.length + 3
+                        print "#{' ' * category_width} " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
+                        total_width = category_width + 1
                     end
+                    total_width = total_width + op.length + 1 + description.length + 3
                 }
-                puts '' if total_width > 0
+                puts ''
 
                 unless category['suffix'].nil?
                   category['suffix'].each{|part1, part2|
-                      part1 = sprintf(" %#{OPERATOR_WIDTH}s  ", part1 =~ /^\#HIDE.*\#$/ ? "" : part1)
-                      puts part1.colorize(@settings.color_help) +
-                           part2.colorize(@settings.color_normal)
-                      }
+                      part1 = sprintf("#{' ' * category_width}  %s", part1 =~ /^\#HIDE.*\#$/ ? "" : part1)
+                      puts part1.colorize(@settings.color_help) + ' ' + part2.colorize(@settings.color_normal)
+                  }
                 end
             }
-            puts "#{'─' * (console_columns - 1)}".colorize(@settings.color_help)
+            puts "#{'_.-~-.' * console_columns.div(6)}".colorize(@settings.color_help)
         when '??'
             Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
         end
