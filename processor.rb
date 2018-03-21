@@ -401,21 +401,21 @@ class Processor   #{{{1
         when 'colors'
           @settings.change_colors
         when '?'
-            puts "#{'~-._.-' * console_columns.div(6)}".colorize(@settings.color_help)
+            puts "╭#{'─' * (console_columns-1)}".colorize(@settings.color_help)
             category_width = VALID_OPERATORS.inject(0) {|len,category| [len,category['category'].length].max}
             VALID_OPERATORS.each{ |category|
                 heading = sprintf("%#{category_width}s: ", category['category'])
-                print heading.colorize(@settings.color_help_heading)
+                print '│'.colorize(@settings.color_help) + heading.colorize(@settings.color_help_heading)
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
 
                 total_width = category_width + 1
                 operators.each{|op,description|
-                    if total_width + op.length + description.length + 3 < console_columns
+                    if total_width + op.length + description.length + 3 < console_columns - 1
                         print op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
                     else
                         puts ''
-                        print "#{' ' * category_width} " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
+                        print '│'.colorize(@settings.color_help) + "#{' ' * category_width} " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
                         total_width = category_width + 1
                     end
                     total_width = total_width + op.length + 1 + description.length + 3
@@ -425,11 +425,11 @@ class Processor   #{{{1
                 unless category['suffix'].nil?
                   category['suffix'].each{|part1, part2|
                       part1 = sprintf("#{' ' * category_width}  %s", part1 =~ /^\#HIDE.*\#$/ ? "" : part1)
-                      puts part1.colorize(@settings.color_help) + ' ' + part2.colorize(@settings.color_normal)
+                      puts '│'.colorize(@settings.color_help) + part1.colorize(@settings.color_help) + ' ' + part2.colorize(@settings.color_normal)
                   }
                 end
             }
-            puts "#{'_.-~-.' * console_columns.div(6)}".colorize(@settings.color_help)
+            puts "╰#{'─' * (console_columns-1)}".colorize(@settings.color_help)
         when '??'
             Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
         end
