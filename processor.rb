@@ -402,32 +402,32 @@ class Processor   #{{{1
           @settings.change_colors
         when '?'
             suffixes = false
-            puts "╭#{'─' * (console_columns-2)}╮".colorize(@settings.color_help)
+            puts "  ╭#{'─' * (console_columns-6)}╮".colorize(@settings.color_help)
             category_width = VALID_OPERATORS.inject(0) {|len,category| [len,category['category'].length].max}
             VALID_OPERATORS.each{ |category|
                 heading = sprintf("%#{category_width}s: ", category['category'])
-                print '│'.colorize(@settings.color_help) + heading.colorize(@settings.color_help_heading)
+                print '  │'.colorize(@settings.color_help) + heading.colorize(@settings.color_help_heading)
 
                 operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
 
                 suffixes = false
-                total_width = category_width + 3
+                total_width = category_width + 5
                 operators.each{|op,description|
-                    if total_width + (op.length + 1) + (description.length + 3) < console_columns - 1
+                    if total_width + (op.length + 1) + (description.length + 3) < console_columns - 3
                         print op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
                     else
-                        if console_columns-1-total_width > 0
-                            puts "#{' ' * (console_columns-1-total_width)}│".colorize(@settings.color_help)
+                        if console_columns-3-total_width > 0
+                            puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
                         else
                             puts ''
                         end
-                        print '│'.colorize(@settings.color_help) + "#{' ' * category_width}  " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
-                        total_width = category_width + 3
+                        print '  │'.colorize(@settings.color_help) + "#{' ' * category_width}  " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
+                        total_width = category_width + 5
                     end
                     total_width += (op.length + 1) + (description.length + 3)
                 }
                 if console_columns-1-total_width > 0
-                    puts "#{' ' * (console_columns-1-total_width)}│".colorize(@settings.color_help)
+                    puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
                 else
                     puts ''
                 end
@@ -436,19 +436,19 @@ class Processor   #{{{1
                   suffixes = true
                   category['suffix'].each{|part1, part2|
                       part1 = part1 =~ /^\#HIDE.*\#$/ ? "" : part1
-                      print "│#{' ' * category_width}  ".colorize(@settings.color_help)
+                      print "  │#{' ' * category_width}  ".colorize(@settings.color_help)
                       print "#{part1} ".colorize(@settings.color_help)
                       print part2.colorize(@settings.color_normal)
-                      total_width = category_width + 3 + (part1.length + 1) + (part2.length)
+                      total_width = category_width + 5 + (part1.length + 1) + (part2.length)
                       if console_columns-1-total_width > 0
-                          puts "#{' ' * (console_columns-1-total_width)}│".colorize(@settings.color_help)
+                          puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
                       else
                           puts ''
                       end
                   }
                 end
             }
-            puts "╰#{'─' * (console_columns-2)}╯".colorize(@settings.color_help) unless suffixes
+            puts "  ╰#{'─' * (console_columns-6)}╯".colorize(@settings.color_help)
         when '??'
             Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
         end
