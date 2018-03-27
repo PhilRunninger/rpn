@@ -258,9 +258,9 @@ class Processor   #{{{1
     end
 
     def parse_macro value   #{{{2
-      return nil if value.match(/^\w+$/) and @macros[value].nil?
-      return value if value.match(/^\w+$/) and !@macros[value].nil?
-      return value.match(/^((\w+)(\(?))?(\))?$/)
+      return nil if value.match(/^\w+$/) && @macros[value].nil?
+      return value if value.match(/^\w+$/) && !@macros[value].nil?
+      return value.match(/^((\w+)(\()(\)?)|(\)))$/)
     end
 
     def float_1_operator operator   #{{{2
@@ -516,19 +516,16 @@ class Processor   #{{{1
     def macro_function parts  #{{{2
       if parts.kind_of?(MatchData)
         name = parts.captures[1]
-        start_of_macro = !parts.captures[2].nil?
-        end_of_macro = !parts.captures[3].nil?
+        end_of_macro = parts.captures[3] == ')' || parts.captures[4] == ')'
 
-        macro_function name if !name.nil? and !start_of_macro and !end_of_macro
-
-        if !name.nil?
+        unless name.nil?
           raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
           raise ArgumentError, "The name #{name} is already used to idenfity a register." unless @registers[name].nil?
           @recording = name
           @macros[@recording] = []
         end
 
-        @macros.delete(@recording) if end_of_macro and @macros[@recording] == []
+        @macros.delete(@recording) if end_of_macro && @macros[@recording] == []
         @recording = nil if end_of_macro
       else
         case parts
