@@ -107,7 +107,7 @@ describe Processor do
             expect(@processor.parse_macro(')')).to be_kind_of(MatchData)
             expect(@processor.parse_macro('f()')).to be_kind_of(MatchData)
             expect(@processor.parse_macro('f')).to be_nil
-
+            expect(@processor.parse_macro('f)')).to be_nil
         end
 
         it 'will not allow pushing a nonexistent register' do
