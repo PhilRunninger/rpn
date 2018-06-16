@@ -2,7 +2,10 @@ class Number
   attr_accessor :value, :base_as_entered
 
   def initialize value, base_as_entered=nil
-    if !base_as_entered.nil?
+    if value == 'Infinity'
+      @value = Float::INFINITY
+      @base_as_entered = 0
+    elsif base_as_entered
       @value = value
       @base_as_entered = base_as_entered
     elsif value.is_a?(Complex)
@@ -63,11 +66,13 @@ class Number
   end
 
   def to_h
+    return {@base_as_entered.to_s => "Infinity"} if @value.infinite?
     return {@base_as_entered.to_s => self.format(0)} if @value.is_a?(Complex)
     return {@base_as_entered.to_s => @value} unless @value.is_a?(Complex)
   end
 
   def self.from_h data
+    return self.new "Infinity" if data.values[0] == "Infinity"
     return self.new Complex(data.values[0]), data.keys[0].to_i if data.values[0].is_a?(String)
     return self.new data.values[0], data.keys[0].to_i unless data.values[0].is_a?(String)
   end
