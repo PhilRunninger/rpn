@@ -503,14 +503,14 @@ class Processor   #{{{1
       else
         case parts
         when 'units'
-          puts "  ╭#{'─' * (console_columns - 6)}╮".colorize(@settings.color_help)
+          puts "  ╔#{'═' * (console_columns - 6)}╗".colorize(@settings.color_help)
           UNITS_CONVERSION.each do |category|
-            print '  │ '.colorize(@settings.color_help) + "#{category['category']}: ".colorize(@settings.color_help_heading)
+            print '  ║ '.colorize(@settings.color_help) + "#{category['category']}: ".colorize(@settings.color_help_heading)
             units = category['systems'].map { |s| s['conversions'].map { |u| u['unit'] }.join(', ') }.join(', ')
             print units.colorize(@settings.color_normal)
-            puts "#{' ' * (console_columns - category['category'].length - units.length - 9)}│".colorize(@settings.color_help)
+            puts "#{' ' * (console_columns - category['category'].length - units.length - 9)}║".colorize(@settings.color_help)
           end
-          puts "  ╰#{'─' * (console_columns - 6)}╯".colorize(@settings.color_help)
+          puts "  ╚#{'═' * (console_columns - 6)}╝".colorize(@settings.color_help)
         end
       end
     end
