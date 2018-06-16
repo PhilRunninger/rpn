@@ -25,7 +25,8 @@ describe Number do
                          {:input=>'0b101+0o72i', :value=>5+58i,    :type=>"Complex", :base_as_entered=>0},
                          {:input=>'0x2A+1.2E3i', :value=>42+1200i, :type=>"Complex", :base_as_entered=>0},
                          {:input=>'0x2A+0b111i', :value=>42+7i,    :type=>"Complex", :base_as_entered=>0},
-                         {:input=>1+2i,          :value=>1+2i,     :type=>"Complex", :base_as_entered=>0}
+                         {:input=>1+2i,          :value=>1+2i,     :type=>"Complex", :base_as_entered=>0},
+                         {:input=>'Infinity',    :value=>Float::INFINITY,     :type=>"Float", :base_as_entered=>0}
         ])
     end
 
@@ -45,7 +46,8 @@ describe Number do
   end
 
   it 'formats numbers properly given current mode' do
-      test_format([{:input=>"123",   :base=>0,  :expected=>"123"},
+      test_format([{:input=>"Infinity",   :base=>0,  :expected=>"Infinity"},
+                   {:input=>"123",   :base=>0,  :expected=>"123"},
                    {:input=>"9.7",   :base=>0,  :expected=>"9.7"},
                    {:input=>"0xa",   :base=>0,  :expected=>"0xa"},
                    {:input=>"0o15",  :base=>0,  :expected=>"0o15"},
@@ -92,7 +94,8 @@ describe Number do
   end
 
   it 'hashes a Number object)' do
-      test_to_h([{:input=>'0x1f', :expected=>{"16"=>31.0}},
+      test_to_h([{:input=>'Infinity', :expected=>{"0"=>"Infinity"}},
+                 {:input=>'0x1f', :expected=>{"16"=>31.0}},
                  {:input=>'3+2i', :expected=>{"0"=>"3+2i"}},
                  {:input=>'0o3+0x12i', :expected=>{"0"=>"3+18i"}}
       ])
@@ -107,7 +110,8 @@ describe Number do
   end
 
   it 'unhashes into a Number object' do
-    test_from_h([{:input=>{"8"=>30.0}, :expected=>Number.new("0o36")},
+    test_from_h([{:input=>{"0"=>"Infinity"}, :expected=>Number.new("Infinity")},
+                 {:input=>{"8"=>30.0}, :expected=>Number.new("0o36")},
                  {:input=>{"0"=>12}, :expected=>Number.new("12")},
                  {:input=>{"0"=>"3+7i"}, :expected=>Number.new("3+7i")}
     ])
