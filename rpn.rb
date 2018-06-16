@@ -20,7 +20,7 @@ else
     begin
       answer = processor.execute(input)
     rescue Exception => exception
-      answer = nil
+      answer = processor.stack.empty? ? nil : processor.stack.last
       puts exception.message.colorize(processor.settings.color_error)
     end
 
@@ -47,7 +47,7 @@ else
   end while input > ''
 
   puts "#{'═' * (processor.console_columns - 23)} Thanks for using rpn.".colorize(processor.settings.color_help)
-  if !answer.nil?
+  if answer
     Clipboard.copy processor.format(answer).to_s
     puts processor.format(answer).colorize(processor.settings.color_normal) +
       ' was copied to the clipboard.'.colorize(processor.settings.color_register)
