@@ -204,7 +204,7 @@ class Processor
 
         if macro
           macro_function macro
-        elsif !@recording.nil?
+        elsif @recording
           @macros[@recording] << value
         elsif number
           @stack.push number
@@ -253,15 +253,14 @@ class Processor
 
   def parse_register value
     parts = value.match(/^(cr:|>>?)?(\w*[a-z]+\w*)$/)
-    return nil if parts.nil? || parts.captures[1].nil?
-    return nil unless @macros[parts.captures[1]].nil?
-    return nil if parts.captures[0].nil? && @registers[parts.captures[1]].nil?
+    return nil unless parts && parts.captures[1]
+    return nil if @macros[parts.captures[1]]
+    return nil unless parts.captures[0] || @registers[parts.captures[1]]
     return parts
   end
 
   def parse_macro value
-    return nil if value.match(/^\w+$/) && @macros[value].nil?
-    return value if value.match(/^\w+$/) && !@macros[value].nil?
+    return (@macros[value] ? value : nil) if value.match(/^\w+$/)
     return value.match(/^((\w+)(\()(\)?)|(\)))$/)
   end
 
@@ -465,7 +464,7 @@ class Processor
     if parts.kind_of?(MatchData)
       name = parts.captures[1]
       raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
-      raise ArgumentError, "The name #{name} is already used to idenfity a macro." unless @macros[name].nil?
+      raise ArgumentError, "The name #{name} is already used to idenfity a macro." if @macros[name]
       case parts.captures[0]
       when '>'
         raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
@@ -474,10 +473,10 @@ class Processor
         raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
         @registers[name] = @stack.dup
       when nil
-        raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+        raise ArgumentError, "Register #{name} is not defined." unless @registers[name]
         [@registers[name]].flatten.each{|value| @stack.push value}
       when 'cr:'
-        raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+        raise ArgumentError, "Register #{name} is not defined." unless @registers[name]
         @registers.delete(name)
       end
     else
@@ -527,9 +526,9 @@ class Processor
       name = parts.captures[1]
       end_of_macro = parts.captures[3] == ')' || parts.captures[4] == ')'
 
-      unless name.nil?
+      if name
         raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
-        raise ArgumentError, "The name #{name} is already used to idenfity a register." unless @registers[name].nil?
+        raise ArgumentError, "The name #{name} is already used to idenfity a register." if @registers[name]
         @recording = name
         @macros[@recording] = []
       end
@@ -552,7 +551,7 @@ class Processor
           raise ArgumentError, "A macro cannot call itself. It will never finish." if parts == @recording
           @macros[@recording] << parts
         else
-          execute @macros[parts].join(' ') unless @macros[parts].nil?
+          execute @macros[parts].join(' ') if @macros[parts]
         end
       end
     end

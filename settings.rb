@@ -14,14 +14,14 @@ class Settings
   end
 
   def write
-    File.open(@settings_file,'w') {|f| f.write(JSON.pretty_generate(@hash))} unless @settings_file.nil?
+    File.open(@settings_file,'w') {|f| f.write(JSON.pretty_generate(@hash))} if @settings_file
   end
 
   def stack= stack
     @hash['stack'] = stack.map{|x| x.to_h}
   end
   def stack
-    return [] if @hash['stack'].nil?
+    return [] unless @hash['stack']
     return @hash['stack'].map{|x| Number.from_h(x)}
   end
 
@@ -29,7 +29,7 @@ class Settings
     @hash['registers'] = Hash[registers.map{|k,v| [k,v.kind_of?(Array) ? v.map{|n| n.to_h} : v.to_h]}]
   end
   def registers
-    return {} if @hash['registers'].nil?
+    return {} unless @hash['registers']
     return Hash[@hash['registers'].map{|k,v| [k,v.kind_of?(Array) ? v.map{|n| Number.from_h(n)} : Number.from_h(v)]}]
   end
 
@@ -55,12 +55,12 @@ class Settings
   end
 
   def get_color(type)
-    return :default if @hash['colors'].nil?
+    return :default unless @hash['colors']
     (@hash['colors'][type] || 'default').to_sym
   end
 
   def set_color(type, value)
-    @hash['colors'] = {} if @hash['colors'].nil?
+    @hash['colors'] = {} unless @hash['colors']
     @hash['colors'][type] = value
   end
 
@@ -125,7 +125,9 @@ class Settings
       end while (item =~ /[0-5\r]/).nil?
       print item
 
-      if item != "\r"
+      if item == "\r"
+        puts ''
+      else
         print '  '
         colors.each_index{|i| print "#{i.to_s(16).upcase}•".colorize(colors[i])}
         print '▷ '
@@ -135,8 +137,6 @@ class Settings
         puts color
 
         send(items.values[item.to_i]+'=', colors[color.to_i(16)].to_sym) unless color == "\r"
-      else
-        puts ''
       end
     end while item != "\r" and color != "\r"
     puts ''

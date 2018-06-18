@@ -16,21 +16,21 @@ class Number
       @base_as_entered = 0
     else
       complex_test = value.match(/^([+-]?(0b[01]+|0x[0-9A-Fa-f]+|0o[0-7]+|(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)([Ee][+-]?\d+)?))([+-](0b[01]+|0x[0-9A-Fa-f]+|0o[0-7]+|(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)([Ee][+-]?\d+)?))i/)
-      if !complex_test.nil?
+      if complex_test
         real = Number.new(complex_test.captures[0])
         imaginary = Number.new(complex_test.captures[6])
         @value = Complex(real.value, imaginary.value)
         @base_as_entered = 0
-      elsif !(value =~ /^[+-]?0b[01]+$/).nil?
+      elsif value =~ /^[+-]?0b[01]+$/
         @value = Integer(value).to_f
         @base_as_entered = 2
-      elsif !(value =~ /^[+-]?0x[0-9A-Fa-f]+$/).nil?
+      elsif value =~ /^[+-]?0x[0-9A-Fa-f]+$/
         @value = Integer(value).to_f
         @base_as_entered = 16
-      elsif !(value =~ /^[+-]?0o[0-7]+$/).nil?
+      elsif value =~ /^[+-]?0o[0-7]+$/
         @value = Integer(value).to_f
         @base_as_entered = 8
-      elsif !(value =~ /^[+-]?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/i).nil?
+      elsif value =~ /^[+-]?(0|(0?\.\d+)|[1-9]\d*(\.\d+)?)(e[+-]?\d+)?$/i
         @value = value.to_f
         @base_as_entered = 0
       else
@@ -40,12 +40,12 @@ class Number
   end
 
   def ==(other)
-    return false if other.nil?
+    return false unless other
     return @value == other.value && @base_as_entered == other.base_as_entered
   end
 
   def format base
-    return "" if @value.nil?
+    return "" unless @value
     if @value.is_a?(Complex)
       real = Number.new(@value.real).format(base)
       imaginary = Number.new(@value.imaginary).format(base)

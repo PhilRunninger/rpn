@@ -10,7 +10,7 @@ if ARGV.length > 0
   processor = Processor.new nil
   answer = processor.execute(ARGV.join(' '))
   puts processor.stack.map{|value| "#{processor.format(value)}" }.join('  ').colorize(processor.settings.color_normal)
-  Clipboard.copy processor.format(answer).to_s unless answer.nil?
+  Clipboard.copy processor.format(answer).to_s if answer
 else
   processor = Processor.new File.join(Dir.home, '.rpnrc')
   puts "RPN Calculator, ©2016, Phil Runninger ".colorize(processor.settings.color_title) +
@@ -26,7 +26,7 @@ else
 
     prompt = ''
 
-    prompt += "Recording #{processor.recording}... ".colorize(processor.settings.color_error) unless processor.recording.nil?
+    prompt += "Recording #{processor.recording}... ".colorize(processor.settings.color_error) if processor.recording
     prompt += "#{processor.macros.keys.join(', ')}  ".colorize(processor.settings.color_help) unless processor.macros == {}
 
     prompt += processor.registers.map{|name, value|
