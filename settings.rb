@@ -122,7 +122,7 @@ class Settings
       print '▷ '
       begin
         item = STDIN.getch.upcase
-      end while (item =~ /[0-5\r]/).nil?
+      end until item =~ /[0-5\r]/
       print item
 
       if item == "\r"
@@ -133,7 +133,7 @@ class Settings
         print '▷ '
         begin
           color = STDIN.getch.upcase
-        end while (color =~ /[0-9A-F\r]/).nil?
+        end until color =~ /[0-9A-F\r]/
         puts color
 
         send(items.values[item.to_i]+'=', colors[color.to_i(16)].to_sym) unless color == "\r"
