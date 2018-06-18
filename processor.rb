@@ -5,7 +5,7 @@ require 'launchy'
 require 'io/console'
 require 'readline'
 
-VALID_OPERATORS =   #{{{1
+VALID_OPERATORS =
     [{'category' => 'Arithmetic',
       'groups' => [{'function' => 'float_2_operator', 'operators' => {'+'    => 'Addition',
                                                                       '*'    => 'Multiplication',
@@ -99,7 +99,7 @@ VALID_OPERATORS =   #{{{1
                                                                       '??'    => 'Google: RPN tutorials'}}]}
     ]
 
-UNITS_CONVERSION = #{{{1
+UNITS_CONVERSION =
     [{'category'=>'length',
       'systems'=>[{'standard'=>'m',
                    'conversions'=>[{'unit'=>'nm',     'to_std'=>'1e9 /',                'from_std'=>'1e9 *'},
@@ -163,411 +163,404 @@ UNITS_CONVERSION = #{{{1
                                    {'unit'=>'quart',  'to_std'=>'2 2 16 3 * * * *',     'from_std'=>'2 2 16 3 * * * /'},
                                    {'unit'=>'gallon', 'to_std'=>'4 2 2 16 3 * * * * *', 'from_std'=>'4 2 2 16 3 * * * * /'}]}]}
     ]
-BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'norm'=>0}   # {{{1
+BASES = {'bin'=>2, 'oct'=>8, 'dec'=>10, 'hex'=>16, 'norm'=>0}
 
-class Processor   #{{{1
-    attr_reader :stack, :registers, :macros, :recording, :settings
-    attr_accessor :base, :angle
+class Processor
+  attr_reader :stack, :registers, :macros, :recording, :settings
+  attr_accessor :base, :angle
 
-    def initialize settings_file   #{{{2
-        @settings = Settings.new(settings_file)
-        @stack = @settings.stack
-        @registers = @settings.registers
-        @macros = @settings.macros
-        @recording = nil
-        @base = @settings.base
-        @angle = @settings.angle
-    end
+  def initialize settings_file
+    @settings = Settings.new(settings_file)
+    @stack = @settings.stack
+    @registers = @settings.registers
+    @macros = @settings.macros
+    @recording = nil
+    @base = @settings.base
+    @angle = @settings.angle
+  end
 
-    def angle_mode   #{{{2
-      return @angle
-    end
+  def angle_mode
+    return @angle
+  end
 
-    def radix   #{{{2
-      return @base == 0 ? '' : BASES.key(@base).upcase
-    end
+  def radix
+    return @base == 0 ? '' : BASES.key(@base).upcase
+  end
 
-    def format(value)   #{{{2
-      return "[#{value.map{|v| v.format(@base)}.join(' ')}]" if value.kind_of?(Array)
-      return value.format(@base)
-    end
+  def format(value)
+    return "[#{value.map{|v| v.format(@base)}.join(' ')}]" if value.kind_of?(Array)
+    return value.format(@base)
+  end
 
-    def execute(text)   #{{{2
-        saved_stack = @stack.dup
-        begin
-            text.split(' ').each do |value|
-                number = parse_number(value)
-                operator = parse_operator(value)
-                register = parse_register(value)
-                macro = parse_macro(value)
-                unit_conversion = parse_unit_conversion(value)
+  def execute(text)
+    saved_stack = @stack.dup
+    begin
+      text.split(' ').each do |value|
+        number = parse_number(value)
+        operator = parse_operator(value)
+        register = parse_register(value)
+        macro = parse_macro(value)
+        unit_conversion = parse_unit_conversion(value)
 
-                if macro
-                    macro_function macro
-                elsif !@recording.nil?
-                    @macros[@recording] << value
-                elsif number
-                    @stack.push number
-                elsif operator
-                    send(operator['function'], value)
-                elsif unit_conversion
-                    convert_unit unit_conversion
-                elsif register
-                    register_function register
-                else
-                    raise NotImplementedError, "#{value} is not a valid number, operator, unit conversion, register, or macro."
-                end
-            end
-        rescue Exception => exception
-            @stack = saved_stack.dup
-            raise exception
-        end
-
-        @stack.delete(nil)
-
-        @settings.stack = @stack
-        @settings.registers = @registers
-        @settings.macros = @macros
-        @settings.base = @base
-        @settings.angle = @angle
-        @settings.write
-
-        @stack.last
-    end
-
-    def parse_number value   #{{{2
-        begin
-            return Number.new(value)
-        rescue
-            return nil
-        end
-    end
-
-    def parse_operator value   #{{{2
-        VALID_OPERATORS.map{|category| category['groups']}.flatten.find{|group| group['operators'].keys.include?(value)}
-    end
-
-    def parse_unit_conversion value   #{{{2
-        value.match(/^([\w\/]+)>([\w\/]+)$/)
-    end
-
-    def parse_register value   #{{{2
-        parts = value.match(/^(cr:|>>?)?(\w*[a-z]+\w*)$/)
-        return nil if parts.nil? || parts.captures[1].nil?
-        return nil unless @macros[parts.captures[1]].nil?
-        return nil if parts.captures[0].nil? && @registers[parts.captures[1]].nil?
-        return parts
-    end
-
-    def parse_macro value   #{{{2
-      return nil if value.match(/^\w+$/) && @macros[value].nil?
-      return value if value.match(/^\w+$/) && !@macros[value].nil?
-      return value.match(/^((\w+)(\()(\)?)|(\)))$/)
-    end
-
-    def float_1_operator operator   #{{{2
-        x = @stack.pop
-        @stack.push Number.new(x.value.send(operator.to_sym))
-    end
-    def float_2_operator operator   #{{{2
-        x = @stack.pop
-        y = @stack.pop
-        @stack.push Number.new(y.value.send(operator.to_sym, x.value))
-    end
-
-    def int_1_operator operator   #{{{2
-        x = @stack.pop.value.to_i
-        @stack.push Number.new(x.send(operator.to_sym))
-    end
-    def int_2_operator operator   #{{{2
-        x = @stack.pop.value.to_i
-        y = @stack.pop.value.to_i
-        @stack.push Number.new(y.send(operator.to_sym, x))
-    end
-
-    def Math_constant value   #{{{2
-        case value
-        when 'phi'
-            @stack.push Number.new((Math.sqrt(5)+1)/2)
-        when 'i'
-            @stack.push Number.new(0+1i)
+        if macro
+          macro_function macro
+        elsif !@recording.nil?
+          @macros[@recording] << value
+        elsif number
+          @stack.push number
+        elsif operator
+          send(operator['function'], value)
+        elsif unit_conversion
+          convert_unit unit_conversion
+        elsif register
+          register_function register
         else
-            @stack.push Number.new(eval("Math::#{value.upcase}"))
-        end
-    end
-
-    def Math_1_operator operator   #{{{2
-        x = @stack.pop.value
-        @stack.push Number.new(eval("Math.#{operator}(#{x})"))
-    end
-
-    def trig_operator operator   #{{{2
-      case operator
-      when 'sin', 'cos', 'tan'
-        x = @stack.pop.value * (@angle == 'RAD' ? 1 : Math::PI / 180.0)
-        @stack.push Number.new(eval("Math.#{operator}(#{x})"))
-      when 'asin', 'acos', 'atan'
-        x= @stack.pop.value
-        @stack.push Number.new(eval("Math.#{operator}(#{x})") * (@angle == 'RAD' ? 1 : 180.0 / Math::PI))
-      end
-    end
-
-    def statistics_operator operator   #{{{2
-        case operator
-        when '!'
-            x = @stack.pop.value
-            raise RangeError, "x must be non-negative." if x < 0
-            @stack.push Number.new(factorial(x))
-        when 'perm'
-            x = @stack.pop.value
-            y = @stack.pop.value
-            @stack.push Number.new(factorial(y) / factorial(y - x))
-        when 'comb'
-            x = @stack.pop.value
-            y = @stack.pop.value
-            @stack.push Number.new(factorial(y) / (factorial(y - x) * factorial(x)))
-        when 'sum'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(sum(@stack.map{|i| i.value}))]
-        when 'product'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(product(@stack.map{|i| i.value}))]
-        when 'count'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(@stack.size)]
-        when 'mean'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(mean(@stack.map{|i| i.value}))]
-        when 'median'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(median(@stack.map{|i| i.value}))]
-        when 'std'
-            @registers['sample'] = @stack.dup
-            @stack = [Number.new(standard_deviation(@stack.map{|i| i.value}))]
-        end
-    end
-
-    def factorial n
-        n == 0 ? 1 : (1..n).reduce(:*)
-    end
-    def sum(a)
-        a.inject(0){ |accum, i| accum + i}
-    end
-    def product(a)
-        a.inject(1){ |accum, i| accum * i }
-    end
-    def mean(a)
-        sum(a) / a.length.to_f
-    end
-    def median(a)
-        sorted = a.sort
-        len = sorted.length
-        (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
-    end
-    def sample_variance(a)
-        m = mean(a)
-        sum = a.inject(0){ |accum, i| accum + (i - m) ** 2 }
-        sum / (a.length - 1).to_f
-    end
-    def standard_deviation(a)
-        Math.sqrt(sample_variance(a))
-    end
-
-    def custom_operator operator   #{{{2
-        case operator
-        when 'chs'
-            @stack.push Number.new(-@stack.pop.value)
-        when '\\'
-            @stack.push Number.new(1/@stack.pop.value)
-        when 'copy'
-            @stack.push @stack.last
-        when 'del'
-            @stack.pop
-        when 'cs'
-            @stack = []
-        when 'edit'
-          Readline.pre_input_hook = -> do
-            Readline.insert_text @stack.map{|value| value.format(0)}.join(' ')
-            Readline.redisplay
-            Readline.pre_input_hook = nil # Remove the hook right away.
-          end
-          input = Readline.readline("Edit Stack: ".colorize(@settings.color_title), false)
-          @stack = input.split(' ').map{|value| Number.new(value)}
-        when 'ca'
-            @stack = []
-            @macros = {}
-            @registers = {}
-            @base = 0
-            @angle = 'DEG'
-        when 'xy'
-            x = @stack.pop
-            y = @stack.pop
-            @stack.push x
-            @stack.push y
-        when 'bin', 'oct', 'dec', 'hex', 'norm'
-          @base = BASES[operator]
-        when 'rad', 'deg'
-          @angle = operator.upcase
-        when 'colors'
-          @settings.change_colors
-        when '?'
-            suffixes = false
-            puts "  ╭#{'─' * (console_columns-6)}╮".colorize(@settings.color_help)
-            category_width = VALID_OPERATORS.inject(0) {|len,category| [len,category['category'].length].max}
-            VALID_OPERATORS.each{ |category|
-                heading = sprintf("%#{category_width}s: ", category['category'])
-                print '  │'.colorize(@settings.color_help) + heading.colorize(@settings.color_help_heading)
-
-                operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
-
-                suffixes = false
-                total_width = category_width + 5
-                operators.each{|op,description|
-                    if total_width + (op.length + 1) + (description.length + 3) < console_columns - 3
-                        print op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
-                    else
-                        if console_columns-3-total_width > 0
-                            puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
-                        else
-                            puts ''
-                        end
-                        print '  │'.colorize(@settings.color_help) + "#{' ' * category_width}  " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
-                        total_width = category_width + 5
-                    end
-                    total_width += (op.length + 1) + (description.length + 3)
-                }
-                if console_columns-1-total_width > 0
-                    puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
-                else
-                    puts ''
-                end
-
-                unless category['suffix'].nil?
-                  suffixes = true
-                  category['suffix'].each{|part1, part2|
-                      part1 = part1 =~ /^\#HIDE.*\#$/ ? "" : part1
-                      print "  │#{' ' * category_width}  ".colorize(@settings.color_help)
-                      print "#{part1} ".colorize(@settings.color_help)
-                      print part2.colorize(@settings.color_normal)
-                      total_width = category_width + 5 + (part1.length + 1) + (part2.length)
-                      if console_columns-1-total_width > 0
-                          puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
-                      else
-                          puts ''
-                      end
-                  }
-                end
-            }
-            puts "  ╰#{'─' * (console_columns-6)}╯".colorize(@settings.color_help)
-        when '??'
-            Launchy.open('https://www.google.com/webhp?ion=1&espv=2&es_th=1&ie=UTF-8#q=reverse%20polish%20notation%20tutorial&es_th=1')
-        end
-    end
-
-    def register_function parts   #{{{2
-        if parts.kind_of?(MatchData)
-            name = parts.captures[1]
-            raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
-            raise ArgumentError, "The name #{name} is already used to idenfity a macro." unless @macros[name].nil?
-            case parts.captures[0]
-            when '>'
-                raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
-                @registers[name] = @stack.last
-            when '>>'
-                raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
-                @registers[name] = @stack.dup
-            when nil
-                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
-                [@registers[name]].flatten.each{|value| @stack.push value}
-            when 'cr:'
-                raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
-                @registers.delete(name)
-            end
-        else
-            case parts
-            when 'cr'
-                @registers = {}
-            end
-        end
-    end
-
-    def convert_unit parts   #{{{2
-      if parts.kind_of?(MatchData)
-        from_units = parts.captures[0]
-        to_units = parts.captures[1]
-        all_units = UNITS_CONVERSION.map{ |x| x['systems'].map{ |y| y['conversions'].map{ |z| z['unit']} } }.flatten
-        raise ArgumentError, "Invalid units: #{from_units}. Type 'units' to see valid units." unless all_units.include?(from_units)
-        raise ArgumentError, "Invalid units: #{to_units}. Type 'units' to see valid units." unless all_units.include?(to_units)
-
-        from_category = UNITS_CONVERSION.find{ |y| y['systems'].find{ |x| x['conversions'].find{ |z| z['unit']==from_units } } }
-        to_category= UNITS_CONVERSION.find{ |y| y['systems'].find{ |x| x['conversions'].find{ |z| z['unit']==to_units } } }
-        raise ArgumentError, "Incompatible units. Type 'units' to see valid units." unless from_category['category'] == to_category['category']
-
-        f_standard = from_category['systems'].find{|x| x['conversions'].find{|y| y['unit']==from_units}}['standard']
-        t_standard = to_category['systems'].find{|x| x['conversions'].find{|y| y['unit']==to_units}}['standard']
-
-        from = from_category['systems'].find{|x| x['standard']==f_standard}['conversions'].find{|z| z['unit']==from_units}['to_std']
-        translation = f_standard == t_standard ? '' : from_category['translations'].find{|x| x['from']==f_standard && x['to']==t_standard}['translation']
-        to = from_category['systems'].find{|x| x['standard']==t_standard}['conversions'].find{|z| z['unit']==to_units}['from_std']
-        execute "#{from} #{translation} #{to}"
-      else
-        case parts
-        when 'units'
-          puts "  ╔#{'═' * (console_columns - 6)}╗".colorize(@settings.color_help)
-          UNITS_CONVERSION.each do |category|
-            print '  ║ '.colorize(@settings.color_help) + "#{category['category']}: ".colorize(@settings.color_help_heading)
-            units = category['systems'].map { |s| s['conversions'].map { |u| u['unit'] }.join(', ') }.join(', ')
-            print units.colorize(@settings.color_normal)
-            puts "#{' ' * (console_columns - category['category'].length - units.length - 9)}║".colorize(@settings.color_help)
-          end
-          puts "  ╚#{'═' * (console_columns - 6)}╝".colorize(@settings.color_help)
+          raise NotImplementedError, "#{value} is not a valid number, operator, unit conversion, register, or macro."
         end
       end
+    rescue Exception => exception
+      @stack = saved_stack.dup
+      raise exception
     end
 
-    def macro_function parts  #{{{2
-      if parts.kind_of?(MatchData)
-        name = parts.captures[1]
-        end_of_macro = parts.captures[3] == ')' || parts.captures[4] == ')'
+    @stack.delete(nil)
 
-        unless name.nil?
-          raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
-          raise ArgumentError, "The name #{name} is already used to idenfity a register." unless @registers[name].nil?
-          @recording = name
-          @macros[@recording] = []
-        end
+    @settings.stack = @stack
+    @settings.registers = @registers
+    @settings.macros = @macros
+    @settings.base = @base
+    @settings.angle = @angle
+    @settings.write
 
-        @macros.delete(@recording) if end_of_macro && @macros[@recording] == []
-        @recording = nil if end_of_macro
-      else
-        case parts
-        when 'lm'
-          width = @macros.map{|macro_name,definition| macro_name.length}.max
-          @macros.map{|macro_name,definition|
-            macro_name = sprintf("  %#{width}s ", macro_name)
-            print "#{macro_name} ".colorize(settings.color_help)
-            puts "#{definition.join(' ')}".colorize(settings.color_normal)
-          }
-        when 'cm'
-          @macros = {}
-        else
-            if @recording
-                raise ArgumentError, "A macro cannot call itself. It will never finish." if parts == @recording
-                @macros[@recording] << parts
+    @stack.last
+  end
+
+  def parse_number value
+    begin
+      return Number.new(value)
+    rescue
+      return nil
+    end
+  end
+
+  def parse_operator value
+    VALID_OPERATORS.map{|category| category['groups']}.flatten.find{|group| group['operators'].keys.include?(value)}
+  end
+
+  def parse_unit_conversion value
+    value.match(/^([\w\/]+)>([\w\/]+)$/)
+  end
+
+  def parse_register value
+    parts = value.match(/^(cr:|>>?)?(\w*[a-z]+\w*)$/)
+    return nil if parts.nil? || parts.captures[1].nil?
+    return nil unless @macros[parts.captures[1]].nil?
+    return nil if parts.captures[0].nil? && @registers[parts.captures[1]].nil?
+    return parts
+  end
+
+  def parse_macro value
+    return nil if value.match(/^\w+$/) && @macros[value].nil?
+    return value if value.match(/^\w+$/) && !@macros[value].nil?
+    return value.match(/^((\w+)(\()(\)?)|(\)))$/)
+  end
+
+  def float_1_operator operator
+    x = @stack.pop
+    @stack.push Number.new(x.value.send(operator.to_sym))
+  end
+  def float_2_operator operator
+    x = @stack.pop
+    y = @stack.pop
+    @stack.push Number.new(y.value.send(operator.to_sym, x.value))
+  end
+
+  def int_1_operator operator
+    x = @stack.pop.value.to_i
+    @stack.push Number.new(x.send(operator.to_sym))
+  end
+  def int_2_operator operator
+    x = @stack.pop.value.to_i
+    y = @stack.pop.value.to_i
+    @stack.push Number.new(y.send(operator.to_sym, x))
+  end
+
+  def Math_constant value
+    case value
+    when 'phi'
+      @stack.push Number.new((Math.sqrt(5)+1)/2)
+    when 'i'
+      @stack.push Number.new(0+1i)
+    else
+      @stack.push Number.new(eval("Math::#{value.upcase}"))
+    end
+  end
+
+  def Math_1_operator operator
+    x = @stack.pop.value
+    @stack.push Number.new(eval("Math.#{operator}(#{x})"))
+  end
+
+  def trig_operator operator
+    case operator
+    when 'sin', 'cos', 'tan'
+      x = @stack.pop.value * (@angle == 'RAD' ? 1 : Math::PI / 180.0)
+      @stack.push Number.new(eval("Math.#{operator}(#{x})"))
+    when 'asin', 'acos', 'atan'
+      x= @stack.pop.value
+      @stack.push Number.new(eval("Math.#{operator}(#{x})") * (@angle == 'RAD' ? 1 : 180.0 / Math::PI))
+    end
+  end
+
+  def statistics_operator operator
+    case operator
+    when '!'
+      x = @stack.pop.value
+      raise RangeError, "x must be non-negative." if x < 0
+      @stack.push Number.new(factorial(x))
+    when 'perm'
+      x = @stack.pop.value
+      y = @stack.pop.value
+      @stack.push Number.new(factorial(y) / factorial(y - x))
+    when 'comb'
+      x = @stack.pop.value
+      y = @stack.pop.value
+      @stack.push Number.new(factorial(y) / (factorial(y - x) * factorial(x)))
+    when 'sum'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(sum(@stack.map{|i| i.value}))]
+    when 'product'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(product(@stack.map{|i| i.value}))]
+    when 'count'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(@stack.size)]
+    when 'mean'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(mean(@stack.map{|i| i.value}))]
+    when 'median'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(median(@stack.map{|i| i.value}))]
+    when 'std'
+      @registers['sample'] = @stack.dup
+      @stack = [Number.new(standard_deviation(@stack.map{|i| i.value}))]
+    end
+  end
+
+  def factorial n
+    n == 0 ? 1 : (1..n).reduce(:*)
+  end
+  def sum(a)
+    a.inject(0){ |accum, i| accum + i}
+  end
+  def product(a)
+    a.inject(1){ |accum, i| accum * i }
+  end
+  def mean(a)
+    sum(a) / a.length.to_f
+  end
+  def median(a)
+    sorted = a.sort
+    len = sorted.length
+    (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
+  end
+  def sample_variance(a)
+    m = mean(a)
+    sum = a.inject(0){ |accum, i| accum + (i - m) ** 2 }
+    sum / (a.length - 1).to_f
+  end
+  def standard_deviation(a)
+    Math.sqrt(sample_variance(a))
+  end
+
+  def custom_operator operator
+    case operator
+    when 'chs'
+      @stack.push Number.new(-@stack.pop.value)
+    when '\\'
+      @stack.push Number.new(1/@stack.pop.value)
+    when 'copy'
+      @stack.push @stack.last
+    when 'del'
+      @stack.pop
+    when 'cs'
+      @stack = []
+    when 'edit'
+      Readline.pre_input_hook = -> do
+        Readline.insert_text @stack.map{|value| value.format(0)}.join(' ')
+        Readline.redisplay
+        Readline.pre_input_hook = nil # Remove the hook right away.
+      end
+      input = Readline.readline("Edit Stack: ".colorize(@settings.color_title), false)
+      @stack = input.split(' ').map{|value| Number.new(value)}
+    when 'ca'
+      @stack = []
+      @macros = {}
+      @registers = {}
+      @base = 0
+      @angle = 'DEG'
+    when 'xy'
+      x = @stack.pop
+      y = @stack.pop
+      @stack.push x
+      @stack.push y
+    when 'bin', 'oct', 'dec', 'hex', 'norm'
+      @base = BASES[operator]
+    when 'rad', 'deg'
+      @angle = operator.upcase
+    when 'colors'
+      @settings.change_colors
+    when '?'
+      puts "  ╭#{'─' * (console_columns-6)}╮".colorize(@settings.color_help)
+      category_width = VALID_OPERATORS.inject(0) {|len,category| [len,category['category'].length].max}
+      VALID_OPERATORS.each do |category|
+        heading = sprintf("%#{category_width}s: ", category['category'])
+        print '  │'.colorize(@settings.color_help) + heading.colorize(@settings.color_help_heading)
+
+        operators = category['groups'].inject({}) {|acc, op| acc.merge(op['operators'])}
+
+        total_width = category_width + 5
+        operators.each{|op,description|
+          if total_width + (op.length + 1) + (description.length + 3) < console_columns - 3
+            print op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
+          else
+            if console_columns-3-total_width > 0
+              puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
             else
-                execute @macros[parts].join(' ') unless @macros[parts].nil?
+              puts ''
             end
+            print '  │'.colorize(@settings.color_help) + "#{' ' * category_width}  " + op.colorize(@settings.color_help) + ' ' + description.colorize(@settings.color_normal) + '   '
+            total_width = category_width + 5
+          end
+          total_width += (op.length + 1) + (description.length + 3)
+        }
+        if console_columns-1-total_width > 0
+          puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
+        else
+          puts ''
+        end
+
+        if category['suffix']
+          category['suffix'].each do |part1, part2|
+            part1 = "" if part1 =~ /^\#HIDE.*\#$/
+            print "  │#{' ' * category_width}  ".colorize(@settings.color_help)
+            print "#{part1} ".colorize(@settings.color_help)
+            print part2.colorize(@settings.color_normal)
+            total_width = category_width + 5 + (part1.length + 1) + (part2.length)
+            if console_columns-1-total_width > 0
+              puts "#{' ' * (console_columns-3-total_width)}│".colorize(@settings.color_help)
+            else
+              puts ''
+            end
+          end
+        end
+      end
+      puts "  ╰#{'─' * (console_columns-6)}╯".colorize(@settings.color_help)
+    when '??'
+      Launchy.open('https://www.google.com/search?q=reverse+polish+notation+tutorials&oq=reverse+polish+notation+tutorials')
+    end
+  end
+
+  def register_function parts
+    if parts.kind_of?(MatchData)
+      name = parts.captures[1]
+      raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
+      raise ArgumentError, "The name #{name} is already used to idenfity a macro." unless @macros[name].nil?
+      case parts.captures[0]
+      when '>'
+        raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
+        @registers[name] = @stack.last
+      when '>>'
+        raise ArgumentError, "Nothing to save in register #{name}." if stack.size == 0
+        @registers[name] = @stack.dup
+      when nil
+        raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+        [@registers[name]].flatten.each{|value| @stack.push value}
+      when 'cr:'
+        raise ArgumentError, "Register #{name} is not defined." if @registers[name].nil?
+        @registers.delete(name)
+      end
+    else
+      case parts
+      when 'cr'
+        @registers = {}
+      end
+    end
+  end
+
+  def convert_unit parts
+    if parts.kind_of?(MatchData)
+      from_units = parts.captures[0]
+      to_units = parts.captures[1]
+      all_units = UNITS_CONVERSION.map{ |x| x['systems'].map{ |y| y['conversions'].map{ |z| z['unit']} } }.flatten
+      raise ArgumentError, "Invalid units: #{from_units}. Type 'units' to see valid units." unless all_units.include?(from_units)
+      raise ArgumentError, "Invalid units: #{to_units}. Type 'units' to see valid units." unless all_units.include?(to_units)
+
+      from_category = UNITS_CONVERSION.find{ |y| y['systems'].find{ |x| x['conversions'].find{ |z| z['unit']==from_units } } }
+      to_category= UNITS_CONVERSION.find{ |y| y['systems'].find{ |x| x['conversions'].find{ |z| z['unit']==to_units } } }
+      raise ArgumentError, "Incompatible units. Type 'units' to see valid units." unless from_category['category'] == to_category['category']
+
+      f_standard = from_category['systems'].find{|x| x['conversions'].find{|y| y['unit']==from_units}}['standard']
+      t_standard = to_category['systems'].find{|x| x['conversions'].find{|y| y['unit']==to_units}}['standard']
+
+      from = from_category['systems'].find{|x| x['standard']==f_standard}['conversions'].find{|z| z['unit']==from_units}['to_std']
+      translation = f_standard == t_standard ? '' : from_category['translations'].find{|x| x['from']==f_standard && x['to']==t_standard}['translation']
+      to = from_category['systems'].find{|x| x['standard']==t_standard}['conversions'].find{|z| z['unit']==to_units}['from_std']
+      execute "#{from} #{translation} #{to}"
+    else
+      case parts
+      when 'units'
+        puts "  ╔#{'═' * (console_columns - 6)}╗".colorize(@settings.color_help)
+        UNITS_CONVERSION.each do |category|
+          print '  ║ '.colorize(@settings.color_help) + "#{category['category']}: ".colorize(@settings.color_help_heading)
+          units = category['systems'].map { |s| s['conversions'].map { |u| u['unit'] }.join(', ') }.join(', ')
+          print units.colorize(@settings.color_normal)
+          puts "#{' ' * (console_columns - category['category'].length - units.length - 9)}║".colorize(@settings.color_help)
+        end
+        puts "  ╚#{'═' * (console_columns - 6)}╝".colorize(@settings.color_help)
+      end
+    end
+  end
+
+  def macro_function parts
+    if parts.kind_of?(MatchData)
+      name = parts.captures[1]
+      end_of_macro = parts.captures[3] == ')' || parts.captures[4] == ')'
+
+      unless name.nil?
+        raise ArgumentError, "The name #{name} is already used as an operator." if parse_operator(name)
+        raise ArgumentError, "The name #{name} is already used to idenfity a register." unless @registers[name].nil?
+        @recording = name
+        @macros[@recording] = []
+      end
+
+      @macros.delete(@recording) if end_of_macro && @macros[@recording] == []
+      @recording = nil if end_of_macro
+    else
+      case parts
+      when 'lm'
+        width = @macros.map{|macro_name,definition| macro_name.length}.max
+        @macros.map{|macro_name,definition|
+          macro_name = sprintf("  %#{width}s ", macro_name)
+          print "#{macro_name} ".colorize(settings.color_help)
+          puts "#{definition.join(' ')}".colorize(settings.color_normal)
+        }
+      when 'cm'
+        @macros = {}
+      else
+        if @recording
+          raise ArgumentError, "A macro cannot call itself. It will never finish." if parts == @recording
+          @macros[@recording] << parts
+        else
+          execute @macros[parts].join(' ') unless @macros[parts].nil?
         end
       end
     end
+  end
 
-    def console_columns   #{{{2
-      _, columns = IO.console.winsize
-      [columns, 60].max
-    end
+  def console_columns
+    _, columns = IO.console.winsize
+    [columns, 60].max
+  end
 
-    #}}}
 end
-
-#}}}
-# vim:ft=ruby foldmethod=marker

@@ -3,23 +3,22 @@ require_relative 'number'
 require_relative 'settings'
 
 def temp_settings_file(hash)
-    @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
-    File.open(@rpnrc, 'w') {|f| f.write(hash.to_json)}
-    @rpnrc
+  @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
+  File.open(@rpnrc, 'w') {|f| f.write(hash.to_json)}
+  @rpnrc
 end
 
 def empty_settings_file()
-    @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
-    File.open(@rpnrc, 'w') {}
-    @rpnrc
+  @rpnrc = File.join(ENV['TMPDIR'], '.rpnrc')
+  File.open(@rpnrc, 'w') {}
+  @rpnrc
 end
 
 def settings_file_hash
-    JSON.parse(File.read(@rpnrc))
+  JSON.parse(File.read(@rpnrc))
 end
 
 describe Settings do
-  # When working with an empty settings file {{{1
   context 'when working with an empty settings file,' do
     before(:each) do
       @settings = Settings.new empty_settings_file()
@@ -63,7 +62,6 @@ describe Settings do
     end
   end
 
-  # When working with a settings file with an empty hash {{{1
   context 'when working with a settings file with an empty hash,' do
     before(:each) do
       @settings = Settings.new temp_settings_file({})
@@ -107,7 +105,6 @@ describe Settings do
     end
   end
 
-  # When working with a non-empty settings file {{{1
   context 'when working with a non-empty settings file,' do
     before(:each) do
       @settings = Settings.new temp_settings_file({'stack'=>[Number.new("1").to_h, Number.new("0o2").to_h],
@@ -116,15 +113,15 @@ describe Settings do
                                                    'base'=>8,
                                                    'angle'=>'RAD',
                                                    'colors'=>{
-                                                       'normal'=>:black,
-                                                       'error'=>:red,
-                                                       'title'=>:green,
-                                                       'register'=>:yellow,
-                                                       'help_heading'=>:blue,
-                                                       'help'=>:cyan}})
+                                                     'normal'=>:black,
+                                                     'error'=>:red,
+                                                     'title'=>:green,
+                                                     'register'=>:yellow,
+                                                     'help_heading'=>:blue,
+                                                     'help'=>:cyan}})
     end
     after(:each) do
-        File.delete @rpnrc
+      File.delete @rpnrc
     end
 
     it 'returns the stack' do
@@ -140,7 +137,7 @@ describe Settings do
     end
 
     it 'returns the macros' do
-        expect(@settings.macros).to eq({'f'=>['3','*']})
+      expect(@settings.macros).to eq({'f'=>['3','*']})
     end
     it 'returns the base' do
       expect(@settings.base).to eq(8)
@@ -173,21 +170,18 @@ describe Settings do
       expect(File.exists?(@rpnrc)).to be(false)
       @settings.write
       expect(settings_file_hash).to eq(
-          {'stack'=>[{"0"=>3.0},{"8"=>4.0},{"0"=>"1.2-3.4i"}],
-           'registers'=>{'z'=>{"16"=>5.0}},
-           'macros'=>{'f'=>['4','/']},
-           'base'=>16,
-           'angle'=>'DEG',
-           'colors'=>{
-               'normal'=>'a',
-               'error'=>'b',
-               'title'=>'c',
-               'register'=>'d',
-               'help_heading'=>'e',
-               'help'=>'f'}})
+        {'stack'=>[{"0"=>3.0},{"8"=>4.0},{"0"=>"1.2-3.4i"}],
+         'registers'=>{'z'=>{"16"=>5.0}},
+         'macros'=>{'f'=>['4','/']},
+         'base'=>16,
+         'angle'=>'DEG',
+         'colors'=>{
+           'normal'=>'a',
+           'error'=>'b',
+           'title'=>'c',
+           'register'=>'d',
+           'help_heading'=>'e',
+           'help'=>'f'}})
     end
   end
-
-  # }}}
 end
-# vim:ft=ruby foldmethod=marker sw=4
