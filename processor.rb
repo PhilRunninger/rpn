@@ -3,6 +3,7 @@ require_relative 'settings'
 require 'json'
 require 'launchy'
 require 'io/console'
+require 'readline'
 
 VALID_OPERATORS =   #{{{1
     [{'category' => 'Arithmetic',
@@ -63,7 +64,8 @@ VALID_OPERATORS =   #{{{1
       'groups' => [{'function' => 'custom_operator',  'operators' => {'copy' => 'Copy top value on stack',
                                                                       'del'  => 'Delete top value from stack',
                                                                       'cs'   => 'Clear the stack',
-                                                                      'xy'   => 'Swap x and y'}}]},
+                                                                      'xy'   => 'Swap x and y',
+                                                                      'edit' => 'Edit the whole stack at once'}}]},
      {'category' => 'Registers',
       'groups' => [{'function' => 'register_function', 'operators' => {'cr' => 'Clear all register values'}}],
       'suffix' => {'cr:foo' => 'Clear the register named \'foo\'',
@@ -383,6 +385,14 @@ class Processor   #{{{1
             @stack.pop
         when 'cs'
             @stack = []
+        when 'edit'
+          Readline.pre_input_hook = -> do
+            Readline.insert_text @stack.map{|value| value.format(0)}.join(' ')
+            Readline.redisplay
+            Readline.pre_input_hook = nil # Remove the hook right away.
+          end
+          input = Readline.readline("Edit Stack: ".colorize(@settings.color_title), false)
+          @stack = input.split(' ').map{|value| Number.new(value)}
         when 'ca'
             @stack = []
             @macros = {}

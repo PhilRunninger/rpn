@@ -292,6 +292,9 @@ describe Processor do
             @processor.execute('1 3 4 xy')
             expect(@processor.stack).to eq([Number.new(1),Number.new(4),Number.new(3)])
         end
+        # it 'enables the user to manually edit the stack' do
+        #    expect{@processor.execute('edit')}.to_not raise_error
+        # end
 
         # Rounding {{{2
         it 'rounds to the nearest integer' do
