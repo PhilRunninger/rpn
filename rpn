@@ -1,2 +1,2 @@
 #!/bin/bash
-ruby ruby/rpn.rb "$@"
+ruby ~/projects/RPN/ruby/rpn.rb "$@"
