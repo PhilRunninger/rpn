@@ -8,8 +8,8 @@ execute(String, Stack) ->
     try lists:foldl(fun(X, Token) -> rpn(X, Token) end, Stack, string:tokens(String, " ")) of
         NewStack -> NewStack
     catch
-        Exception:Reason ->
-            io:format("An error occured in your calculation: ~p:~p~n", [Exception,Reason]),
+        _:Reason ->
+            io:format("An error occured in your calculation: ~p~n", [Reason]),
             Stack
     end.
 

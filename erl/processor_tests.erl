@@ -1,6 +1,6 @@
 -module(processor_tests).
 
--import(processor, [ execute/2 ]).
+-import(processor, [execute/2]).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -8,6 +8,15 @@
 %%% Use the following vim commands to put the macro in register q:
 %%% 03x"qy$
 %%%ma<G..:'a,$s/ *{{{\d$//:'a,$s/^#/%/:'a,$g/^it '.*' do$/s/ /_/g:'a,$s/it_'\(.*\)'_do/\1_test() ->/:'a,$s/^end$//:'a,$s/^expect./?assertEqual([something],/:'a,$s/@processor\.//:'a,$s/something\(.*\)\.to \(.*\)$/\2\1./:'a,$s/\(execute(.\{-}\))/\1,[])/'ama
+
+%%% Internal Functions
+
+assertWithin(Expected, Tolerance, [Actual|_]) when Actual < Expected ->
+    io:format("Checking ~p = ~p +/- ~p...~n", [Actual,Expected,Tolerance]),
+    ?assert(Expected - Actual =< Tolerance);
+assertWithin(Expected, Tolerance, [Actual|_]) ->
+    io:format("Checking ~p = ~p +/- ~p...~n", [Actual,Expected,Tolerance]),
+    ?assert(Actual - Expected =< Tolerance).
 
 %%% Unit Tests
 
@@ -65,24 +74,16 @@ raises_an_error_if_given_an_unknown_operator_test() ->
 
 % Constants
 knows_the_value_of_pi_test() ->
-    ?assertEqual([math:pi()], execute("pi",[])).
+    assertWithin(3.141592653589793, 0.000000001, execute("pi",[])).
 
 knows_the_value_of_e_test() ->
-    ?assertEqual([math:exp(1)], execute("e",[])).
+    assertWithin(2.718281828459045, 0.000000001, execute("e",[])).
 
 knows_the_value_of_phi_test() ->
-    ?assertEqual([(math:sqrt(5)+1)/2], execute("phi",[])).
+    assertWithin(1.618033988749895, 0.000000001, execute("phi",[])).
 
 % knows_the_value_of_i_test() ->
 %     ?assertEqual([{0,1}],execute("i",[])).
-
-assertWithin(Expected, Tolerance, [Actual]) ->
-    io:format("Checking... Is ~p within ~p of ~p?", [Actual, Tolerance, Actual]),
-    if Actual < Expected ->
-           ?assert(Expected - Actual =< Tolerance);
-       true ->
-           ?assert(Actual - Expected =< Tolerance)
-    end.
 
 % Trigonometric
 calculates_sin_of_a_number_in_degrees_test() ->
