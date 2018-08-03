@@ -5,12 +5,16 @@
 %%% API
 
 execute(String, Stack) ->
-    try lists:foldl(fun(X, Token) -> rpn(X, Token) end, Stack, string:tokens(String, " ")) of
-        NewStack -> NewStack
-    catch
-        _:Reason ->
-            io:format("An error occured in your calculation: ~p~n", [Reason]),
-            Stack
+    loop(string:tokens(String, " "), Stack).
+
+loop([], Stack) ->
+    Stack;
+loop([Input|T], Stack) ->
+    try rpn(Input, Stack) of
+        NewStack -> loop(T, NewStack)
+    catch _:Reason ->
+              io:format("**ERROR** while executing ~s -> ~p~n", [Input, Reason]),
+              Stack
     end.
 
 %%% Internal functions

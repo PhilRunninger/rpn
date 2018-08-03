@@ -67,10 +67,10 @@ calculates_the_absolute_value_of_a_number_test_() ->
 
 % Error Handling
 raises_an_error_if_not_enough_operands_test() ->
-    ?assertEqual([],execute("2 +",[])).
+    ?assertEqual([2],execute("2 +",[])).
 
 raises_an_error_if_given_an_unknown_operator_test() ->
-    ?assertEqual([],execute("1 2 bogus",[])).
+    ?assertEqual([2,1],execute("1 2 bogus",[])).
 
 % Constants
 knows_the_value_of_pi_test() ->
