@@ -177,3 +177,22 @@ truncates_to_the_nearest_integer_test_() ->
      ?_assertEqual([-5],execute("trunc",[-5.6]))
     ].
 
+% Bitwise
+does_bitwise_AND_test() ->
+    ?assertEqual([12],execute("60 13 &",[])).
+
+does_bitwise_OR_test() ->
+    ?assertEqual([61],execute("60 13 |",[])).
+
+does_bitwise_XOR_test() ->
+    ?assertEqual([49],execute("60 13 ^",[])).
+
+does_ones_complement_test() ->
+    ?assertEqual([-61],execute("60 ~",[])).
+
+does_left_shift_test() ->
+    ?assertEqual([240],execute("60 2 <<",[])).
+
+does_right_shift_test() ->
+    ?assertEqual([15],execute("60 2 >>",[])).
+

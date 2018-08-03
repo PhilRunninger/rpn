@@ -58,6 +58,13 @@ rpn("del",   [_  |S]) -> S;
 rpn("cs",    _      ) -> [];
 rpn("xy",    [X,Y|S]) -> [Y,X|S];
 
+rpn("&",     [X,Y|S]) -> [X band Y|S];
+rpn("|",     [X,Y|S]) -> [X bor Y|S];
+rpn("^",     [X,Y|S]) -> [X bxor Y|S];
+rpn("~",     [X  |S]) -> [bnot X|S];
+rpn("<<",    [X,Y|S]) -> [Y bsl X|S];
+rpn(">>",    [X,Y|S]) -> [Y bsr X|S];
+
 rpn(Arg,          S ) -> [to_num(Arg)|S].
 
 to_num(Arg) ->
