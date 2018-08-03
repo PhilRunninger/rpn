@@ -4,9 +4,9 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%%% Vim Macros to convert rspec to eunit, as much as possible.
+%%% Vim Macro to convert rspec to eunit, as much as possible.
 %%% Use the following vim commands to put the macro in register q:
-%%% 03x"qy$
+%%% 03l"qy$
 %%%ma<G..:'a,$s/ *{{{\d$//:'a,$s/^#/%/:'a,$g/^it '.*' do$/s/ /_/g:'a,$s/it_'\(.*\)'_do/\1_test() ->/:'a,$s/^end$//:'a,$s/^expect./?assertEqual([something],/:'a,$s/@processor\.//:'a,$s/something\(.*\)\.to \(.*\)$/\2\1./:'a,$s/\(execute(.\{-}\))/\1,[])/'ama
 
 %%% Internal Functions
