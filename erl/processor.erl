@@ -7,15 +7,17 @@
 execute(String, Stack) ->
     loop(string:tokens(String, " "), Stack).
 
-loop([], Stack) ->
-    Stack;
-loop([Input|T], Stack) ->
-    try rpn(Input, Stack) of
-        NewStack -> loop(T, NewStack)
-    catch _:Reason ->
-              io:format("**ERROR** while executing ~s -> ~p~n", [Input, Reason]),
-              Stack
-    end.
+loop(Input, Stack) ->
+    F = fun([], S) -> S;
+           ([H|T], S) ->
+                try rpn(H, S) of
+                    NewS -> loop(T, NewS)
+                catch _:Reason ->
+                          io:format("**ERROR** while executing ~s -> ~p~n", [H, Reason]),
+                          S
+                end
+        end,
+    F(Input, Stack).
 
 %%% Internal functions
 
@@ -71,7 +73,7 @@ rpn(Operator, Stack) ->
     F(Operator, Stack).
 
 to_num(Arg) ->
-    case string:to_float(Arg) of
-        {error,no_float} -> list_to_integer(Arg);
-        {Float,_} -> Float
-    end.
+    F = fun({error,no_float}) -> list_to_integer(Arg);
+           ({Float,_}) -> Float
+        end,
+    F(string:to_float(Arg)).
