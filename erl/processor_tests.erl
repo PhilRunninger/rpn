@@ -34,6 +34,15 @@ parses_a_string_of_two_numbers_into_a_stack_with_two_numbers_test() ->
     Actual = execute("1.5 32",[]),
     ?assertEqual([32, 1.5],Actual).
 
+parses_a_string_containing_a_complex_number_test_() ->
+    lists:map(fun({Input,Expected}) ->
+                      ?_assertEqual(Expected, execute(Input, []))
+              end,
+              [ {"5,3", [{5,3}]},
+                {"-2.0e-3,5", [{-0.002,5}]},
+                {"4,-7.0e3", [{4,-7.0e3}]},
+                {"-0.4,-0.75", [{-0.4,-0.75}]} ]).
+
 % Basic Arithmetic
 adds_two_numbers_test() ->
     ?assertEqual([3], execute ("1 2 +",[])).
@@ -82,8 +91,8 @@ knows_the_value_of_e_test() ->
 knows_the_value_of_phi_test() ->
     assertWithin(1.618033988749895, 0.000000001, execute("phi",[])).
 
-% knows_the_value_of_i_test() ->
-%     ?assertEqual([{0,1}],execute("i",[])).
+knows_the_value_of_i_test() ->
+    ?assertEqual([{0,1}],execute("i",[])).
 
 % Trigonometric
 calculates_sin_of_a_number_in_degrees_test() ->

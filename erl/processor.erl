@@ -14,6 +14,7 @@ loop(Input, Stack) ->
                     NewS -> loop(T, NewS)
                 catch _:Reason ->
                           io:format("**ERROR** while executing ~s -> ~p~n", [H, Reason]),
+                          % erlang:display(erlang:get_stacktrace()),
                           S
                 end
         end,
@@ -36,6 +37,7 @@ rpn(Operator, Stack) ->
            ("pi",         S ) -> [math:pi()|S];
            ("e",          S ) -> [math:exp(1)|S];
            ("phi",        S ) -> [(math:sqrt(5)+1)/2|S];
+           ("i",          S ) -> [{0,1}|S];
 
            ("sin",   [X  |S]) -> [math:sin(X*math:pi()/180)|S];
            ("cos",   [X  |S]) -> [math:cos(X*math:pi()/180)|S];
@@ -80,7 +82,12 @@ rpn(Operator, Stack) ->
     F(Operator, Stack).
 
 to_num(Arg) ->
-    F = fun({error,no_float}) -> list_to_integer(Arg);
-           ({Float,_}) -> Float
-        end,
-    F(string:to_float(Arg)).
+    to_num(Arg, re:run(Arg,
+                       "^(-?\\d+(\\.\\d+)?([Ee]-?\\d+)?),"
+                        "(-?\\d+(\\.\\d+)?([Ee]-?\\d+)?)$",
+                       [{capture,all,list}])).
+
+to_num(_, {match,[_,Re,_,_,Im|_]}) -> {to_num(Re),to_num(Im)};
+to_num(Arg, nomatch)               -> to_num(Arg, string:to_float(Arg));
+to_num(Arg, {error,no_float})      -> list_to_integer(Arg);
+to_num(_, {Float, _})              -> Float.
