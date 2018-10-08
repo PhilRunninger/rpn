@@ -23,10 +23,26 @@ loop(Input, Stack) ->
 %%% Internal functions
 
 rpn(Operator, Stack) ->
-    F = fun("+",     [X,Y|S]) -> [Y+X|S];
-           ("-",     [X,Y|S]) -> [Y-X|S];
-           ("*",     [X,Y|S]) -> [Y*X|S];
-           ("/",     [X,Y|S]) -> [Y/X|S];
+    F = fun("+",     [{C,D},{A,B}|S]) -> [{A+C,B+D}|S];
+           ("+",     [{C,D},Y    |S]) -> [{Y+C,D}  |S];
+           ("+",     [X    ,{A,B}|S]) -> [{A+X,B}  |S];
+           ("+",     [X    ,Y    |S]) -> [ Y+X     |S];
+
+           ("-",     [{C,D},{A,B}|S]) -> [{A-C,B-D}|S];
+           ("-",     [{C,D},Y    |S]) -> [{Y-C,-D} |S];
+           ("-",     [X    ,{A,B}|S]) -> [{A-X,B}  |S];
+           ("-",     [X    ,Y    |S]) -> [ Y-X     |S];
+
+           ("*",     [{C,D},{A,B}|S]) -> [{A*C-B*D,A*D+C*B}|S];
+           ("*",     [{C,D},Y    |S]) -> [{Y*C,Y*D}        |S];
+           ("*",     [X    ,{A,B}|S]) -> [{A*X,B*X}        |S];
+           ("*",     [X    ,Y    |S]) -> [ Y*X             |S];
+
+           ("/",     [{C,D},{A,B}|S]) -> [{(A*C+B*D)/(C*C+D*D),(C*B-A*D)/(C*C+D*D)}|S];
+           ("/",     [{C,D},Y    |S]) -> [{Y*C/(C*C+D*D),-Y*D/(C*C+D*D)}           |S];
+           ("/",     [X    ,{A,B}|S]) -> [{A/X,B/X}                                |S];
+           ("/",     [X    ,Y    |S]) -> [Y/X                                      |S];
+
            ("div",   [X,Y|S]) -> [trunc(Y/X)|S];
            ("%",     [X,Y|S]) -> [Y rem X|S];
            ("**",    [X,Y|S]) -> [math:pow(Y,X)|S];

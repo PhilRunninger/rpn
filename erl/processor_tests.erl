@@ -4,11 +4,6 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%%% Vim Macro to convert rspec to eunit, as much as possible.
-%%% Use the following vim commands to put the macro in register q:
-%%% 03l"qy$
-%%%ma<G..:'a,$s/ *{{{\d$//:'a,$s/^#/%/:'a,$g/^it '.*' do$/s/ /_/g:'a,$s/it_'\(.*\)'_do/\1_test() ->/:'a,$s/^end$//:'a,$s/^expect./?assertEqual([something],/:'a,$s/@processor\.//:'a,$s/something\(.*\)\.to \(.*\)$/\2\1./:'a,$s/\(execute(.\{-}\))/\1,[])/'ama
-
 %%% Internal Functions
 
 assertWithin(Expected, Tolerance, [Actual|_]) when Actual < Expected ->
@@ -44,17 +39,37 @@ parses_a_string_containing_a_complex_number_test_() ->
                 {"-0.4,-0.75", [{-0.4,-0.75}]} ]).
 
 % Basic Arithmetic
-adds_two_numbers_test() ->
-    ?assertEqual([3], execute ("1 2 +",[])).
+adds_two_numbers_test_() ->
+    [
+     ?_assertEqual([3],      execute("1   2    +",[])),
+     ?_assertEqual([{3,-2}], execute("1   2,-2 +",[])),
+     ?_assertEqual([{3,7}],  execute("1,7 2    +",[])),
+     ?_assertEqual([{3,5}],  execute("1,7 2,-2 +",[]))
+    ].
 
-subtracts_two_numbers_test() ->
-    ?assertEqual([-1], execute ("1 2 -",[])).
+subtracts_two_numbers_test_() ->
+    [
+     ?_assertEqual([-1],     execute("1   2    -",[])),
+     ?_assertEqual([{-1,2}], execute("1   2,-2 -",[])),
+     ?_assertEqual([{-1,7}], execute("1,7 2    -",[])),
+     ?_assertEqual([{-1,9}], execute("1,7 2,-2 -",[]))
+    ].
 
-multiplies_two_numbers_test() ->
-    ?assertEqual([6.28], execute ("3.14 2 *",[])).
+multiplies_two_numbers_test_() ->
+    [
+     ?_assertEqual([{8 ,6}],  execute("2    4,3 *",[])),
+     ?_assertEqual([{3 ,-6}], execute("1,-2 3   *",[])),
+     ?_assertEqual([{10,-5}], execute("1,-2 4,3 *",[])),
+     ?_assertEqual([6.28],    execute("3.14 2   *",[]))
+    ].
 
-divides_two_numbers_test() ->
-    ?assertEqual([0.5], execute ("1 2 /",[])).
+divides_two_numbers_test_() ->
+    [
+     ?_assertEqual([{0.7,-0.4}], execute("3,2 2,4 /",[])),
+     ?_assertEqual([{1.5,1.0}],    execute("3,2 2   /",[])),
+     ?_assertEqual([{0.3,-0.6}], execute("3   2,4 /",[])),
+     ?_assertEqual([0.5],        execute("1   2   /",[]))
+    ].
 
 returns_the_integer_part_of_division_test() ->
     ?assertEqual([6], execute("45.4 7 div",[])).
