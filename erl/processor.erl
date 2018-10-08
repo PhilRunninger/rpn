@@ -44,6 +44,13 @@ rpn(Operator, Stack) ->
            ("acos",  [X  |S]) -> [math:acos(X)*180/math:pi()|S];
            ("atan",  [X  |S]) -> [math:atan(X)*180/math:pi()|S];
 
+           ("sinh",  [X  |S]) -> [math:sinh(X)|S];
+           ("cosh",  [X  |S]) -> [math:cosh(X)|S];
+           ("tanh",  [X  |S]) -> [math:tanh(X)|S];
+           ("asinh", [X  |S]) -> [math:asinh(X)|S];
+           ("acosh", [X  |S]) -> [math:acosh(X)|S];
+           ("atanh", [X  |S]) -> [math:atanh(X)|S];
+
            ("sqrt",  [X  |S]) -> [math:sqrt(X)|S];
            ("\\",    [X  |S]) -> [1/X|S];
            ("exp",   [X  |S]) -> [math:exp(X)|S];

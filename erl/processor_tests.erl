@@ -104,6 +104,25 @@ calculates_acos_of_a_number_in_degrees_test() ->
 calculates_atan_of_a_number_in_degrees_test() ->
     assertWithin(45.0, 0.000001, execute("1 atan",[])).
 
+% Hyperbolic Trigonometry
+calculates_sinh_of_a_number_test() ->
+    assertWithin(3.6268604079, 0.000001, execute("2 sinh", [])).
+
+calculates_cosh_of_a_number_test() ->
+    assertWithin(27.30823284, 0.000001, execute("4 cosh",[])).
+
+calculates_tanh_of_a_number_test() ->
+    assertWithin(-0.462117157, 0.000001, execute("-0.5 tanh",[])).
+
+calculates_arsinh_of_a_number_test() ->
+    assertWithin(2.0, 0.000001, execute("3.6268604079 asinh",[])).
+
+calculates_arcosh_of_a_number_test() ->
+    assertWithin(4.0, 0.000001, execute("27.30823284 acosh",[])).
+
+calculates_artanh_of_a_number_test() ->
+    assertWithin(-0.5, 0.000001, execute("-0.462117157 atanh",[])).
+
 % Powers and Logarithms
 calculates_the_square_root_of_a_number_test() ->
     ?assertEqual([8.0], execute("64 sqrt",[])).
