@@ -45,9 +45,26 @@ rpn(Operator, Stack) ->
 
            ("div",   [X,Y|S]) -> [trunc(Y/X)|S];
            ("%",     [X,Y|S]) -> [Y rem X|S];
-           ("**",    [X,Y|S]) -> [math:pow(Y,X)|S];
-           ("chs",   [X  |S]) -> [-X|S];
 
+           ("**",    [{C,D},{A,B}|S]) ->
+                R = math:sqrt(A*A+B*B),
+                Theta = math:atan(B/A),
+                Multiplier = math:exp(C*math:log(R) - D*Theta),
+                [{Multiplier*math:cos(D*math:log(R)+C*Theta),
+                  Multiplier*math:sin(D*math:log(R)+C*Theta)}|S];
+           ("**",    [X,{A,B}|S]) ->
+                R = math:sqrt(A*A+B*B),
+                Theta = math:atan(B/A),
+                [{math:pow(R,X)*math:cos(Theta*X),
+                  math:pow(R,X)*math:sin(Theta*X)}|S];
+           ("**",    [{A,B},Y|S]) -> [{math:pow(Y,A)*math:cos(B*math:log(Y)),
+                                       math:pow(Y,A)*math:sin(B*math:log(Y))}|S];
+           ("**",    [X,Y|S]) -> [math:pow(Y,X)|S];
+
+           ("chs",   [{A,B}|S]) -> [{-A,-B}|S];
+           ("chs",   [X    |S]) -> [-X|S];
+
+           ("abs",   [{A,B}|S]) -> [math:sqrt(A*A+B*B)|S];
            ("abs",   [X    |S]) -> [erlang:abs(X)|S];
 
            ("pi",         S ) -> [math:pi()|S];

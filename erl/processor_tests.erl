@@ -80,16 +80,25 @@ returns_the_integer_part_of_division_test() ->
 finds_the_modulus_of_a_number_test() ->
     ?assertEqual([3], execute ("23 4 %",[])).
 
-raises_a_number_to_a_power_test() ->
-    ?assertEqual([32.0], execute ("2 5 **",[])).
+raises_a_number_to_a_power_test_() ->
+    [
+     ?_assertEqual([32.0], execute ("2 5 **",[])),
+     assertComplexWithin([{-7.461496614688569,2.8854927255134477}], 0.00000001, execute("2 3,4 **",[])),
+     assertComplexWithin([{-37.999999999999986,41.000000000000014}], 0.00000001, execute("3,4 2.5 **",[])),
+     assertComplexWithin([{-14.405859669065997,101.33689785344499}], 0.00000001, execute("1,2 3,-2 **",[]))
+    ].
 
-changes_the_sign_of_the_top_number_test() ->
-    ?assertEqual([-12], execute("12 chs",[])).
+changes_the_sign_of_the_top_number_test_() ->
+    [
+     ?_assertEqual([-12],    execute("12 chs",[])),
+     ?_assertEqual([{-4,2}], execute("4,-2 chs",[]))
+    ].
 
 calculates_the_absolute_value_of_a_number_test_() ->
     [
-     ?_assertEqual([5], execute("-5 abs",[])),
-     ?_assertEqual([3.14], execute("3.14 abs",[]))
+     ?_assertEqual([5],    execute("-5 abs",[])),
+     ?_assertEqual([3.14], execute("3.14 abs",[])),
+     ?_assertEqual([13.0], execute("5,-12 abs",[]))
     ].
 
 % Error Handling
