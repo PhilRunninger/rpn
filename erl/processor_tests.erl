@@ -6,12 +6,15 @@
 
 %%% Internal Functions
 
-assertWithin(Expected, Tolerance, [Actual|_]) when Actual < Expected ->
-    io:format("Checking ~p = ~p +/- ~p...~n", [Actual,Expected,Tolerance]),
-    ?assert(Expected - Actual =< Tolerance);
+assertComplexWithin([{ExpRe,ExpIm}], Tolerance, [{ActRe,ActIm}|_]) ->
+    [ assertComplexWithin(ExpRe, Tolerance, ActRe), assertComplexWithin(ExpIm, Tolerance, ActIm) ];
+assertComplexWithin(Expected, Tolerance, Actual) ->
+    io:format("Does ~p = ~p +/- ~p?~n", [Actual,Expected,Tolerance]),
+    ?_assert(erlang:abs(Expected - Actual) =< Tolerance).
+
 assertWithin(Expected, Tolerance, [Actual|_]) ->
-    io:format("Checking ~p = ~p +/- ~p...~n", [Actual,Expected,Tolerance]),
-    ?assert(Actual - Expected =< Tolerance).
+    io:format("Does ~p = ~p +/- ~p?~n", [Actual,Expected,Tolerance]),
+    ?assert(erlang:abs(Expected - Actual) =< Tolerance ).
 
 %%% Unit Tests
 
@@ -31,7 +34,7 @@ parses_a_string_of_two_numbers_into_a_stack_with_two_numbers_test() ->
 
 parses_a_string_containing_a_complex_number_test_() ->
     lists:map(fun({Input,Expected}) ->
-                      ?_assertEqual(Expected, execute(Input, []))
+                      assertComplexWithin(Expected, 0.000000001,  execute(Input, []))
               end,
               [ {"5,3", [{5,3}]},
                 {"-2.0e-3,5", [{-0.002,5}]},
@@ -66,7 +69,7 @@ multiplies_two_numbers_test_() ->
 divides_two_numbers_test_() ->
     [
      ?_assertEqual([{0.7,-0.4}], execute("3,2 2,4 /",[])),
-     ?_assertEqual([{1.5,1.0}],    execute("3,2 2   /",[])),
+     ?_assertEqual([{1.5,1.0}],  execute("3,2 2   /",[])),
      ?_assertEqual([{0.3,-0.6}], execute("3   2,4 /",[])),
      ?_assertEqual([0.5],        execute("1   2   /",[]))
     ].
