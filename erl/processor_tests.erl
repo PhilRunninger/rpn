@@ -6,15 +6,14 @@
 
 %%% Internal Functions
 
-assertComplexWithin([{ExpRe,ExpIm}], Tolerance, [{ActRe,ActIm}|_]) ->
-    [ assertComplexWithin(ExpRe, Tolerance, ActRe), assertComplexWithin(ExpIm, Tolerance, ActIm) ];
-assertComplexWithin(Expected, Tolerance, Actual) ->
-    io:format("Does ~p = ~p +/- ~p?~n", [Actual,Expected,Tolerance]),
-    ?_assert(erlang:abs(Expected - Actual) =< Tolerance).
+assertComplexWithin({ExpRe,ExpIm}, Tolerance, [{ActRe,ActIm}|_]) ->
+    [
+     ?_assert(erlang:abs(ExpRe - ActRe) =< Tolerance),
+     ?_assert(erlang:abs(ExpIm - ActIm) =< Tolerance)
+    ].
 
 assertWithin(Expected, Tolerance, [Actual|_]) ->
-    io:format("Does ~p = ~p +/- ~p?~n", [Actual,Expected,Tolerance]),
-    ?assert(erlang:abs(Expected - Actual) =< Tolerance ).
+    ?assert(erlang:abs(Expected - Actual) =< Tolerance).
 
 %%% Unit Tests
 
@@ -36,10 +35,10 @@ parses_a_string_containing_a_complex_number_test_() ->
     lists:map(fun({Input,Expected}) ->
                       assertComplexWithin(Expected, 0.000000001,  execute(Input, []))
               end,
-              [ {"5,3", [{5,3}]},
-                {"-2.0e-3,5", [{-0.002,5}]},
-                {"4,-7.0e3", [{4,-7.0e3}]},
-                {"-0.4,-0.75", [{-0.4,-0.75}]} ]).
+              [ {"5,3", {5,3}},
+                {"-2.0e-3,5", {-0.002,5}},
+                {"4,-7.0e3", {4,-7.0e3}},
+                {"-0.4,-0.75", {-0.4,-0.75}} ]).
 
 % Basic Arithmetic
 adds_two_numbers_test_() ->
@@ -83,9 +82,9 @@ finds_the_modulus_of_a_number_test() ->
 raises_a_number_to_a_power_test_() ->
     [
      ?_assertEqual([32.0], execute ("2 5 **",[])),
-     assertComplexWithin([{-7.461496614688569,2.8854927255134477}], 0.00000001, execute("2 3,4 **",[])),
-     assertComplexWithin([{-37.999999999999986,41.000000000000014}], 0.00000001, execute("3,4 2.5 **",[])),
-     assertComplexWithin([{-14.405859669065997,101.33689785344499}], 0.00000001, execute("1,2 3,-2 **",[]))
+     assertComplexWithin({-7.461496614688569,2.8854927255134477}, 0.00000001, execute("2 3,4 **",[])),
+     assertComplexWithin({-37.999999999999986,41.000000000000014}, 0.00000001, execute("3,4 2.5 **",[])),
+     assertComplexWithin({-14.405859669065997,101.33689785344499}, 0.00000001, execute("1,2 3,-2 **",[]))
     ].
 
 changes_the_sign_of_the_top_number_test_() ->
