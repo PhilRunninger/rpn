@@ -48,7 +48,7 @@ rpn(Operator, Stack) ->
            ("**",    [X,Y|S]) -> [math:pow(Y,X)|S];
            ("chs",   [X  |S]) -> [-X|S];
 
-           ("abs",   [X  |S]) -> [if X<0 -> -X; true -> X end|S];
+           ("abs",   [X    |S]) -> [erlang:abs(X)|S];
 
            ("pi",         S ) -> [math:pi()|S];
            ("e",          S ) -> [math:exp(1)|S];
