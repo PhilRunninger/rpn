@@ -72,6 +72,13 @@ rpn(Operator, Stack) ->
            ("phi",        S ) -> [(math:sqrt(5)+1)/2|S];
            ("i",          S ) -> [{0,1}|S];
 
+           % sin, cos, tan for complex
+           ("sin",   [{A,B}|S]) -> [{math:sin(A)*math:cosh(B), math:cos(A)*math:sinh(B)}|S];
+           ("cos",   [{A,B}|S]) -> [{math:cos(A)*math:cosh(B), -math:sin(A)*math:sinh(B)}|S];
+           ("tan",   [{A,B}|S]) -> [{math:sin(2*A)/(math:cos(2*A)+math:cosh(2*B)),
+                                     math:sinh(2*B)/(math:cos(2*A)+math:cosh(2*B))}|S];
+
+           % asin, acos, atan for complex ?
            ("sin",   [X  |S]) -> [math:sin(X*math:pi()/180)|S];
            ("cos",   [X  |S]) -> [math:cos(X*math:pi()/180)|S];
            ("tan",   [X  |S]) -> [math:tan(X*math:pi()/180)|S];
@@ -79,6 +86,8 @@ rpn(Operator, Stack) ->
            ("acos",  [X  |S]) -> [math:acos(X)*180/math:pi()|S];
            ("atan",  [X  |S]) -> [math:atan(X)*180/math:pi()|S];
 
+           % sinh, cosh, tanh for complex
+           % asinh, acosh, atanh for complex ?
            ("sinh",  [X  |S]) -> [math:sinh(X)|S];
            ("cosh",  [X  |S]) -> [math:cosh(X)|S];
            ("tanh",  [X  |S]) -> [math:tanh(X)|S];
@@ -86,6 +95,8 @@ rpn(Operator, Stack) ->
            ("acosh", [X  |S]) -> [math:acosh(X)|S];
            ("atanh", [X  |S]) -> [math:atanh(X)|S];
 
+           % sqrt, \\, exp, log for complex
+           % log2, log10 for complex ?
            ("sqrt",  [X  |S]) -> [math:sqrt(X)|S];
            ("\\",    [X  |S]) -> [1/X|S];
            ("exp",   [X  |S]) -> [math:exp(X)|S];

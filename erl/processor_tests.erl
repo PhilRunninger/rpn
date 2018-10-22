@@ -150,6 +150,13 @@ calculates_acos_of_a_number_in_degrees_test() ->
 calculates_atan_of_a_number_in_degrees_test() ->
     assertWithin(9, 45.0, execute("1 atan",[])).
 
+calculates_trig_functions_of_complex_numbers_test_() ->
+    [
+     assertWithin(9, {1.298457581,0.634963915}, execute("1,1 sin", [])),
+     assertWithin(9, {0.833730025,-0.988897706}, execute("1,1 cos", [])),
+     assertWithin(9, {0.271752585,1.083923327}, execute("1,1 tan", []))
+    ].
+
 % Hyperbolic Trigonometry
 calculates_sinh_of_a_number_test() ->
     assertWithin(9, 3.6268604079, execute("2 sinh", [])).
