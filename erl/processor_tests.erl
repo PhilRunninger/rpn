@@ -6,14 +6,25 @@
 
 %%% Internal Functions
 
-assertComplexWithin({ExpRe,ExpIm}, Tolerance, [{ActRe,ActIm}|_]) ->
-    [
-     ?_assert(erlang:abs(ExpRe - ActRe) =< Tolerance),
-     ?_assert(erlang:abs(ExpIm - ActIm) =< Tolerance)
-    ].
+assertWithin(Decimals, {_,_}=Expected, Stack) ->
+    assertWithin(Decimals, Expected, Stack, list);
+assertWithin(Decimals, Expected, Stack) ->
+    assertWithin(Decimals, Expected, Stack, single).
 
-assertWithin(Expected, Tolerance, [Actual|_]) ->
-    ?assert(erlang:abs(Expected - Actual) =< Tolerance).
+assertWithin(Decimals, {ExpRe,ExpIm}, [{ActRe,ActIm}|_], list) ->
+    Factor = math:pow(10,Decimals),
+    [
+     ?_assertEqual(round(ExpRe*Factor)/Factor, round(ActRe*Factor)/Factor),
+     ?_assertEqual(round(ExpIm*Factor)/Factor, round(ActIm*Factor)/Factor)
+    ];
+assertWithin(Decimals, Expected, [Actual|_], list) ->
+    Factor = math:pow(10,Decimals),
+    [
+     ?_assertEqual(round(Expected*Factor)/Factor, round(Actual*Factor)/Factor)
+    ];
+assertWithin(Decimals, Expected, [Actual|_], single) ->
+    Factor = math:pow(10,Decimals),
+    ?assertEqual(round(Expected*Factor)/Factor, round(Actual*Factor)/Factor).
 
 %%% Unit Tests
 
@@ -33,7 +44,7 @@ parses_a_string_of_two_numbers_into_a_stack_with_two_numbers_test() ->
 
 parses_a_string_containing_a_complex_number_test_() ->
     lists:map(fun({Input,Expected}) ->
-                      assertComplexWithin(Expected, 0.000000001,  execute(Input, []))
+                      assertWithin(9, Expected, execute(Input, []))
               end,
               [ {"5,3", {5,3}},
                 {"-2.0e-3,5", {-0.002,5}},
@@ -82,9 +93,9 @@ finds_the_modulus_of_a_number_test() ->
 raises_a_number_to_a_power_test_() ->
     [
      ?_assertEqual([32.0], execute ("2 5 **",[])),
-     assertComplexWithin({-7.461496614688569,2.8854927255134477}, 0.00000001, execute("2 3,4 **",[])),
-     assertComplexWithin({-37.999999999999986,41.000000000000014}, 0.00000001, execute("3,4 2.5 **",[])),
-     assertComplexWithin({-14.405859669065997,101.33689785344499}, 0.00000001, execute("1,2 3,-2 **",[]))
+     assertWithin(9, {-7.461496614688569,2.8854927255134477}, execute("2 3,4 **",[])),
+     assertWithin(9, {-37.999999999999986,41.000000000000014}, execute("3,4 2.5 **",[])),
+     assertWithin(9, {-14.405859669065997,101.33689785344499}, execute("1,2 3,-2 **",[]))
     ].
 
 changes_the_sign_of_the_top_number_test_() ->
@@ -109,54 +120,54 @@ raises_an_error_if_given_an_unknown_operator_test() ->
 
 % Constants
 knows_the_value_of_pi_test() ->
-    assertWithin(3.141592653589793, 0.000000001, execute("pi",[])).
+    assertWithin(9, 3.141592653589793, execute("pi",[])).
 
 knows_the_value_of_e_test() ->
-    assertWithin(2.718281828459045, 0.000000001, execute("e",[])).
+    assertWithin(9, 2.718281828459045, execute("e",[])).
 
 knows_the_value_of_phi_test() ->
-    assertWithin(1.618033988749895, 0.000000001, execute("phi",[])).
+    assertWithin(9, 1.618033988749895, execute("phi",[])).
 
 knows_the_value_of_i_test() ->
     ?assertEqual([{0,1}],execute("i",[])).
 
 % Trigonometric
 calculates_sin_of_a_number_in_degrees_test() ->
-    assertWithin(0.5, 0.000001, execute("30 sin", [])).
+    assertWithin(9, 0.5, execute("30 sin", [])).
 
 calculates_cos_of_a_number_in_degrees_test() ->
-    assertWithin(0.5, 0.000001, execute("60 cos",[])).
+    assertWithin(9, 0.5, execute("60 cos",[])).
 
 calculates_tan_of_a_number_in_degrees_test() ->
-    assertWithin(1.0, 0.000001, execute("45 tan",[])).
+    assertWithin(9, 1.0, execute("45 tan",[])).
 
 calculates_asin_of_a_number_in_degrees_test() ->
-    assertWithin(30.0, 0.000001, execute("0.5 asin",[])).
+    assertWithin(9, 30.0, execute("0.5 asin",[])).
 
 calculates_acos_of_a_number_in_degrees_test() ->
-    assertWithin(60.0, 0.000001, execute("0.5 acos",[])).
+    assertWithin(9, 60.0, execute("0.5 acos",[])).
 
 calculates_atan_of_a_number_in_degrees_test() ->
-    assertWithin(45.0, 0.000001, execute("1 atan",[])).
+    assertWithin(9, 45.0, execute("1 atan",[])).
 
 % Hyperbolic Trigonometry
 calculates_sinh_of_a_number_test() ->
-    assertWithin(3.6268604079, 0.000001, execute("2 sinh", [])).
+    assertWithin(9, 3.6268604079, execute("2 sinh", [])).
 
 calculates_cosh_of_a_number_test() ->
-    assertWithin(27.30823284, 0.000001, execute("4 cosh",[])).
+    assertWithin(9, 27.308232836, execute("4 cosh",[])).
 
 calculates_tanh_of_a_number_test() ->
-    assertWithin(-0.462117157, 0.000001, execute("-0.5 tanh",[])).
+    assertWithin(9, -0.462117157, execute("-0.5 tanh",[])).
 
 calculates_arsinh_of_a_number_test() ->
-    assertWithin(2.0, 0.000001, execute("3.6268604079 asinh",[])).
+    assertWithin(9, 2.0, execute("3.6268604079 asinh",[])).
 
 calculates_arcosh_of_a_number_test() ->
-    assertWithin(4.0, 0.000001, execute("27.30823284 acosh",[])).
+    assertWithin(9, 4.0, execute("27.30823284 acosh",[])).
 
 calculates_artanh_of_a_number_test() ->
-    assertWithin(-0.5, 0.000001, execute("-0.462117157 atanh",[])).
+    assertWithin(9, -0.5, execute("-0.462117157 atanh",[])).
 
 % Powers and Logarithms
 calculates_the_square_root_of_a_number_test() ->
@@ -166,16 +177,16 @@ calculates_the_reciprocal_of_a_number_test() ->
     ?assertEqual([0.25], execute("4 \\",[])).
 
 calculates_e_to_the_x_test() ->
-    assertWithin(22026.4657948, 0.000001, execute("10 exp",[])).
+    assertWithin(9, 22026.465794807, execute("10 exp",[])).
 
 calculates_the_natural_log_of_x_test() ->
-    assertWithin(4.59511985014, 0.000001, execute("99 log",[])).
+    assertWithin(9, 4.59511985014, execute("99 log",[])).
 
 calculates_the_log_base_10_of_x_test() ->
-    assertWithin(1.9956351946, 0.000001, execute("99 log10",[])).
+    assertWithin(9, 1.9956351946, execute("99 log10",[])).
 
 calculates_the_log_base_2_of_x_test() ->
-    assertWithin(6.62935662008, 0.000001, execute("99 log2",[])).
+    assertWithin(9, 6.62935662008, execute("99 log2",[])).
 
 % Stack Manipulation
 copies_the_top_value_on_the_stack_test() ->
