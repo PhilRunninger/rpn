@@ -176,6 +176,13 @@ calculates_arcosh_of_a_number_test() ->
 calculates_artanh_of_a_number_test() ->
     assertWithin(9, -0.5, execute("-0.462117157 atanh",[])).
 
+calculates_hyperbolic_trig_functions_of_complex_numbers_test_() ->
+    [
+     assertWithin(9, {0.634963915,1.298457581}, execute("1,1 sinh", [])),
+     assertWithin(9, {0.833730025,0.988897706}, execute("1,1 cosh", [])),
+     assertWithin(9, {1.083923327,0.271752585}, execute("1,1 tanh", []))
+    ].
+
 % Powers and Logarithms
 calculates_the_square_root_of_a_number_test() ->
     ?assertEqual([8.0], execute("64 sqrt",[])).
