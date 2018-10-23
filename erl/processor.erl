@@ -47,13 +47,13 @@ rpn(Operator, Stack) ->
            ("%",     [X,Y|S]) -> [Y rem X|S];
 
            ("**",    [{C,D},{A,B}|S]) ->
-                R = math:sqrt(A*A+B*B),
+                [R] = rpn("abs",[{A,B}]),
                 Theta = math:atan(B/A),
                 Multiplier = math:exp(C*math:log(R) - D*Theta),
                 [{Multiplier*math:cos(D*math:log(R)+C*Theta),
                   Multiplier*math:sin(D*math:log(R)+C*Theta)}|S];
            ("**",    [X,{A,B}|S]) ->
-                R = math:sqrt(A*A+B*B),
+                [R] = rpn("abs",[{A,B}]),
                 Theta = math:atan(B/A),
                 [{math:pow(R,X)*math:cos(Theta*X),
                   math:pow(R,X)*math:sin(Theta*X)}|S];
@@ -74,8 +74,7 @@ rpn(Operator, Stack) ->
 
            ("sin",   [{A,B}|S]) -> [{math:sin(A)*math:cosh(B), math:cos(A)*math:sinh(B)}|S];
            ("cos",   [{A,B}|S]) -> [{math:cos(A)*math:cosh(B), -math:sin(A)*math:sinh(B)}|S];
-           ("tan",   [{A,B}|S]) -> [{math:sin(2*A)/(math:cos(2*A)+math:cosh(2*B)),
-                                     math:sinh(2*B)/(math:cos(2*A)+math:cosh(2*B))}|S];
+           ("tan",   [{A,B}|S]) -> rpn("/", rpn("cos",[{A,B}]) ++ rpn("sin",[{A,B}])) ++ S;
            ("sin",   [X  |S]) -> [math:sin(X*math:pi()/180)|S];
            ("cos",   [X  |S]) -> [math:cos(X*math:pi()/180)|S];
            ("tan",   [X  |S]) -> [math:tan(X*math:pi()/180)|S];
@@ -87,8 +86,7 @@ rpn(Operator, Stack) ->
 
            ("sinh",  [{A,B}|S]) -> [{math:sinh(A)*math:cos(B), math:cosh(A)*math:sin(B)}|S];
            ("cosh",  [{A,B}|S]) -> [{math:cosh(A)*math:cos(B), math:sinh(A)*math:sin(B)}|S];
-           ("tanh",  [{A,B}|S]) -> [{math:sinh(2*A)/(math:cos(2*B)+math:cosh(2*A)),
-                                     math:sin(2*B)/(math:cos(2*B)+math:cosh(2*A))}|S];
+           ("tanh",  [{A,B}|S]) -> rpn("/", rpn("cosh",[{A,B}]) ++ rpn("sinh", [{A,B}])) ++ S;
            ("sinh",  [X  |S]) -> [math:sinh(X)|S];
            ("cosh",  [X  |S]) -> [math:cosh(X)|S];
            ("tanh",  [X  |S]) -> [math:tanh(X)|S];
