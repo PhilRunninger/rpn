@@ -23,48 +23,46 @@ loop(Input, Stack) ->
 %%% Internal functions
 
 rpn(Operator, Stack) ->
-    F = fun("+",     [{C,D},{A,B}|S]) -> [{A+C,B+D}|S];
-           ("+",     [{C,D},Y    |S]) -> [{Y+C,D}  |S];
-           ("+",     [X    ,{A,B}|S]) -> [{A+X,B}  |S];
-           ("+",     [X    ,Y    |S]) -> [ Y+X     |S];
+    F = fun("+",     [{C,D},{A,B}|S]) -> [{A+C, B+D}|S];
+           ("+",     [{C,D},Y    |S]) -> [{Y+C, D}  |S];
+           ("+",     [X    ,{A,B}|S]) -> [{A+X, B}  |S];
+           ("+",     [X    ,Y    |S]) -> [ Y+X      |S];
 
-           ("-",     [{C,D},{A,B}|S]) -> [{A-C,B-D}|S];
-           ("-",     [{C,D},Y    |S]) -> [{Y-C,-D} |S];
-           ("-",     [X    ,{A,B}|S]) -> [{A-X,B}  |S];
-           ("-",     [X    ,Y    |S]) -> [ Y-X     |S];
+           ("-",     [{C,D},{A,B}|S]) -> [{A-C, B-D}|S];
+           ("-",     [{C,D},Y    |S]) -> [{Y-C, -D} |S];
+           ("-",     [X    ,{A,B}|S]) -> [{A-X, B}  |S];
+           ("-",     [X    ,Y    |S]) -> [ Y-X      |S];
 
-           ("*",     [{C,D},{A,B}|S]) -> [{A*C-B*D,A*D+C*B}|S];
-           ("*",     [{C,D},Y    |S]) -> [{Y*C,Y*D}        |S];
-           ("*",     [X    ,{A,B}|S]) -> [{A*X,B*X}        |S];
-           ("*",     [X    ,Y    |S]) -> [ Y*X             |S];
+           ("*",     [{C,D},{A,B}|S]) -> [{A*C - B*D, A*D + C*B}|S];
+           ("*",     [{C,D},Y    |S]) -> [{Y*C, Y*D}            |S];
+           ("*",     [X    ,{A,B}|S]) -> [{A*X, B*X}            |S];
+           ("*",     [X    ,Y    |S]) -> [ Y*X                  |S];
 
-           ("/",     [{C,D},{A,B}|S]) -> [{(A*C+B*D)/(C*C+D*D),(C*B-A*D)/(C*C+D*D)}|S];
-           ("/",     [{C,D},Y    |S]) -> [{Y*C/(C*C+D*D),-Y*D/(C*C+D*D)}           |S];
-           ("/",     [X    ,{A,B}|S]) -> [{A/X,B/X}                                |S];
-           ("/",     [X    ,Y    |S]) -> [Y/X                                      |S];
+           ("/",     [{C,D},{A,B}|S]) -> [{(A*C + B*D)/(C*C + D*D), (C*B - A*D)/(C*C + D*D)}|S];
+           ("/",     [{C,D},Y    |S]) -> [{Y*C/(C*C + D*D), - Y*D/(C*C + D*D)}              |S];
+           ("/",     [X    ,{A,B}|S]) -> [{A/X, B/X}                                        |S];
+           ("/",     [X    ,Y    |S]) -> [Y/X                                               |S];
 
            ("div",   [X,Y|S]) -> [trunc(Y/X)|S];
            ("%",     [X,Y|S]) -> [Y rem X|S];
 
-           ("**",    [{C,D},{A,B}|S]) ->
-                [R] = rpn("abs",[{A,B}]),
-                Theta = math:atan(B/A),
-                Multiplier = math:exp(C*math:log(R) - D*Theta),
-                [{Multiplier*math:cos(D*math:log(R)+C*Theta),
-                  Multiplier*math:sin(D*math:log(R)+C*Theta)}|S];
-           ("**",    [X,{A,B}|S]) ->
-                [R] = rpn("abs",[{A,B}]),
-                Theta = math:atan(B/A),
-                [{math:pow(R,X)*math:cos(Theta*X),
-                  math:pow(R,X)*math:sin(Theta*X)}|S];
-           ("**",    [{A,B},Y|S]) -> [{math:pow(Y,A)*math:cos(B*math:log(Y)),
-                                       math:pow(Y,A)*math:sin(B*math:log(Y))}|S];
-           ("**",    [X,Y|S]) -> [math:pow(Y,X)|S];
+           ("**",    [{C,D},{A,B}|S]) -> [R] = rpn("abs",[{A,B}]),
+                                         Theta = math:atan(B/A),
+                                         Multiplier = math:exp(C*math:log(R) - D*Theta),
+                                         [{Multiplier*math:cos(D*math:log(R) + C*Theta),
+                                           Multiplier*math:sin(D*math:log(R) + C*Theta)}|S];
+           ("**",    [X,{A,B}    |S]) -> [R] = rpn("abs",[{A,B}]),
+                                         Theta = math:atan(B/A),
+                                         [{math:pow(R,X)*math:cos(Theta*X),
+                                           math:pow(R,X)*math:sin(Theta*X)}|S];
+           ("**",    [{A,B},Y    |S]) -> [{math:pow(Y,A)*math:cos(B*math:log(Y)),
+                                           math:pow(Y,A)*math:sin(B*math:log(Y))}|S];
+           ("**",    [X,Y        |S]) -> [math:pow(Y,X)|S];
 
-           ("chs",   [{A,B}|S]) -> [{-A,-B}|S];
+           ("chs",   [{A,B}|S]) -> [{-A, -B}|S];
            ("chs",   [X    |S]) -> [-X|S];
 
-           ("abs",   [{A,B}|S]) -> [math:sqrt(A*A+B*B)|S];
+           ("abs",   [{A,B}|S]) -> [math:sqrt(A*A + B*B)|S];
            ("abs",   [X    |S]) -> [erlang:abs(X)|S];
 
            ("pi",         S ) -> [math:pi()|S];
@@ -75,11 +73,15 @@ rpn(Operator, Stack) ->
            ("sin",   [{A,B}|S]) -> [{math:sin(A)*math:cosh(B), math:cos(A)*math:sinh(B)}|S];
            ("cos",   [{A,B}|S]) -> [{math:cos(A)*math:cosh(B), -math:sin(A)*math:sinh(B)}|S];
            ("tan",   [{A,B}|S]) -> rpn("/", rpn("cos",[{A,B}]) ++ rpn("sin",[{A,B}])) ++ S;
-           ("sin",   [X  |S]) -> [math:sin(X*math:pi()/180)|S];
-           ("cos",   [X  |S]) -> [math:cos(X*math:pi()/180)|S];
-           ("tan",   [X  |S]) -> [math:tan(X*math:pi()/180)|S];
+           ("sin",   [X    |S]) -> [math:sin(X*math:pi()/180)|S];
+           ("cos",   [X    |S]) -> [math:cos(X*math:pi()/180)|S];
+           ("tan",   [X    |S]) -> [math:tan(X*math:pi()/180)|S];
 
-           % asin, acos, atan for complex ?
+           % % asin, acos, atan for complex ?
+           % ("asin",  [{A,B}|S]) -> [math:asin(X)*180/math:pi()|S];
+           % ("acos",  [{A,B}|S]) -> [math:acos(X)*180/math:pi()|S];
+           % ("atan",  [{A,B}|S]) -> [math:atan(X)*180/math:pi()|S];
+
            ("asin",  [X  |S]) -> [math:asin(X)*180/math:pi()|S];
            ("acos",  [X  |S]) -> [math:acos(X)*180/math:pi()|S];
            ("atan",  [X  |S]) -> [math:atan(X)*180/math:pi()|S];
@@ -87,9 +89,9 @@ rpn(Operator, Stack) ->
            ("sinh",  [{A,B}|S]) -> [{math:sinh(A)*math:cos(B), math:cosh(A)*math:sin(B)}|S];
            ("cosh",  [{A,B}|S]) -> [{math:cosh(A)*math:cos(B), math:sinh(A)*math:sin(B)}|S];
            ("tanh",  [{A,B}|S]) -> rpn("/", rpn("cosh",[{A,B}]) ++ rpn("sinh", [{A,B}])) ++ S;
-           ("sinh",  [X  |S]) -> [math:sinh(X)|S];
-           ("cosh",  [X  |S]) -> [math:cosh(X)|S];
-           ("tanh",  [X  |S]) -> [math:tanh(X)|S];
+           ("sinh",  [X    |S]) -> [math:sinh(X)|S];
+           ("cosh",  [X    |S]) -> [math:cosh(X)|S];
+           ("tanh",  [X    |S]) -> [math:tanh(X)|S];
 
            % asinh, acosh, atanh for complex ?
            ("asinh", [X  |S]) -> [math:asinh(X)|S];
@@ -129,7 +131,7 @@ rpn(Operator, Stack) ->
 to_num(Arg) ->
     to_num(Arg, re:run(Arg,
                        "^(-?\\d+(\\.\\d+)?([Ee]-?\\d+)?),"
-                        "(-?\\d+(\\.\\d+)?([Ee]-?\\d+)?)$",
+                       "(-?\\d+(\\.\\d+)?([Ee]-?\\d+)?)$",
                        [{capture,all,list}])).
 
 to_num(_, {match,[_,Re,_,_,Im|_]}) -> {to_num(Re),to_num(Im)};
