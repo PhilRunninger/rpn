@@ -4,274 +4,243 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%%% Internal Functions
+%%% Internal Macros
 
-assertWithin(Decimals, {_,_}=Expected, Stack) ->
-    assertWithin(Decimals, Expected, Stack, list);
-assertWithin(Decimals, Expected, Stack) ->
-    assertWithin(Decimals, Expected, Stack, single).
-
-assertWithin(Decimals, {ExpRe,ExpIm}, [{ActRe,ActIm}|_], list) ->
-    Factor = math:pow(10,Decimals),
-    [
-     ?_assertEqual(round(ExpRe*Factor)/Factor, round(ActRe*Factor)/Factor),
-     ?_assertEqual(round(ExpIm*Factor)/Factor, round(ActIm*Factor)/Factor)
-    ];
-assertWithin(Decimals, Expected, [Actual|_], list) ->
-    Factor = math:pow(10,Decimals),
-    [
-     ?_assertEqual(round(Expected*Factor)/Factor, round(Actual*Factor)/Factor)
-    ];
-assertWithin(Decimals, Expected, [Actual|_], single) ->
-    Factor = math:pow(10,Decimals),
-    ?assertEqual(round(Expected*Factor)/Factor, round(Actual*Factor)/Factor).
+-define(round(Value, Decimals), round(Value*math:pow(10,Decimals))/math:pow(10,Decimals)).
+-define(assertFloat(Input, Expected), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), Input, Expected}).
 
 %%% Unit Tests
 
 % Basic stack pushing and popping
-parses_a_string_with_one_number_into_a_stack_with_one_number_test() ->
-    Actual = execute("123",[]),
-    ?assertEqual([123],Actual).
+errors_leave_stack_untouched_test_() ->
+    [
+     ?_assertEqual([2],   execute("2 +",[])),       % not enough operands
+     ?_assertEqual([2,1], execute("1 2 bogus",[]))  % invalid operator
+    ].
 
-adds_to_the_stack_with_subsequent_calls_to_execute_test() ->
-    Int = execute("42",[]),
-    Actual = execute("73",Int),
-    ?assertEqual([73,42],Actual).
+values_are_pushed_onto_stack_in_various_ways_test_() ->
+    [
+     ?_assertEqual([123],     execute("123",[])),
+     ?_assertEqual([73,42],   execute("73", execute("42", []))),
+     ?_assertEqual([32, 1.5], execute("1.5 32",[]))
+    ].
 
-parses_a_string_of_two_numbers_into_a_stack_with_two_numbers_test() ->
-    Actual = execute("1.5 32",[]),
-    ?assertEqual([32, 1.5],Actual).
+stack_manipulation_commands_test_() ->
+    [
+     ?_assertEqual([5,5],  execute("copy",[5])),
+     ?_assertEqual([5],     execute("del",[3,5])),
+     ?_assertEqual([],      execute("cs",[1,2,3])),
+     ?_assertEqual([3,1,4], execute("xy",[1, 3, 4]))
+    ].
 
-parses_a_string_containing_a_complex_number_test_() ->
-    lists:map(fun({Input,Expected}) ->
-                      assertWithin(9, Expected, execute(Input, []))
+% Test driver to handle floating point tests, both real and complex.
+numbers_with_tolerances_test_() ->
+    lists:map(fun({Title,Input,{ExpectedRe,ExpectedIm}}) ->
+                      [{ActualRe,ActualIm}|_] = execute(Input,[]),
+                      [
+                       {Title, ?_assertEqual(?round(ExpectedRe,9), ?round(ActualRe,9))},
+                       {Title, ?_assertEqual(?round(ExpectedIm,9), ?round(ActualIm,9))}
+                      ];
+                 ({Title,Input,Real}) ->
+                      [Actual|_] = execute(Input,[]),
+                      {Title, ?_assertEqual(?round(Real,9), ?round(Actual,9))}
               end,
-              [ {"5,3", {5,3}},
-                {"-2.0e-3,5", {-0.002,5}},
-                {"4,-7.0e3", {4,-7.0e3}},
-                {"-0.4,-0.75", {-0.4,-0.75}} ]).
+              lists:flatten(
+                [
+                 parses_real_number_strings(),
+                 parses_complex_number_strings(),
+                 addition_tests(),
+                 multiplication_tests(),
+                 subtraction_tests(),
+                 division_tests(),
+                 integer_division_tests(),
+                 absolute_value(),
+                 change_sign(),
+                 constants(),
+                 raises_a_number_to_a_power(),
+                 trig_functions_in_real_domain(),
+                 trig_functions_in_complex_domain(),
+                 hyperbolic_trig_functions_in_real_domaion(),
+                 hyperbolic_trig_functions_in_complex_domain(),
+                 powers_and_logarithms_tests(),
+                 rounding_methods(),
+                 bitwise_operations()
+                ])).
+
+parses_real_number_strings() ->
+    [
+     ?assertFloat("5", 5),
+     ?assertFloat("42.1", 42.1),
+     ?assertFloat("-2.0e-3", -0.002),
+     ?assertFloat("6.02E23", 6.02e23)
+    ].
+
+parses_complex_number_strings() ->
+    [
+     ?assertFloat("5,3", {5,3}),
+     ?assertFloat("-2.0e-3,5", {-0.002,5}),
+     ?assertFloat("4,-7.0e3", {4,-7.0e3}),
+     ?assertFloat("-0.4,-0.75", {-0.4,-0.75})
+    ].
 
 % Basic Arithmetic
-adds_two_numbers_test_() ->
+addition_tests() ->
     [
-     ?_assertEqual([3],      execute("1   2    +",[])),
-     ?_assertEqual([{3,-2}], execute("1   2,-2 +",[])),
-     ?_assertEqual([{3,7}],  execute("1,7 2    +",[])),
-     ?_assertEqual([{3,5}],  execute("1,7 2,-2 +",[]))
+     ?assertFloat("1   2    +", 3),
+     ?assertFloat("1   2,-2 +", {3,-2}),
+     ?assertFloat("1,7 2    +", {3,7}),
+     ?assertFloat("1,7 2,-2 +", {3,5})
     ].
 
-subtracts_two_numbers_test_() ->
+subtraction_tests() ->
     [
-     ?_assertEqual([-1],     execute("1   2    -",[])),
-     ?_assertEqual([{-1,2}], execute("1   2,-2 -",[])),
-     ?_assertEqual([{-1,7}], execute("1,7 2    -",[])),
-     ?_assertEqual([{-1,9}], execute("1,7 2,-2 -",[]))
+     ?assertFloat("1   2    -", -1),
+     ?assertFloat("1   2,-2 -", {-1,2}),
+     ?assertFloat("1,7 2    -", {-1,7}),
+     ?assertFloat("1,7 2,-2 -", {-1,9})
     ].
 
-multiplies_two_numbers_test_() ->
+multiplication_tests() ->
     [
-     ?_assertEqual([{8 ,6}],  execute("2    4,3 *",[])),
-     ?_assertEqual([{3 ,-6}], execute("1,-2 3   *",[])),
-     ?_assertEqual([{10,-5}], execute("1,-2 4,3 *",[])),
-     ?_assertEqual([6.28],    execute("3.14 2   *",[]))
+     ?assertFloat("2    4,3 *",  {8 ,6}),
+     ?assertFloat("1,-2 3   *", {3 ,-6}),
+     ?assertFloat("1,-2 4,3 *", {10,-5}),
+     ?assertFloat("3.14 2   *",    6.28)
     ].
 
-divides_two_numbers_test_() ->
+division_tests() ->
     [
-     ?_assertEqual([{0.7,-0.4}], execute("3,2 2,4 /",[])),
-     ?_assertEqual([{1.5,1.0}],  execute("3,2 2   /",[])),
-     ?_assertEqual([{0.3,-0.6}], execute("3   2,4 /",[])),
-     ?_assertEqual([0.5],        execute("1   2   /",[]))
+     ?assertFloat("3,2 2,4 /", {0.7,-0.4}),
+     ?assertFloat("3,2 2   /",  {1.5,1.0}),
+     ?assertFloat("3   2,4 /", {0.3,-0.6}),
+     ?assertFloat("1   2   /",        0.5)
     ].
 
-returns_the_integer_part_of_division_test() ->
-    ?assertEqual([6], execute("45.4 7 div",[])).
-
-finds_the_modulus_of_a_number_test() ->
-    ?assertEqual([3], execute ("23 4 %",[])).
-
-raises_a_number_to_a_power_test_() ->
+integer_division_tests() ->
     [
-     ?_assertEqual([32.0], execute ("2 5 **",[])),
-     assertWithin(9, {-7.461496614688569,2.8854927255134477}, execute("2 3,4 **",[])),
-     assertWithin(9, {-37.999999999999986,41.000000000000014}, execute("3,4 2.5 **",[])),
-     assertWithin(9, {-14.405859669065997,101.33689785344499}, execute("1,2 3,-2 **",[]))
+     ?assertFloat("45.4 7 div", 6),
+     ?assertFloat("23 4 %", 3)
     ].
 
-changes_the_sign_of_the_top_number_test_() ->
+raises_a_number_to_a_power() ->
     [
-     ?_assertEqual([-12],    execute("12 chs",[])),
-     ?_assertEqual([{-4,2}], execute("4,-2 chs",[]))
+     ?assertFloat("2 5 **",      32.0),
+     ?assertFloat("2 3,4 **",    {-7.461496614688569,2.8854927255134477}),
+     ?assertFloat("3,4 2.5 **",  {-37.999999999999986,41.000000000000014}),
+     ?assertFloat("1,2 3,-2 **", {-14.405859669065997,101.33689785344499})
+     % ,
+     % ?assertFloat("i i **",      {0.20787957635,0})
     ].
 
-calculates_the_absolute_value_of_a_number_test_() ->
+change_sign() ->
     [
-     ?_assertEqual([5],    execute("-5 abs",[])),
-     ?_assertEqual([3.14], execute("3.14 abs",[])),
-     ?_assertEqual([13.0], execute("5,-12 abs",[]))
+     ?assertFloat("12 chs",   -12),
+     ?assertFloat("4,-2 chs", {-4,2})
     ].
 
-% Error Handling
-raises_an_error_if_not_enough_operands_test() ->
-    ?assertEqual([2],execute("2 +",[])).
+absolute_value() ->
+    [
+     ?assertFloat("-5 abs",    5),
+     ?assertFloat("3.14 abs",  3.14),
+     ?assertFloat("5,-12 abs", 13.0)
+    ].
 
-raises_an_error_if_given_an_unknown_operator_test() ->
-    ?assertEqual([2,1],execute("1 2 bogus",[])).
-
-% Constants
-knows_the_value_of_pi_test() ->
-    assertWithin(9, 3.141592653589793, execute("pi",[])).
-
-knows_the_value_of_e_test() ->
-    assertWithin(9, 2.718281828459045, execute("e",[])).
-
-knows_the_value_of_phi_test() ->
-    assertWithin(9, 1.618033988749895, execute("phi",[])).
-
-knows_the_value_of_i_test() ->
-    ?assertEqual([{0,1}],execute("i",[])).
+constants() ->
+    [
+     ?assertFloat("pi", 3.141592653589793),
+     ?assertFloat("e", 2.718281828459045),
+     ?assertFloat("phi", 1.618033988749895),
+     ?assertFloat("i", {0,1})
+    ].
 
 % Trigonometric
-calculates_sin_of_a_number_in_degrees_test() ->
-    assertWithin(9, 0.5, execute("30 sin", [])).
-
-calculates_cos_of_a_number_in_degrees_test() ->
-    assertWithin(9, 0.5, execute("60 cos",[])).
-
-calculates_tan_of_a_number_in_degrees_test() ->
-    assertWithin(9, 1.0, execute("45 tan",[])).
-
-calculates_asin_of_a_number_in_degrees_test() ->
-    assertWithin(9, 30.0, execute("0.5 asin",[])).
-
-calculates_acos_of_a_number_in_degrees_test() ->
-    assertWithin(9, 60.0, execute("0.5 acos",[])).
-
-calculates_atan_of_a_number_in_degrees_test() ->
-    assertWithin(9, 45.0, execute("1 atan",[])).
-
-calculates_trig_functions_of_complex_numbers_test_() ->
+trig_functions_in_real_domain() ->
     [
-     assertWithin(9, {1.298457581,0.634963915}, execute("1,1 sin", [])),
-     assertWithin(9, {0.833730025,-0.988897706}, execute("1,1 cos", [])),
-     assertWithin(9, {0.271752585,1.083923327}, execute("1,1 tan", []))
+     ?assertFloat("30 sin", 0.5),
+     ?assertFloat("60 cos", 0.5),
+     ?assertFloat("45 tan", 1.0),
+     ?assertFloat("0.5 asin", 30.0),
+     ?assertFloat("0.5 acos", 60.0),
+     ?assertFloat("1 atan", 45.0)
+    ].
+
+trig_functions_in_complex_domain() ->
+    [
+     ?assertFloat("1,1 sin", {1.298457581,0.634963915}),
+     ?assertFloat("1,1 cos", {0.833730025,-0.988897706}),
+     ?assertFloat("1,1 tan", {0.271752585,1.083923327})
+     % ,
+     % ?assertFloat("1,1 asin", {0.666239432,1.061275062}),
+     % ?assertFloat("1,1 acos", {0.904556894,1.061275062}),
+     % ?assertFloat("1,1 atan", {1.017221968,0.402359478})
     ].
 
 % Hyperbolic Trigonometry
-calculates_sinh_of_a_number_test() ->
-    assertWithin(9, 3.6268604079, execute("2 sinh", [])).
-
-calculates_cosh_of_a_number_test() ->
-    assertWithin(9, 27.308232836, execute("4 cosh",[])).
-
-calculates_tanh_of_a_number_test() ->
-    assertWithin(9, -0.462117157, execute("-0.5 tanh",[])).
-
-calculates_arsinh_of_a_number_test() ->
-    assertWithin(9, 2.0, execute("3.6268604079 asinh",[])).
-
-calculates_arcosh_of_a_number_test() ->
-    assertWithin(9, 4.0, execute("27.30823284 acosh",[])).
-
-calculates_artanh_of_a_number_test() ->
-    assertWithin(9, -0.5, execute("-0.462117157 atanh",[])).
-
-calculates_hyperbolic_trig_functions_of_complex_numbers_test_() ->
+hyperbolic_trig_functions_in_real_domaion() ->
     [
-     assertWithin(9, {0.634963915,1.298457581}, execute("1,1 sinh", [])),
-     assertWithin(9, {0.833730025,0.988897706}, execute("1,1 cosh", [])),
-     assertWithin(9, {1.083923327,0.271752585}, execute("1,1 tanh", []))
+     ?assertFloat("2 sinh", 3.6268604079),
+     ?assertFloat("4 cosh", 27.308232836),
+     ?assertFloat("-0.5 tanh", -0.462117157),
+     ?assertFloat("3.6268604079 asinh", 2.0),
+     ?assertFloat("27.30823284 acosh", 4.0),
+     ?assertFloat("-0.462117157 atanh", -0.5)
+    ].
+
+hyperbolic_trig_functions_in_complex_domain() ->
+    [
+     ?assertFloat("1,1 sinh", {0.634963915,1.298457581}),
+     ?assertFloat("1,1 cosh", {0.833730025,0.988897706}),
+     ?assertFloat("1,1 tanh", {1.083923327,0.271752585})
     ].
 
 % Powers and Logarithms
-calculates_the_square_root_of_a_number_test() ->
-    ?assertEqual([8.0], execute("64 sqrt",[])).
-
-calculates_the_reciprocal_of_a_number_test() ->
-    ?assertEqual([0.25], execute("4 \\",[])).
-
-calculates_e_to_the_x_test() ->
-    assertWithin(9, 22026.465794807, execute("10 exp",[])).
-
-calculates_the_natural_log_of_x_test() ->
-    assertWithin(9, 4.59511985014, execute("99 log",[])).
-
-calculates_the_log_base_10_of_x_test() ->
-    assertWithin(9, 1.9956351946, execute("99 log10",[])).
-
-calculates_the_log_base_2_of_x_test() ->
-    assertWithin(9, 6.62935662008, execute("99 log2",[])).
-
-% Stack Manipulation
-copies_the_top_value_on_the_stack_test() ->
-    ?assertEqual([5,5], execute("copy",[5])).
-
-deletes_the_top_value_from_the_stack_test() ->
-    ?assertEqual([5], execute("del",[3,5])).
-
-clears_the_stack_completely_test() ->
-    ?assertEqual([], execute("cs",[1,2,3])).
-
-exchanges_the_values_in_X_and_Y_test() ->
-    ?assertEqual([3,1,4], execute("xy",[1, 3, 4])).
+powers_and_logarithms_tests() ->
+    [
+     ?assertFloat("64 sqrt", 8.0),
+     ?assertFloat("4 \\", 0.25),
+     ?assertFloat("10 exp", 22026.465794807),
+     ?assertFloat("99 log", 4.59511985014),
+     ?assertFloat("99 log10", 1.9956351946),
+     ?assertFloat("99 log2", 6.62935662008)
+    ].
 
 % Rounding
-rounds_to_the_nearest_integer_test_() ->
+rounding_methods() ->
     [
-     ?_assertEqual([3],execute("round",[3.4])),
-     ?_assertEqual([5],execute("round",[4.5])),
-     ?_assertEqual([8],execute("round",[7.8])),
-     ?_assertEqual([-4],execute("round",[-4.2])),
-     ?_assertEqual([-5],execute("round",[-4.5])),
-     ?_assertEqual([-6],execute("round",[-5.6]))
-    ].
-
-rounds_down_to_the_nearest_integer_test_() ->
-    [
-     ?_assertEqual([3],execute("floor",[3.4])),
-     ?_assertEqual([4],execute("floor",[4.5])),
-     ?_assertEqual([7],execute("floor",[7.8])),
-     ?_assertEqual([-5],execute("floor",[-4.2])),
-     ?_assertEqual([-5],execute("floor",[-4.5])),
-     ?_assertEqual([-6],execute("floor",[-5.6]))
-    ].
-
-rounds_up_to_the_nearest_integer_test_() ->
-    [
-     ?_assertEqual([4],execute("ceil",[3.4])),
-     ?_assertEqual([5],execute("ceil",[4.5])),
-     ?_assertEqual([8],execute("ceil",[7.8])),
-     ?_assertEqual([-4],execute("ceil",[-4.2])),
-     ?_assertEqual([-4],execute("ceil",[-4.5])),
-     ?_assertEqual([-5],execute("ceil",[-5.6]))
-    ].
-
-truncates_to_the_nearest_integer_test_() ->
-    [
-     ?_assertEqual([3],execute("trunc",[3.4])),
-     ?_assertEqual([4],execute("trunc",[4.5])),
-     ?_assertEqual([7],execute("trunc",[7.8])),
-     ?_assertEqual([-4],execute("trunc",[-4.2])),
-     ?_assertEqual([-4],execute("trunc",[-4.5])),
-     ?_assertEqual([-5],execute("trunc",[-5.6]))
+     ?assertFloat("3.4 round",  3),
+     ?assertFloat("4.5 round",  5),
+     ?assertFloat("7.8 round",  8),
+     ?assertFloat("-4.2 round", -4),
+     ?assertFloat("-4.5 round", -5),
+     ?assertFloat("-5.6 round", -6),
+     ?assertFloat("3.4 floor",  3),
+     ?assertFloat("4.5 floor",  4),
+     ?assertFloat("7.8 floor",  7),
+     ?assertFloat("-4.2 floor", -5),
+     ?assertFloat("-4.5 floor", -5),
+     ?assertFloat("-5.6 floor", -6),
+     ?assertFloat("3.4 ceil",   4),
+     ?assertFloat("4.5 ceil",   5),
+     ?assertFloat("7.8 ceil",   8),
+     ?assertFloat("-4.2 ceil",  -4),
+     ?assertFloat("-4.5 ceil",  -4),
+     ?assertFloat("-5.6 ceil",  -5),
+     ?assertFloat("3.4 trunc",  3),
+     ?assertFloat("4.5 trunc",  4),
+     ?assertFloat("7.8 trunc",  7),
+     ?assertFloat("-4.2 trunc", -4),
+     ?assertFloat("-4.5 trunc", -4),
+     ?assertFloat("-5.6 trunc", -5)
     ].
 
 % Bitwise
-does_bitwise_AND_test() ->
-    ?assertEqual([12],execute("60 13 &",[])).
-
-does_bitwise_OR_test() ->
-    ?assertEqual([61],execute("60 13 |",[])).
-
-does_bitwise_XOR_test() ->
-    ?assertEqual([49],execute("60 13 ^",[])).
-
-does_ones_complement_test() ->
-    ?assertEqual([-61],execute("60 ~",[])).
-
-does_left_shift_test() ->
-    ?assertEqual([240],execute("60 2 <<",[])).
-
-does_right_shift_test() ->
-    ?assertEqual([15],execute("60 2 >>",[])).
+bitwise_operations() ->
+    [
+     ?assertFloat("60 13 &", 12),
+     ?assertFloat("60 13 |", 61),
+     ?assertFloat("60 13 ^", 49),
+     ?assertFloat("60 ~",    -61),
+     ?assertFloat("60 2 <<", 240),
+     ?assertFloat("60 2 >>", 15)
+    ].
 
