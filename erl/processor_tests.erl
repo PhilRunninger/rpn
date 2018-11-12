@@ -236,11 +236,11 @@ rounding_methods() ->
 % Bitwise
 bitwise_operations() ->
     [
-     ?assertFloat("60 13 &", 12),
-     ?assertFloat("60 13 |", 61),
-     ?assertFloat("60 13 ^", 49),
-     ?assertFloat("60 ~",    -61),
-     ?assertFloat("60 2 <<", 240),
-     ?assertFloat("60 2 >>", 15)
+     ?assertFloat("60 13 &", 12),   % AND
+     ?assertFloat("60 13 |", 61),   % OR
+     ?assertFloat("60 13 ^", 49),   % XOR
+     ?assertFloat("60 ~",    -61),  % NOT
+     ?assertFloat("60 2 <<", 240),  % Left Shift
+     ?assertFloat("60 2 >>", 15)    % Right Shift
     ].
 
