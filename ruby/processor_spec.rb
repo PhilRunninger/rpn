@@ -639,6 +639,19 @@ describe Processor do
       expect(@processor.base).to eq(0)
       expect(@processor.angle).to eq("DEG")
     end
+
+    it 'converts hours, minutes, and seconds to hours' do
+      expect((@processor.execute('4 15 0 hrs')).value).to eq(4.25)
+      expect((@processor.execute('-1 0 -30 hrs')).value).to be_within(0.0000001).of(-1.0083333)
+      @processor.execute 'ca 2.75 hms'
+      expect(@processor.stack.pop.value).to be_within(0.000001).of(0)
+      expect(@processor.stack.pop.value).to eq(45)
+      expect(@processor.stack.pop.value).to eq(2)
+      @processor.execute 'ca -3.289722222222222 hms'
+      expect(@processor.stack.pop.value).to be_within(0.000001).of(-23)
+      expect(@processor.stack.pop.value).to eq(-17)
+      expect(@processor.stack.pop.value).to eq(-3)
+    end
   end
 
   # When using an exising non-empty settings file {{{1

@@ -92,7 +92,9 @@ VALID_OPERATORS =
       'groups' => [{'function' => 'custom_operator', 'operators' => {'rad' => 'Switch to radians',
                                                                      'deg' => 'Switch to degrees'}}]},
      {'category' => 'Other',
-      'groups' => [{'function' => 'custom_operator',  'operators' => {'ca' => 'Clear all',
+      'groups' => [{'function' => 'custom_operator',  'operators' => {'hrs' => 'Convert Z:Y:X to hours',
+                                                                      'hms' => 'Convert X hours to Z:Y:X',
+                                                                      'ca' => 'Clear all',
                                                                       '<Enter>' => 'Exit calculator',
                                                                       'colors' => 'Change colors',
                                                                       '?'     => 'Display this list',
@@ -398,6 +400,15 @@ class Processor
       @registers = {}
       @base = 0
       @angle = 'DEG'
+    when 'hrs'
+      @stack.push Number.new((@stack.pop.value/60 + @stack.pop.value)/60 + @stack.pop.value)
+    when 'hms'
+      x = @stack.pop.value
+      2.times do |i|
+        @stack.push Number.new(x.truncate)
+        x = 60 * (x- x.truncate)
+      end
+      @stack.push Number.new(x)
     when 'xy'
       x = @stack.pop
       y = @stack.pop
