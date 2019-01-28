@@ -65,6 +65,14 @@ rpn(Operator, Stack) ->
            ("abs",   [{A,B}|S]) -> [math:sqrt(A*A + B*B)|S];
            ("abs",   [X    |S]) -> [erlang:abs(X)|S];
 
+           ("arg",   [{0,B}|_]) when B == 0 -> throw("undefined for 0,0");
+           ("arg",   [{0,B}|S]) when B > 0  -> [math:pi()/2|S];
+           ("arg",   [{0,B}|S]) when B < 0  -> [-math:pi()/2|S];
+           ("arg",   [{A,B}|S]) when A > 0  -> [math:atan(B/A)|S];
+           ("arg",   [{A,B}|S]) when B >= 0 -> [math:atan(B/A)+math:pi()|S];
+           ("arg",   [{A,B}|S])             -> [math:atan(B/A)-math:pi()|S];
+           ("arg",   [_|_])                 -> throw("undefined for real numbers");
+
            ("pi",         S ) -> [math:pi()|S];
            ("e",          S ) -> [math:exp(1)|S];
            ("phi",        S ) -> [(math:sqrt(5)+1)/2|S];

@@ -27,7 +27,7 @@ values_are_pushed_onto_stack_in_various_ways_test_() ->
 
 stack_manipulation_commands_test_() ->
     [
-     ?_assertEqual([5,5],  execute("copy",[5])),
+     ?_assertEqual([5,5],   execute("copy",[5])),
      ?_assertEqual([5],     execute("del",[3,5])),
      ?_assertEqual([],      execute("cs",[1,2,3])),
      ?_assertEqual([3,1,4], execute("xy",[1, 3, 4]))
@@ -55,6 +55,7 @@ numbers_with_tolerances_test_() ->
                  division_tests(),
                  integer_division_tests(),
                  absolute_value(),
+                 argument_of_complex_number(),
                  change_sign(),
                  constants(),
                  raises_a_number_to_a_power(),
@@ -143,6 +144,18 @@ absolute_value() ->
      ?assertFloat("-5 abs",    5),
      ?assertFloat("3.14 abs",  3.14),
      ?assertFloat("5,-12 abs", 13.0)
+    ].
+
+argument_of_complex_number() ->
+    [
+     ?assertFloat("-1,-1 arg", -3*math:pi()/4),
+     ?assertFloat("0,-1 arg", -math:pi()/2),
+     ?assertFloat("1,-1 arg", -math:pi()/4),
+     ?assertFloat("1,0 arg", 0.0),
+     ?assertFloat("1,1 arg", math:pi()/4),
+     ?assertFloat("0,1 arg", math:pi()/2),
+     ?assertFloat("-1,1 arg", 3*math:pi()/4),
+     ?assertFloat("-1,0 arg", math:pi())
     ].
 
 constants() ->
