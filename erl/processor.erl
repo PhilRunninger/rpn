@@ -47,7 +47,7 @@ rpn(Operator, Stack) ->
            ("%",     [X,Y|S]) -> [Y rem X|S];
 
            ("**",    [{C,D},{A,B}|S]) -> [R] = rpn("abs",[{A,B}]),
-                                         Theta = math:atan(B/A),
+                                         [Theta] = rpn("arg",[{A,B}]),
                                          Multiplier = math:exp(C*math:log(R) - D*Theta),
                                          [{Multiplier*math:cos(D*math:log(R) + C*Theta),
                                            Multiplier*math:sin(D*math:log(R) + C*Theta)}|S];
