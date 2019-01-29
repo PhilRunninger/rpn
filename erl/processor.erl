@@ -2,6 +2,10 @@
 
 -export([execute/2]).
 
+-ifdef(TEST).
+-export([rpn/2]).
+-endif.
+
 %%% API
 
 execute(String, Stack) ->
@@ -13,7 +17,7 @@ loop(Input, Stack) ->
                 try rpn(H, S) of
                     NewS -> loop(T, NewS)
                 catch _:Reason ->
-                          io:format("**ERROR** while executing ~s -> ~p~n", [H, Reason]),
+                          io:format("ERROR while executing ~ts: ~ts~n", [H, Reason]),
                           % erlang:display(erlang:get_stacktrace()),
                           S
                 end
@@ -38,12 +42,17 @@ rpn(Operator, Stack) ->
            ("*",     [X    ,{A,B}|S]) -> [{A*X, B*X}            |S];
            ("*",     [X    ,Y    |S]) -> [ Y*X                  |S];
 
+           ("/",     [{0,0},_    |_]) -> throw("division by zero");
+           ("/",     [0    ,_    |_]) -> throw("division by zero");
            ("/",     [{C,D},{A,B}|S]) -> [{(A*C + B*D)/(C*C + D*D), (C*B - A*D)/(C*C + D*D)}|S];
            ("/",     [{C,D},Y    |S]) -> [{Y*C/(C*C + D*D), - Y*D/(C*C + D*D)}              |S];
            ("/",     [X    ,{A,B}|S]) -> [{A/X, B/X}                                        |S];
            ("/",     [X    ,Y    |S]) -> [Y/X                                               |S];
 
+           ("div",   [0,_|_]) -> throw("division by zero");
            ("div",   [X,Y|S]) -> [trunc(Y/X)|S];
+
+           ("%",     [0,_|_]) -> throw("division by zero");
            ("%",     [X,Y|S]) -> [Y rem X|S];
 
            ("**",    [{C,D},{A,B}|S]) -> [R] = rpn("abs",[{A,B}]),
@@ -62,7 +71,7 @@ rpn(Operator, Stack) ->
            ("abs",   [{A,B}|S]) -> [math:sqrt(A*A + B*B)|S];
            ("abs",   [X    |S]) -> [erlang:abs(X)|S];
 
-           ("arg",   [{0,B}|_]) when B == 0 -> throw("undefined for 0,0");
+           ("arg",   [{0,0}|_])             -> throw("undefined for 0,0");
            ("arg",   [{0,B}|S]) when B > 0  -> [math:pi()/2|S];
            ("arg",   [{0,B}|S]) when B < 0  -> [-math:pi()/2|S];
            ("arg",   [{A,B}|S]) when A > 0  -> [math:atan(B/A)|S];
@@ -87,7 +96,9 @@ rpn(Operator, Stack) ->
            % ("acos",  [{A,B}|S]) -> [math:acos(X)*180/math:pi()|S];
            % ("atan",  [{A,B}|S]) -> [math:atan(X)*180/math:pi()|S];
 
+           ("asin",  [X  |_]) when X < -1 orelse X > 1 -> throw("out of range [1,1]");
            ("asin",  [X  |S]) -> [math:asin(X)*180/math:pi()|S];
+           ("acos",  [X  |_]) when X < -1 orelse X > 1 -> throw("out of range [1,1]");
            ("acos",  [X  |S]) -> [math:acos(X)*180/math:pi()|S];
            ("atan",  [X  |S]) -> [math:atan(X)*180/math:pi()|S];
 
@@ -100,16 +111,22 @@ rpn(Operator, Stack) ->
 
            % asinh, acosh, atanh for complex ?
            ("asinh", [X  |S]) -> [math:asinh(X)|S];
+           ("acosh", [X  |_]) when X < 1 -> throw("out of range [1,infinity)");
            ("acosh", [X  |S]) -> [math:acosh(X)|S];
+           ("atanh", [X  |_]) when X >= 1 orelse X =< -1 -> throw("out of range (-1,1)");
            ("atanh", [X  |S]) -> [math:atanh(X)|S];
 
            % sqrt, \\, exp, log for complex
            % log2, log10 for complex ?
            ("sqrt",  [X  |S]) -> [math:sqrt(X)|S];
-           ("\\",    [X  |S]) -> [1/X|S];
+           ("\\",    [0  |_]) -> throw("division by zero");
+           ("\\",    [X  |S]) -> rpn("/", [X, 1]) ++ S;
            ("exp",   [X  |S]) -> [math:exp(X)|S];
+           ("log",   [X  |_]) when X =< 0 -> throw("undefined for non-positive values");
            ("log",   [X  |S]) -> [math:log(X)|S];
+           ("log2",  [X  |_]) when X =< 0 -> throw("undefined for non-positive values");
            ("log2",  [X  |S]) -> [math:log2(X)|S];
+           ("log10", [X  |_]) when X =< 0 -> throw("undefined for non-positive values");
            ("log10", [X  |S]) -> [math:log10(X)|S];
 
            ("round", [X  |S]) -> [round(X)|S];

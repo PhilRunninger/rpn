@@ -1,6 +1,6 @@
 -module(processor_tests).
 
--import(processor, [execute/2]).
+-import(processor, [execute/2, rpn/2]).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -8,6 +8,7 @@
 
 -define(round(Value, Decimals), round(Value*math:pow(10,Decimals))/math:pow(10,Decimals)).
 -define(assertFloat(Input, Expected), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), Input, Expected}).
+-define(assertRPNError(Operator, Stack), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), {Operator, Stack}, error}).
 
 %%% Unit Tests
 
@@ -35,7 +36,9 @@ stack_manipulation_commands_test_() ->
 
 % Test driver to handle floating point tests, both real and complex.
 numbers_with_tolerances_test_() ->
-    lists:map(fun({Title,Input,{ExpectedRe,ExpectedIm}}) ->
+    lists:map(fun({Title,{Operator,Stack},error}) ->
+                      {Title, ?_assertThrow(_, rpn(Operator, Stack))};
+                 ({Title,Input,{ExpectedRe,ExpectedIm}}) ->
                       [{ActualRe,ActualIm}|_] = execute(Input,[]),
                       [
                        {Title, ?_assertEqual(?round(ExpectedRe,9), ?round(ActualRe,9))},
@@ -114,13 +117,17 @@ division_tests() ->
      ?assertFloat("3,2 2,4 /", {0.7,-0.4}),
      ?assertFloat("3,2 2   /",  {1.5,1.0}),
      ?assertFloat("3   2,4 /", {0.3,-0.6}),
-     ?assertFloat("1   2   /",        0.5)
+     ?assertFloat("1   2   /",        0.5),
+     ?assertRPNError("/", [0, 10]),
+     ?assertRPNError("/", [{0,0}, 10])
     ].
 
 integer_division_tests() ->
     [
      ?assertFloat("45.4 7 div", 6),
-     ?assertFloat("23 4 %", 3)
+     ?assertFloat("23 4 %", 3),
+     ?assertRPNError("div", [0, 10]),
+     ?assertRPNError("%", [0, 10])
     ].
 
 raises_a_number_to_a_power() ->
@@ -154,7 +161,9 @@ argument_of_complex_number() ->
      ?assertFloat("1,1 arg", math:pi()/4),
      ?assertFloat("0,1 arg", math:pi()/2),
      ?assertFloat("-1,1 arg", 3*math:pi()/4),
-     ?assertFloat("-1,0 arg", math:pi())
+     ?assertFloat("-1,0 arg", math:pi()),
+     ?assertRPNError("arg", [{0,0}]),
+     ?assertRPNError("arg", [42])
     ].
 
 constants() ->
@@ -173,7 +182,9 @@ trig_functions_in_real_domain() ->
      ?assertFloat("45 tan", 1.0),
      ?assertFloat("0.5 asin", 30.0),
      ?assertFloat("0.5 acos", 60.0),
-     ?assertFloat("1 atan", 45.0)
+     ?assertFloat("1 atan", 45.0),
+     ?assertRPNError("asin", [10]),
+     ?assertRPNError("acos", [-10])
     ].
 
 trig_functions_in_complex_domain() ->
@@ -195,7 +206,11 @@ hyperbolic_trig_functions_in_real_domaion() ->
      ?assertFloat("-0.5 tanh", -0.462117157),
      ?assertFloat("3.6268604079 asinh", 2.0),
      ?assertFloat("27.30823284 acosh", 4.0),
-     ?assertFloat("-0.462117157 atanh", -0.5)
+     ?assertFloat("-0.462117157 atanh", -0.5),
+     ?assertRPNError("acosh", [0]),
+     ?assertRPNError("atanh", [1]),
+     ?assertRPNError("atanh", [-1]),
+     ?assertRPNError("atanh", [10])
     ].
 
 hyperbolic_trig_functions_in_complex_domain() ->
@@ -209,11 +224,19 @@ hyperbolic_trig_functions_in_complex_domain() ->
 powers_and_logarithms_tests() ->
     [
      ?assertFloat("64 sqrt", 8.0),
-     ?assertFloat("4 \\", 0.25),
+     ?assertFloat("2,3 \\", {2/13, -3/13}),
+     ?assertRPNError("\\", [0]),
+     ?assertRPNError("\\", [0]),
      ?assertFloat("10 exp", 22026.465794807),
      ?assertFloat("99 log", 4.59511985014),
      ?assertFloat("99 log10", 1.9956351946),
-     ?assertFloat("99 log2", 6.62935662008)
+     ?assertFloat("99 log2", 6.62935662008),
+     ?assertRPNError("log", [0]),
+     ?assertRPNError("log", [-1]),
+     ?assertRPNError("log2", [0]),
+     ?assertRPNError("log2", [-1]),
+     ?assertRPNError("log10", [0]),
+     ?assertRPNError("log10", [-1])
     ].
 
 % Rounding

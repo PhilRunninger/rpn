@@ -8,7 +8,8 @@ run: $(beams)
 $(beams): %.beam: %.erl
 	erlc $<
 
-eunit: $(beams)
+eunit:
+	$(foreach module,$(source),erlc -DTEST $(module);)
 	$(foreach test_module,$(test_modules),erl -s $(test_module) test -s init stop -noinput;)
 
 clean:
