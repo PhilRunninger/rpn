@@ -8,7 +8,7 @@
 
 -define(round(Value, Decimals), round(Value*math:pow(10,Decimals))/math:pow(10,Decimals)).
 -define(assertRPNFloat(Input, Expected), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), Input, Expected}).
--define(assertRPNError(Operator, Stack), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), {Operator, Stack}, error}).
+-define(assertRPNError(Operator, Stack), {atom_to_list(element(2,element(2,process_info(self(), current_function))))++", line "++integer_to_list(?LINE), {Operator, Stack}, assertThrow}).
 
 %%% Unit Tests
 
@@ -31,12 +31,14 @@ stack_manipulation_commands_test_() ->
      ?_assertEqual([5,5],   execute("copy",[5])),
      ?_assertEqual([5],     execute("del",[3,5])),
      ?_assertEqual([],      execute("cs",[1,2,3])),
-     ?_assertEqual([3,1,4], execute("xy",[1, 3, 4]))
+     ?_assertEqual([3,1,4], execute("xy",[1,3,4]))
     ].
 
 % Test driver to handle floating point tests, both real and complex.
 numbers_with_tolerances_test_() ->
-    lists:map(fun({Title,{Operator,Stack},error}) ->
+    lists:map(fun({Title,{Operator,Stack},assertThrow}) ->
+                      % We need to use rpn/2 here because execute/2 catches and handles
+                      % errors, and eunit won't detect them.
                       {Title, ?_assertThrow(_, rpn(Operator, Stack))};
                  ({Title,Input,{ExpectedRe,ExpectedIm}}) ->
                       [{ActualRe,ActualIm}|_] = execute(Input,[]),
@@ -87,7 +89,6 @@ parses_complex_number_strings() ->
      ?assertRPNFloat("-0.4,-0.75", {-0.4,-0.75})
     ].
 
-% Basic Arithmetic
 addition_tests() ->
     [
      ?assertRPNFloat("1   2    +", 3),
@@ -174,7 +175,6 @@ constants() ->
      ?assertRPNFloat("i", {0,1})
     ].
 
-% Trigonometric
 trig_functions_in_real_domain() ->
     [
      ?assertRPNFloat("30 sin", 0.5),
@@ -198,7 +198,6 @@ trig_functions_in_complex_domain() ->
      % ?assertRPNFloat("1,1 atan", {1.017221968,0.402359478})
     ].
 
-% Hyperbolic Trigonometry
 hyperbolic_trig_functions_in_real_domaion() ->
     [
      ?assertRPNFloat("2 sinh", 3.6268604079),
@@ -220,7 +219,6 @@ hyperbolic_trig_functions_in_complex_domain() ->
      ?assertRPNFloat("1,1 tanh", {1.083923327,0.271752585})
     ].
 
-% Powers and Logarithms
 powers_and_logarithms_tests() ->
     [
      ?assertRPNFloat("64 sqrt", 8.0),
@@ -239,7 +237,6 @@ powers_and_logarithms_tests() ->
      ?assertRPNError("log10", [-1])
     ].
 
-% Rounding
 rounding_methods() ->
     [
      ?assertRPNFloat("3.4 round",  3),
@@ -268,7 +265,6 @@ rounding_methods() ->
      ?assertRPNFloat("-5.6 trunc", -5)
     ].
 
-% Bitwise
 bitwise_operations() ->
     [
      ?assertRPNFloat("60 13 &", 12),   % AND
