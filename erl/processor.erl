@@ -6,25 +6,18 @@
 -export([rpn/2]).
 -endif.
 
-%%% API
-
 execute(String, Stack) ->
     loop(string:tokens(String, " "), Stack).
 
-loop(Input, Stack) ->
-    F = fun([], S) -> S;
-           ([H|T], S) ->
-                try rpn(H, S) of
-                    NewS -> loop(T, NewS)
-                catch _:Reason ->
-                          io:format("ERROR while executing ~ts: ~ts~n", [H, Reason]),
-                          % erlang:display(erlang:get_stacktrace()),
-                          S
-                end
-        end,
-    F(Input, Stack).
-
-%%% Internal functions
+loop([], S) -> S;
+loop([H|T], S) ->
+    try rpn(H, S) of
+        NewS -> loop(T, NewS)
+    catch _:Reason ->
+              io:format("ERROR while executing ~ts: ~ts~n", [H, Reason]),
+              % erlang:display(erlang:get_stacktrace()),
+              S
+    end.
 
 rpn(Operator, Stack) ->
     F = fun("+",     [{C,D},{A,B}|S]) -> [{A+C, B+D}|S];
