@@ -3,7 +3,7 @@
 -export([execute/2]).
 
 -ifdef(TEST).
--export([rpn/2]).
+-export([rpn/2, to_num/1]).
 -endif.
 
 execute(String, Stack) ->

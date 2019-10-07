@@ -1,6 +1,6 @@
 -module(processor_tests).
 
--import(processor, [execute/2, rpn/2]).
+-import(processor, [execute/2, rpn/2, to_num/1]).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -32,6 +32,16 @@ stack_manipulation_commands_test_() ->
      ?_assertEqual([5],     execute("del",[3,5])),
      ?_assertEqual([],      execute("cs",[1,2,3])),
      ?_assertEqual([3,1,4], execute("xy",[1,3,4]))
+    ].
+
+text_to_number_test_() ->
+    [
+     ?_assertEqual(123, to_num("123")),
+     ?_assertEqual(1.25, to_num("1.25")),
+     ?_assertEqual(1.0e7, to_num("10.0e6")),
+     ?_assertEqual(0.001, to_num("1.0e-3")),
+     ?_assertEqual({3,4}, to_num("3,4")),
+     ?_assertEqual({3.75,4.0e3}, to_num("3.75,4.0e3"))
     ].
 
 % Test driver to handle floating point tests, both real and complex.
